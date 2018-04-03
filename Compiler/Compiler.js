@@ -1,11 +1,9 @@
-#reads in a .jack file, compiles it into a .vm file, prints the results to stdout
-import sys
-from _operator import add
+//reads in a .jack file, compiles it into a .vm file, prints the results to stdout
 
-class Analyzer:
+class Analyzer {
     
-    def __init__(self,file_with_path):
-        self.keywords = ['class',
+    constructor(f){
+          this.keywords = ['class',
         'constructor',
         'function',
         'method',
@@ -17,157 +15,192 @@ class Analyzer:
         'while','return'
         ] 
     
-        self.symbols = ['(',')','{','}','[',']',
+        this.symbols = ['(',')','{','}','[',']',
         '.',',',';','+','-','*','/','&','|',
         '<','>','=','~']
+    
+      
         
-        self.lines = []
-        
-        fileName = file_with_path.split('\\')[-1]
-        
-        with open(file_with_path) as f:
-            
-            for line in f:
-                #replaces tabs with single spaces
-                line = line.replace('\t',' ')
-                #removes comments with two slashes
-                line = line.split('//')[0]
-                #ignore blank lines
-                if line != '':
-                    self.lines.append(line)
-        #joins the lines together into one big string
-        inputStream = ''.join(self.lines)
-        
-        #number of comments remaining in the file
-        numberOfComments = inputStream.count('/*')
-        #removes remaining comments
-        while(numberOfComments>0):
-            before = inputStream.split('/*',1)[0]
-            after = inputStream.split('*/',1)[1]
-            inputStream = before+after
-            numberOfComments-=1
-        
-        #removes newlines
-        self.inputStream = inputStream.replace('\n',' ')
-        
-        #redirects stdout to our file
-        outputFile = file_with_path.replace('.jack','.vm')
-        #sys.stdout=open(outputFile,"w")
+        var lines = f.split('\n')
+        var parsed = [];
        
-    def hasMoreTokens(self):
-        return (len(self.inputStream.replace(' ',''))>0)
-    
-    def advance(self):
-        #returns the next token. If no tokens left,
-        #returns None
+        for(var i = 0;i<lines.length;i++){
+            //replace tabs with spaces
+            var line = lines[i].replace('\t',' ')
+            //remove single line comments
+            var startSingleComment = line.indexOf('//')
+            if(startSingleComment !== -1)
+                line = line.slice(0,startSingleComment)
+            //ignore blank lines
+            if(line !== '')
+                parsed.push(line)
+        }
         
-        if(not self.hasMoreTokens()):
-            return None
         
-        #removes leading whitespace
-        self.inputStream = self.inputStream.lstrip()
+        //joins the lines together into one string
+        var inputStream = parsed.join('')
         
-        #checks to see if we are looking at a string (leading char is \")
-        if self.inputStream[0] == "\"":
-            closing_index = self.inputStream.index("\"",1) 
-            token = self.inputStream[:closing_index+1]
-            self.inputStream = self.inputStream[len(token):]
-            return token
+        //number of multi-line comments remaining in the file
+        var numberOfComments = (inputStream.match(/\/\*/g) || []).length; // searches for '/*'
         
-        #checks to see if we are looking at a symbol
-        if self.inputStream[0] in self.symbols:
-            token = self.inputStream[0]
-            self.inputStream=self.inputStream[1:]
-            return token
         
-        #gets a potential token, read up to the next whitespace character
-        #this potential token requires further parsing as it might contain a symbol inside, which
-        #should delimit the token instead of the whitespace
-        
-        potential_token= self.inputStream.split(' ',1)[0]
-        foundInside = [i for i in self.symbols if i in potential_token]
-        
-        #if there is a symbol inside, use it to delimit our symbol
-        if len(foundInside)>0:
-            for i in foundInside:
-                potential_token = potential_token.split(i,1)[0]
-        
-        #chops out the token from our input stream and returns it
-        token = potential_token
-        self.inputStream = self.inputStream[len(token):].lstrip()
-        return token
-    
-    def peek(self):
-        #returns the next symbol without removing it from the stream
-        if(not self.hasMoreTokens()):
-            return None
-        token = self.advance()
-        self.inputStream = token+" "+self.inputStream
-        return token
+        // removes multiline comments
+        while(numberOfComments>0){
+            var startCut = inputStream.indexOf('/*')
+            var endCut = inputStream.indexOf('*/')+2
+            inputStream = inputStream.slice(0,startCut)+inputStream.slice(endCut);
+            numberOfComments-=1
+        }
             
-    def tokenType(self,token):
-        #returns the type of token we have obtained
+        // removes newlines
+        this.inputStream = inputStream.replace('\n',' ')
         
-        if token[0] == "\"":
-            return 'stringConstant'
+    }
+       
+    hasMoreTokens(){
+         return this.inputStream.replace(' ','').length > 0;
+    }
+    
+    advance(){
+        //returns the next token. If no tokens left,
+        //returns null
         
-        if token in self.keywords:
-            return 'keyword'
-        if token in self.symbols:
-            return 'symbol'
-        if token[0].isdigit():
-            return 'integerConstant'
+        if(!this.hasMoreTokens())
+            return null;
         
+        //removes leading whitespace
+        this.inputStream = this.inputStream.trim()
         
-        return 'identifier'
+        //checks to see if we are looking at a string (leading char is \")
+        // if so, pull the entire string as a token
+        if (this.inputStream.charAt(0) == '"'){
+            var closing_index = this.inputStream.indexOf('"',1) 
+            var token = this.inputStream.slice(0,closing_index+1)
+            this.inputStream = this.inputStream.slice(token.length)
+            return token
+        }
+            
         
-    def keyWord(self,token):
-        #returns the keyword of the current 
-        #token
+        //checks to see if we are looking at a symbol
+        if( this.symbols.includes( this.inputStream.charAt(0) ) ){
+            var token = this.inputStream.charAt(0);
+            this.inputStream=this.inputStream.slice(1);
+            return token
+        }
+            
+        
+        // gets a potential token, read up to the next whitespace character
+        // this potential token requires further parsing as it might contain a symbol inside, which
+        // should delimit the token instead of the whitespace
+        // example:   "A=M+3;" returns foundInside = [';','+','=']
+        
+        var potential_token= this.inputStream.split(' ',1)[0];
+        var foundInside = [];
+        
+        // add one of each symbol found inside the potential token to the list of "found inside"
+        for(var i = 0;i<potential_token.length;i++){
+            if( this.symbols.includes( potential_token.charAt(i) ) & !foundInside.includes( potential_token.charAt(i) )  )
+                foundInside.push( potential_token.charAt(i) );
+        }
+        
+        //if there is a symbol inside, use it to delimit our token, always slicing to the first token
+        if (foundInside.length>0){
+            for(var i = 0;i<foundInside.length;i++)
+                potential_token = potential_token.split( foundInside[i] ,1)[0];
+        }
+        
+        //chops out the token from our input stream and returns it
+        var token = potential_token
+        this.inputStream = this.inputStream.slice(token.length).trim();
         return token
+        
+    }
+        
+        
+    peek(){
+        // returns the next symbol without removing it from the stream
+        if(!this.hasMoreTokens())
+            return null;
+        token = this.advance();
+        this.inputStream = token+" "+this.inputStream;
+        return token;
+    }
+        
+            
+    tokenType(token){
+        //returns the type of token we have obtained
+        
+        if ( token.charAt(0) == '"' )
+            return 'stringConstant';
+        
+        if (this.keywords.contains(token))
+            return 'keyword';
+        if (this.symbols.contains(token))
+            return 'symbol'
+        if ( '0123456789'.contains(token.charAt(0)))
+            return 'integerConstant';
+        
+        return 'identifier';
+    }
+        
+        
+    keyWord(token){
+        //returns the keyword of the current 
+        //token
+        return token
+    }
 
-    def intVal(self,token):
-        return int(token)
+    intVal(token){
+        return parseInt(token)
+    }
+        
     
-    def stringVal(self,token):
-        return token[1:-1] #strips the quotes off of our token
+    stringVal(token){
+        //strips the quotes off of our token
+        return token.slice(1,token.length-1); 
+    }
+        
     
-    def symbolOperator(self,token):
-        if token == '+':
+    symbolOperator(token){
+       if ( token === '+')
             return 'add'
-        elif  token == '-':
+        else if (token === '-')
             return 'sub'
-        elif  token == '*':
+        else if (token === '*')
             return 'call Math.multiply 2'
-        elif  token == '/':
+        else if (token === '/')
             return 'call Math.divide 2'
-        elif  token == '&':
+        else if (token === '&')
             return 'and'
-        elif  token == '|':
+        else if (token === '|')
             return 'or'
-        elif  token == '<':
+        else if (token === '<')
             return 'lt'
-        elif  token == '>':
+        else if (token === '>')
             return 'gt'
-        elif  token == '=':
+        else if (token === '=')
             return 'eq'
         
+        return null 
+    }
         
-        return None
-        
-class CompileJack:
+}
+/*
+class CompileJack{
     
-    def __init__(self,file_with_path):
-        self.fetch = Analyzer(file_with_path)
-        self.symbol = SymbolTable()
-        self.indent = 0
-        self.whileCount = -1
-        self.ifCount = -1
-        self.CompileClass()
-        return
+    constructor(file_with_path){
+        this.fetch = Analyzer(file_with_path)
+        this.symbol = SymbolTable()
+        this.indent = 0
+        this.whileCount = -1
+        this.ifCount = -1
+        this.CompileClass()
+    }
+    
+
     
     def print_tag(self,tag): 
-        for i in range(self.indent):
+        for i in range(this.indent):
             print('  ',end='')
         print(tag)
         
@@ -184,73 +217,73 @@ class CompileJack:
         #prints out the parsed XML line
         
         #indent for readability
-        for i in range(self.indent):
+        for i in range(this.indent):
             print('  ',end='')
             
         #check if we have an int
         if(isinstance( token, int )):
-           type = self.fetch.tokenType(str(token))
+           type = this.fetch.tokenType(str(token))
            print("<"+type+"> "+str(token)+" </"+type+">")
         
         #we have a string
         else:
-            type = self.fetch.tokenType(token)
+            type = this.fetch.tokenType(token)
             
             #remove quotes form string constants, otherwise just print the type and string
             if type == 'stringConstant':
-                token = self.fetch.stringVal(token)
+                token = this.fetch.stringVal(token)
                 
             #removes non-xml-compatable characters from our token
-            token = self.xml_ify(token)
+            token = this.xml_ify(token)
             print("<"+type+"> "+token+" </"+type+">")
         
     
     def CompileClass(self):
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         f.advance() #encountered a class "class"
         
-        self.class_name = f.advance() 
+        this.class_name = f.advance() 
         
         f.advance() #opens the class '{'
         
         
         peek = f.peek() #class Var Dec
         classVars = 0
-        self.staticVarCount = 0
+        this.staticVarCount = 0
         while(peek in ['static','field']):
-            classVars+=self.CompileClassVarDec()
+            classVars+=this.CompileClassVarDec()
             peek = f.peek()
         
         #class subroutine Dec
         while(peek in ['constructor','function',
                     'method','void']):
-            self.CompileSubroutine(classVars)
+            this.CompileSubroutine(classVars)
             peek = f.peek()
             
          
             
         f.advance() #ends the class '}'
         
-        self.indent-=1
+        this.indent-=1
         
         return
     
     def CompileClassVarDec(self):
-        #self.print_tag('<classVarDec>')
+        #this.print_tag('<classVarDec>')
         #KIND IS FIELD
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         num_of_vars = 1
         f_or_s = f.advance()   #field or static
         type = f.advance()  
         varName = f.advance() 
-        self.symbol.define(varName,type,f_or_s)
+        this.symbol.define(varName,type,f_or_s)
         peek = f.peek()
         while peek == ',':
             f.advance() #','
             varName = f.advance()#varName
-            self.symbol.define(varName,type,f_or_s)
+            this.symbol.define(varName,type,f_or_s)
             peek = f.peek()
             num_of_vars+=1
             
@@ -260,30 +293,30 @@ class CompileJack:
         return 0
         
     def CompileSubroutine(self,classVariables = 0):
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         
-        self.whileCount = -1
-        self.ifCount = -1
-        self.symbol.startSubroutine()
+        this.whileCount = -1
+        this.ifCount = -1
+        this.symbol.startSubroutine()
         sub_type = f.advance() #constructor/function/method
         
         if sub_type == 'method':
             #first arg pushed is 'this'
             
-            self.symbol.define('this','object','arg')
+            this.symbol.define('this','object','arg')
         
         
         return_type = f.advance() #return type or void
         if(return_type == 'void'):
-            self.voidReturn = True
+            this.voidReturn = True
         else:
-            self.voidReturn = False
+            this.voidReturn = False
         sub_name = f.advance() #subroutineName 
        
         f.advance() # '('
         
-        parameter_count = self.CompileParameterList()
+        parameter_count = this.CompileParameterList()
         
         f.advance() # ')'
         
@@ -292,9 +325,9 @@ class CompileJack:
         num_of_method_vars = 0
         peek = f.peek()
         while(peek == 'var'):
-                num_of_method_vars+=self.CompileVarDec()
+                num_of_method_vars+=this.CompileVarDec()
                 peek = f.peek()
-        functionName = self.class_name+'.'+sub_name
+        functionName = this.class_name+'.'+sub_name
         #find num of variables declared!
         VMWriter.writeFunction(functionName,num_of_method_vars)
         
@@ -309,54 +342,54 @@ class CompileJack:
             print('push argument '+str(0))
             print('pop pointer 0')
         
-        self.CompileSubroutineBody()
+        this.CompileSubroutineBody()
         
-        self.indent -=1
+        this.indent -=1
         
         return
     
     def CompileParameterList(self):
         #((type varName)(','type varName)*)?
         parameter_count = 0
-        self.indent +=1
-        f= self.fetch
+        this.indent +=1
+        f= this.fetch
         peek = f.peek()
         while peek != ')':
             parameter_count+=1
             type = f.advance()# type or varName
             varName = f.advance()
-            self.symbol.define(varName,type,'arg')
+            this.symbol.define(varName,type,'arg')
             peek = f.peek()
             if peek == ',':
                 f.advance()
-        self.indent -=1
+        this.indent -=1
         return parameter_count
             
     def CompileSubroutineBody(self):
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         num_of_vars = 0
         peek = f.peek()
         while(peek != '}'):
-            self.CompileStatements()
+            this.CompileStatements()
             peek = f.peek()
         close_brace = f.advance() #'}' end of our function
         #print('i had '+str(num_of_vars)+ ' variables')
-        self.indent -=1
+        this.indent -=1
 
     def CompileVarDec(self):
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         num_of_vars = 1
         var = f.advance()  
         type = f.advance()  
         varName = f.advance() 
-        self.symbol.define(varName,type,'var')
+        this.symbol.define(varName,type,'var')
         peek = f.peek()
         while peek == ',':
             token = f.advance() #','
             varName = f.advance()#varName
-            self.symbol.define(varName,type,'var')
+            this.symbol.define(varName,type,'var')
             
             #is the var type not built-in? allocate a new object!
             if varName not in ['int','char','boolean']:
@@ -367,45 +400,45 @@ class CompileJack:
             peek = f.peek()
             num_of_vars+=1
         f.advance() #';' ends declaration
-        self.indent -=1
+        this.indent -=1
         return num_of_vars
             
     def CompileStatements(self):
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         peek = f.peek()
         while(peek in ['let','if','while','do','return']):
-            self.CompileStatement()
+            this.CompileStatement()
             peek = f.peek()
         
-        self.indent -=1
+        this.indent -=1
         
     def CompileStatement(self):
-        f = self.fetch
+        f = this.fetch
         peek = f.peek()
-        if peek == 'let': self.CompileLet()
-        if peek == 'if': self.CompileIf()
-        if peek == 'while': self.CompileWhile()
-        if peek == 'do': self.CompileDo()
-        if peek == 'return': self.CompileReturn()
+        if peek == 'let': this.CompileLet()
+        if peek == 'if': this.CompileIf()
+        if peek == 'while': this.CompileWhile()
+        if peek == 'do': this.CompileDo()
+        if peek == 'return': this.CompileReturn()
         
         
     def CompileDo(self):
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         token = f.advance() #do command
         peek = f.peek()
         while(peek != ';'):
-            self.CompileSubroutineCall()
+            this.CompileSubroutineCall()
             peek = f.peek()
         token = f.advance()# ';' end of do command
         VMWriter.pop('temp',0) #all do commands pop and ignore local 0
-        self.indent -=1
+        this.indent -=1
         
     def CompileLet(self):
        
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         f.advance()# let keyword
         varName = f.advance()
         
@@ -416,22 +449,22 @@ class CompileJack:
             f.advance() #'[' array open bracket
             peek = f.peek()
             if(peek !=']'):
-                self.CompileExpression()
+                this.CompileExpression()
             f.advance()#']' array close bracket
             
-            array_var_number = str(self.symbol.indexOf(varName))
-            kind = self.symbol.kindOf(varName)
+            array_var_number = str(this.symbol.indexOf(varName))
+            kind = this.symbol.kindOf(varName)
             VMWriter.push(kind,array_var_number)
             print('add')
             
             
         
         f.advance()# '=' 
-        self.CompileExpression()
+        this.CompileExpression()
         
         f.advance()# ';'
-        var_symbol_num = self.symbol.indexOf(varName)
-        kind = self.symbol.kindOf(varName)
+        var_symbol_num = this.symbol.indexOf(varName)
+        kind = this.symbol.kindOf(varName)
         
         if array:
             print('pop temp 0')
@@ -440,7 +473,7 @@ class CompileJack:
             print('pop that 0')
         else:
             VMWriter.pop(kind,var_symbol_num)
-        self.indent -=1
+        this.indent -=1
         
     def CompileWhile(self):
         #while(cond){ stuff}
@@ -451,17 +484,17 @@ class CompileJack:
         #stuff
         #goto Label1
         #Label2
-        self.indent +=1
-        self.whileCount+=1
-        wCount = str(self.whileCount)
+        this.indent +=1
+        this.whileCount+=1
+        wCount = str(this.whileCount)
         VMWriter.writeLabel('WHILE_EXP'+wCount)
         
-        f = self.fetch
+        f = this.fetch
         f.advance() #while
         token = f.advance()#'('
         peek = f.peek()
         while(peek != ')'):
-            self.CompileExpression()
+            this.CompileExpression()
             peek = f.peek()
         f.advance()# ')'
         print('not')
@@ -471,25 +504,25 @@ class CompileJack:
         f.advance()# '{'
         peek = f.peek()
         while(peek !='}'):
-            self.CompileStatements()
+            this.CompileStatements()
             peek = f.peek()
         f.advance()# '}'
         print('goto '+'WHILE_EXP'+wCount)
         VMWriter.writeLabel('WHILE_END'+wCount)
         
-        self.indent -=1
+        this.indent -=1
         
     def CompileReturn(self):
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         f.advance()# 'return'
         peek = f.peek()
         while(peek != ';'):
-            self.CompileExpression()
+            this.CompileExpression()
             peek = f.peek()
            
         f.advance()# ';' end of return statement
-        if(self.voidReturn):
+        if(this.voidReturn):
             print('push constant 0')
         
         
@@ -498,7 +531,7 @@ class CompileJack:
         print('return')
         
         
-        self.indent -=1
+        this.indent -=1
         
     def CompileIf(self):
         #if(cond)
@@ -513,16 +546,16 @@ class CompileJack:
         #Label1
         #s2
         #Label2
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         f.advance()#'if
         f.advance()#'('
         peek = f.peek()
-        self.ifCount+=1
-        ifCount = str(self.ifCount)
+        this.ifCount+=1
+        ifCount = str(this.ifCount)
         
         while(peek != ')'):
-            self.CompileExpression()
+            this.CompileExpression()
             peek = f.peek()
         f.advance()#')'
         print('if-goto IF_TRUE'+ifCount)
@@ -532,7 +565,7 @@ class CompileJack:
         
         peek = f.peek()
         while(peek!= '}'):
-            self.CompileStatements()
+            this.CompileStatements()
             peek = f.peek()
         f.advance()# '}'
         
@@ -544,39 +577,39 @@ class CompileJack:
             f.advance()#'else'
             f.advance()# '{'
             while(peek!= '}'):
-                self.CompileStatements()
+                this.CompileStatements()
                 peek = f.peek()
             f.advance()# '}'
             
             print('label IF_END'+ifCount)
         else:
             print('label IF_FALSE'+ifCount)
-        self.indent -=1
+        this.indent -=1
         
     def CompileExpression(self):
        
-        self.indent +=1
+        this.indent +=1
         #term (op term)*
-        f = self.fetch
+        f = this.fetch
         peek = f.peek()
-        self.CompileTerm()
+        this.CompileTerm()
         peek = f.peek()
         while peek in ['+','-','*','/','&','|',
                     '<','>','=']:
             token = f.advance()
             operator_statement = f.symbolOperator(token)# operator symbol
-            self.CompileTerm()
+            this.CompileTerm()
             print(operator_statement)
             peek = f.peek()
         
-        self.indent -=1
+        this.indent -=1
         
     def CompileTerm(self):
         #term (op term)*
         #if term is identifier, distinguish between
         #[ ( or .
-        self.indent +=1
-        f = self.fetch
+        this.indent +=1
+        f = this.fetch
         token = f.advance()
         type = f.tokenType(token)
         if type =='integerConstant':
@@ -590,11 +623,11 @@ class CompileJack:
         #( expression )
         elif token == '(':
             
-            self.CompileExpression()
+            this.CompileExpression()
             token = f.advance()#) end of parenthisis
             
         elif token in ['-','~']:
-            self.CompileTerm()
+            this.CompileTerm()
             if token == '-':
                 print('neg')
             if token == '~':
@@ -607,18 +640,18 @@ class CompileJack:
            
            #subroutine call
             if peek =='.':
-                self.CompileSubroutineCall(token)
+                this.CompileSubroutineCall(token)
                 
             #varName [ expression ]
             elif peek == '[':
                 varName = token
-                kind = self.symbol.kindOf(varName)
+                kind = this.symbol.kindOf(varName)
                 
                 f.advance()#[
-                self.CompileExpression()
+                this.CompileExpression()
                 f.advance()# ]
                 
-                var_symbol_num = self.symbol.indexOf(varName)
+                var_symbol_num = this.symbol.indexOf(varName)
                 VMWriter.push(kind, var_symbol_num)
                 print('add')
                 print('pop pointer 1')
@@ -630,33 +663,33 @@ class CompileJack:
             #variable
             else:
                 varName = token
-                var_symbol_num = self.symbol.indexOf(varName)
-                kind = self.symbol.kindOf(varName)
+                var_symbol_num = this.symbol.indexOf(varName)
+                kind = this.symbol.kindOf(varName)
                 VMWriter.push(kind, var_symbol_num)
         
-        self.indent -=1
+        this.indent -=1
                 
     def CompileExpressionList(self):
         
-        self.indent+=1
-        f = self.fetch
+        this.indent+=1
+        f = this.fetch
         peek = f.peek()
         num_of_expressions = 0
         while(peek != ')'):
             num_of_expressions += 1
-            self.CompileExpression()
+            this.CompileExpression()
             peek = f.peek()
             if(peek == ','):
                 token = f.advance()# ',' seperates another expression
                 peek = f.peek()
                 
         
-        self.indent-=1
+        this.indent-=1
         return num_of_expressions
     
     def CompileSubroutineCall(self,className = ''):
         
-        f = self.fetch
+        f = this.fetch
         token = f.advance() #could be a '.' or (
         num_subroutine_arguments = 0
         if className != '':
@@ -674,27 +707,27 @@ class CompileJack:
         #a reference to the base of that object. write a call to the class's subroutine
         #if we are calling a method in this object, push our pointer to this object, then
         #write a call to the class method        
-        if self.symbol.getTableOf(className) != None:
-            index = self.symbol.indexOf(className)
-            kind = self.symbol.kindOf(className)
-            type = self.symbol.typeOf(className)
+        if this.symbol.getTableOf(className) != None:
+            index = this.symbol.indexOf(className)
+            kind = this.symbol.kindOf(className)
+            type = this.symbol.typeOf(className)
             subroutine_name = type+'.'+subroutine_name.split('.',1)[1]
             VMWriter.push(kind,index)
             num_subroutine_arguments+=1
         
         if '.' not in subroutine_name:
             #we have a call to this object's method. 
-            subroutine_name = self.class_name+'.'+subroutine_name
+            subroutine_name = this.class_name+'.'+subroutine_name
             print('push pointer 0')
             num_subroutine_arguments+=1
         
-        num_subroutine_arguments += self.CompileExpressionList()
+        num_subroutine_arguments += this.CompileExpressionList()
         token = f.advance() #')' end of subroutine call's arguments
         
         
         
 
-        #self.symbol.printTables()
+        #this.symbol.printTables()
         
 
         
@@ -702,20 +735,21 @@ class CompileJack:
         
         VMWriter.writeCall(subroutine_name, num_subroutine_arguments)
         return
+}
     
 class Symbol:
     def __init__(self,name,type,kind):
-        self.name = name
-        self.type = type
+        this.name = name
+        this.type = type
         if kind == 'var':
-            self.kind = 'local'
+            this.kind = 'local'
         elif kind == 'field':
-            self.kind='field'
+            this.kind='field'
         else:
-            self.kind = kind
+            this.kind = kind
         
     def __repr__(self):
-        return '['+self.name+','+self.type+','+self.kind+']'
+        return '['+this.name+','+this.type+','+this.kind+']'
         
 class SymbolTable:
     #subroutine variables are accessed by *local
@@ -725,26 +759,26 @@ class SymbolTable:
     #the "this" segment, then accessing the field via this index reference
     
     def __init__(self):
-        self.classTable = []
-        self.subroutineTable = []
+        this.classTable = []
+        this.subroutineTable = []
     
     def startSubroutine(self):
-        self.subroutineTable = []
+        this.subroutineTable = []
     
     def define(self,name,type,kind):
         
         newSymbol = Symbol(name,type,kind)
         if kind in ['arg','var']:
-            self.subroutineTable.append(newSymbol)
+            this.subroutineTable.append(newSymbol)
         if kind in ['static','field']:
-            self.classTable.append(newSymbol)
+            this.classTable.append(newSymbol)
         
     def varCount(self,kind):
         num = 0
         if kind in ['arg','var']:
-            table = self.subroutineTable
+            table = this.subroutineTable
         if kind in ['static','field']:
-            table = self.classTable
+            table = this.classTable
         for i in table:
             if i.kind == kind:
                 num+=1
@@ -753,7 +787,7 @@ class SymbolTable:
             
     def kindOf(self,name):
         #what kind of variable is name
-        table = self.getTableOf(name)
+        table = this.getTableOf(name)
         if table != None:
             names = [i.name for i in table]
             if name in names:
@@ -764,7 +798,7 @@ class SymbolTable:
         
     def typeOf(self,name):
        #what type of variable is name
-        table = self.getTableOf(name)
+        table = this.getTableOf(name)
         if table != None:
             names = [i.name for i in table]
             if name in names:
@@ -774,28 +808,28 @@ class SymbolTable:
     def getTableOf(self,name):
         #returns the table which contains our variable
         #is our name in the subroutine
-        names = [i.name for i in self.subroutineTable]
+        names = [i.name for i in this.subroutineTable]
         if name in names:
-            return self.subroutineTable
+            return this.subroutineTable
         
         #is our name a class var?
-        names = [i.name for i in self.classTable]
+        names = [i.name for i in this.classTable]
         if name in names:
-            return self.classTable
+            return this.classTable
     
     def indexOf(self,name):
         #what is the index of name
-        table = self.getTableOf(name)
+        table = this.getTableOf(name)
         if table != None:
-            nameKind = self.kindOf(name)
+            nameKind = this.kindOf(name)
             names = [i.name for i in table if i.kind == nameKind]
             if name in names:
                 return names.index(name)
 
         return None
     def printTables(self):    
-        print('classTable',self.classTable)
-        print('subroutineTable',self.subroutineTable)
+        print('classTable',this.classTable)
+        print('subroutineTable',this.subroutineTable)
 class VMWriter:
     def __init__(self):
         pass
@@ -860,3 +894,4 @@ if __name__ == "__main__":
         print(e)
         input()
         sys.exit()
+        */
