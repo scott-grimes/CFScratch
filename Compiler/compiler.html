@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<title>Compiler Page</title></title>
+<head>
+<script src="Compiler.js"
+    type="text/javascript"></script><script>
+/**
+ * Compiles our high-level language into a stack-based VM language
+ */
+
+
+
+window.onload = function() {
+    document.getElementById("assbutton").onclick = function () {
+   var assText = document.getElementById("assembly").value;
+   var a = new Assembler();
+   var m = document.getElementById("machine");
+   var m1 = document.getElementById("compilerMessage");
+   var answer;
+   m1.value = 'Compiling...';
+   try{
+       answer = a.assemble(assText);
+      
+       m.value = '';
+       for(var i = 0;i<answer.length;i++){
+           if(i===0) m.value = answer[0]
+           else
+           m.value = m.value+'\n'+answer[i];
+       }
+       m1.value = 'Compiled Successfully!';
+   }
+   catch(err){
+       m.value = '';
+       m1.value = 'Error: '+err;
+   
+   }
+   
+}
+}
+    
+</script>
+</head>
+<body>
+<textarea id="assembly" rows="10" cols="60">
+@3
+</textarea>
+<br>
+<button type="button" id="assbutton" >Assemble</button>
+<input type="text" id="compilerMessage" size="44" readonly><br>
+<br>
+<textarea id="machine" rows="10" cols="60" readonly>
+</textarea>
+</body>
+</html>
