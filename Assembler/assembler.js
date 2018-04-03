@@ -98,7 +98,7 @@ class Assembler {
         this.validChars = 'abcdefghijklmnopqrstuvwxyz'
         this.validChars+= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         this.validChars+= '0123456789'
-        this.validChars+= '@_+-.:!&|$;='
+        this.validChars+= '@_+-.:!&|$;=()'
         
         this.userDefVarsCount = 0
     }
@@ -111,7 +111,7 @@ class Assembler {
         
          if (this.lines[i].charAt(0) ==='('){
               var label = this.lines[i].slice(1,this.lines[i].length-1);
-              this.makeNewAddress(symbol,lineNumber);
+              this.symbolDict[label] = lineNumber;
          }else{
              
              lineNumber+=1;
@@ -137,7 +137,7 @@ class Assembler {
             //checks for invalid characters
             for(var j = 0;j<lines[i].length;j++){
                 if(this.validChars.indexOf( lines[i].charAt(j) ) === -1){
-                    throw('invalid character on line '+(i+1))
+                    throw('invalid character on line '+(i+1), lines[i])
                 }
             }
             
@@ -224,6 +224,7 @@ class Assembler {
     // DST;JMP for jump commands
     // where DST,CMD, and JMP are assembly commands in the dictionaries dst,cmd,jmp
     cCommand(line){
+       
         // is the line a computation command?
         if(line.indexOf('=')!= -1){
             var dst = line.split('=')[0];
@@ -236,11 +237,12 @@ class Assembler {
         else if(line.indexOf(';')!= -1){
             var dest = line.split(';')[0];
             var jmp = line.split(';')[1];
-            if(this.dst[dst] && this.jmp[jmp]){
-                return '111'+'0000000'+this.dst[dst]+this.jmp[jmp];
+            if(this.dst[dest] && this.jmp[jmp]){
+                return '111'+'0000000'+this.dst[dest]+this.jmp[jmp];
             }
             
         }
+       
            
         //line is not built correcly, throw error
            throw('invalid command: '+line+' on line: '+this.lineNumber);
