@@ -15,7 +15,9 @@ window.onload = function() {
    var assText = document.getElementById("assembly").value;
    var a = new Assembler();
    var m = document.getElementById("machine");
+   var m1 = document.getElementById("compilerMessage");
    var answer;
+   m1.value = 'Compiling...';
    try{
        answer = a.assemble(assText);
       
@@ -25,10 +27,11 @@ window.onload = function() {
            else
            m.value = m.value+'\n'+answer[i];
        }
+       m1.value = 'Compiled Successfully!';
    }
    catch(err){
-      
-       m.value = 'Error: '+err;
+       m.value = '';
+       m1.value = 'Error: '+err;
    
    }
    
@@ -41,8 +44,10 @@ window.onload = function() {
 <textarea id="assembly" rows="10" cols="60">
 @3
 </textarea>
+<br>
 <button type="button" id="assbutton" >Assemble</button>
-
+<input type="text" id="compilerMessage" size="44" readonly><br>
+<br>
 <textarea id="machine" rows="10" cols="60" readonly>
 </textarea>
 </body>
