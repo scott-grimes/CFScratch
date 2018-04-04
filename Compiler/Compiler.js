@@ -51,9 +51,14 @@ class Analyzer {
             inputStream = inputStream.slice(0,startCut)+inputStream.slice(endCut);
             numberOfComments-=1
         }
-            
+        
         // removes newlines
         this.inputStream = inputStream.replace('\n',' ')
+        
+        //checks for mismatched (leftover closing) comments
+        if(inputStream.indexOf('*/') !== -1)
+                throw("Cannot compile! Mismatched comment close statement found!");
+            
         
     }
        
@@ -121,7 +126,7 @@ class Analyzer {
         // returns the next symbol without removing it from the stream
         if(!this.hasMoreTokens())
             return null;
-        token = this.advance();
+        var token = this.advance();
         this.inputStream = token+" "+this.inputStream;
         return token;
     }
@@ -133,11 +138,11 @@ class Analyzer {
         if ( token.charAt(0) == '"' )
             return 'stringConstant';
         
-        if (this.keywords.contains(token))
+        if (this.keywords.includes(token))
             return 'keyword';
-        if (this.symbols.contains(token))
+        if (this.symbols.includes(token))
             return 'symbol'
-        if ( '0123456789'.contains(token.charAt(0)))
+        if ( '0123456789'.includes(token.charAt(0)))
             return 'integerConstant';
         
         return 'identifier';
@@ -724,46 +729,53 @@ class CompileJack{
         num_subroutine_arguments += this.CompileExpressionList()
         token = f.advance() #')' end of subroutine call's arguments
         
-        
-        
-
         #this.symbol.printTables()
         
-
-        
-            
         
         VMWriter.writeCall(subroutine_name, num_subroutine_arguments)
         return
 }
-    
-class Symbol:
-    def __init__(self,name,type,kind):
+*/
+class Symbol{
+    constructor(name,type,kind){
         this.name = name
         this.type = type
-        if kind == 'var':
+        if (kind === 'var')
             this.kind = 'local'
-        elif kind == 'field':
+        else if (kind === 'field')
             this.kind='field'
-        else:
+        else
             this.kind = kind
-        
-    def __repr__(self):
-        return '['+this.name+','+this.type+','+this.kind+']'
-        
-class SymbolTable:
-    #subroutine variables are accessed by *local
-    #subroutine argument variables are accessed by *argument
-    #static class variables are accessed by *static
-    #access to class fields in a subroutine are found by pointing to 
-    #the "this" segment, then accessing the field via this index reference
+    }
+}
     
-    def __init__(self):
+    //def __repr__(self):
+    //    return '['+this.name+','+this.type+','+this.kind+']'
+
+class SymbolTable{
+    //subroutine variables are accessed by *local
+    //subroutine argument variables are accessed by *argument
+    //static class variables are accessed by *static
+    //access to class fields in a subroutine are found by pointing to 
+    //the "this" segment, then accessing the field via this index reference
+    
+    
+    
+    constructor(){
         this.classTable = []
         this.subroutineTable = []
+    }
     
-    def startSubroutine(self):
+    startSubroutine(){
         this.subroutineTable = []
+    }
+        
+    
+}
+    
+    
+    
+    
     
     def define(self,name,type,kind):
         
@@ -830,6 +842,7 @@ class SymbolTable:
     def printTables(self):    
         print('classTable',this.classTable)
         print('subroutineTable',this.subroutineTable)
+/*
 class VMWriter:
     def __init__(self):
         pass
