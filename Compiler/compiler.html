@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-<title>Assembler Page</title></title>
+<title>Comipler Page</title></title>
 <head>
 <script src="Compiler.js"
     type="text/javascript"></script><script>
 /**
- * A translator from assmebly language to our machine language
+ * A translator from our high level language to our VM language
  */
 
 
@@ -35,7 +35,7 @@ class Array { \n\
     } \n\
 }";
     
-    document.getElementById("inputBox").value = initialMessage;
+   document.getElementById("inputBox").value = initialMessage;
     
    document.getElementById("runbutton").onclick = function () {
    var jackTest = document.getElementById("inputBox").value;
@@ -47,10 +47,10 @@ class Array { \n\
    try{
        m.value = '';
        var a = new Analyzer(jackTest);
-       var token = a.advance();
-       while(token){
-           m.value += token+'\n';
-           token = a.advance();
+       
+       while(a.hasMoreTokens()){
+           var token = a.advance();
+           m.value += token+'\t\t\t('+a.tokenType(token)+')\n';
        }
        m1.value = 'Analyzed Successfully!'
    }
