@@ -1,4 +1,5 @@
 //reads in a .jack file, compiles it into a .vm file, prints the results to stdout
+// need to add throws for error messages! give line number for original statements? 
 
 class Analyzer {
     
@@ -194,14 +195,14 @@ class Analyzer {
 class CompileJack{
     
     constructor(file_with_path){
-        this.fetch = Analyzer(file_with_path)
-        this.symbol = SymbolTable()
+        this.fetch = new Analyzer(file_with_path)
+        this.symbol = new SymbolTable()
         this.indent = 0
         this.whileCount = -1
         this.ifCount = -1
+        CompileJack.prototype.line = ""; //current line to be printed
+        CompileJack.prototype.lines = [];
         this.CompileClass()
-        CompileJack.line = ""; //current line to be printed
-        CompileJack.lines = [];
     }
         
         
@@ -214,10 +215,10 @@ class CompileJack{
         return token
     }
         
-    print(token){
-            CompileJack.line+=token;
-            CompileJack.lines.push(CompileJack.line);
-            CompileJack.line = '';
+    static print(token){
+            CompileJack.prototype.line+=token;
+            CompileJack.prototype.lines.push(CompileJack.prototype.line);
+            CompileJack.prototype.line = '';
         }
     
     out(token){
@@ -243,7 +244,7 @@ class CompileJack{
             if (type === 'stringConstant')
                 token = this.fetch.stringVal(token)
                 
-            #removes non-xml-compatable characters from our token
+            //removes non-xml-compatable characters from our token
             token = this.xml_ify(token)
             CompileJack.print("<"+type+"> "+token+" </"+type+">")
             
@@ -257,13 +258,13 @@ class CompileJack{
         
         this.indent +=1
         var f = this.fetch
-        f.advance() //encountered a class "class"
+        this.AssertAndAdvance('class') //encountered a class "class"
         
         this.class_name = f.advance() 
         
-        f.advance() //opens the class '{'
+        this.AssertAndAdvance('{') //opens the class '{'
         
-        
+        //might have class variables, check for them!
         var peek = f.peek() //class Var Dec
         var classVars = 0
         this.staticVarCount = 0
@@ -272,7 +273,7 @@ class CompileJack{
             peek = f.peek()
         }
            
-        
+        //class variables dealt with, move on to
         //class subroutine Dec
         while(['constructor','function',
                     'method','void'].includes( peek )){
@@ -283,9 +284,26 @@ class CompileJack{
             
          
             
-        f.advance() //ends the class '}'
+        this.AssertAndAdvance('}'); //ends the class '}'
         
         this.indent-=1        
+    }
+    
+    //advances the token stream and asserts that the new token has the expected value.
+    //returns the token, throws if an unexpected value is enountered
+    // *value can be an array of potential values
+    AssertAndAdvance(value){
+        var token = this.fetch.advance();
+        
+        if(Array.isArray(value)){
+            if(value.includes(token))
+                return token;
+        }
+        else{
+            if(value === token)
+                return token;
+        }
+        throw('Expected: '+value+' but got :'+token);
     }
         
     
@@ -301,7 +319,7 @@ class CompileJack{
         this.symbol.define(varName,type,f_or_s)
         var peek = f.peek()
         while ( peek === ',' ){
-            f.advance() //','
+            f.advance() //remove the ','
             varName = f.advance()//varName
             this.symbol.define(varName,type,f_or_s)
             peek = f.peek()
@@ -309,7 +327,7 @@ class CompileJack{
         }
             
             
-        f.advance() //';'
+        this.AssertAndAdvance(';'); //';'
         if (f_or_s !== 'static'){
             return num_of_vars
         }
@@ -327,7 +345,7 @@ class CompileJack{
         this.whileCount = -1
         this.ifCount = -1
         this.symbol.startSubroutine()
-        var sub_type = f.advance() #constructor/function/method
+        var sub_type = f.advance() //could be a constructor/function/method
         
         if (sub_type === 'method')
             //first arg pushed is 'this'
@@ -341,13 +359,13 @@ class CompileJack{
             this.voidReturn = false
         var sub_name = f.advance() //subroutineName 
        
-        f.advance() // '('
+        this.AssertAndAdvance('('); // '('
         
         var parameter_count = this.CompileParameterList()
         
-        f.advance() // ')'
+        this.AssertAndAdvance(')'); // ')'
         
-        f.advance() // '{' starts the body of the subroutine
+        this.AssertAndAdvance('{'); // '{' starts the body of the subroutine
         
         var num_of_method_vars = 0
         var peek = f.peek()
@@ -363,13 +381,13 @@ class CompileJack{
         
         
         if (sub_type === 'constructor'){
-            CompileJack.print ('push constant '+str(classVariables))
+            CompileJack.print ('push constant '+classVariables.toString() )
             CompileJack.print('call Memory.alloc 1')
             CompileJack.print('pop pointer 0')
         }
             
         if (sub_type === 'method'){
-            CompileJack.print('push argument '+str(0))
+            CompileJack.print('push argument 0')
             CompileJack.print('pop pointer 0')
         }
             
@@ -384,7 +402,7 @@ class CompileJack{
     }
         
     
-    def CompileParameterList(){
+    CompileParameterList(){
         //((type varName)(','type varName)*)?
         var parameter_count = 0
         this.indent +=1
@@ -392,7 +410,7 @@ class CompileJack{
         var peek = f.peek()
         while (peek !== ')'){
             parameter_count+=1
-            var type = f.advance()# type or varName
+            var type = f.advance()// type or varName
             var varName = f.advance()
             this.symbol.define(varName,type,'arg')
             peek = f.peek()
@@ -416,28 +434,28 @@ class CompileJack{
             peek = f.peek()
         }
             
-        var close_brace = f.advance() //'}' end of our function
+        this.AssertAndAdvance('}'); //'}' end of our function
         //print('i had '+str(num_of_vars)+ ' variables')
         this.indent -=1
     }
         
 
-    def CompileVarDec(){
+    CompileVarDec(){
         this.indent +=1
         var f = this.fetch
         var num_of_vars = 1
-        var = f.advance()  
+        var variable_token= f.advance()  
         var type = f.advance()  
         var varName = f.advance() 
         this.symbol.define(varName,type,'var')
         var peek = f.peek()
         while (peek === ','){
-            var token = f.advance() //','
+            this.AssertAndAdvance(','); //','
             varName = f.advance() //varName
             this.symbol.define(varName,type,'var')
             
             //is the var type not built-in? allocate a new object!
-            if (!(['int','char','boolean'].contains(varName)))
+            if (!(['int','char','boolean'].includes(varName)))
                 continue;
                 
                 
@@ -446,18 +464,18 @@ class CompileJack{
             num_of_vars+=1
         }
             
-        f.advance() //';' ends declaration
+        this.AssertAndAdvance(';'); //';' ends declaration
         this.indent -=1
         return num_of_vars
         
     }
         
             
-    def CompileStatements(){
+    CompileStatements(){
         this.indent +=1
         var f = this.fetch
         var peek = f.peek()
-        while(['let','if','while','do','return'].contains(peek)){
+        while(['let','if','while','do','return'].includes(peek)){
             this.CompileStatement()
             peek = f.peek()
         }
@@ -467,7 +485,7 @@ class CompileJack{
     }
         
         
-    def CompileStatement(){
+    CompileStatement(){
         var f = this.fetch
         var peek = f.peek()
         if (peek === 'let') this.CompileLet() 
@@ -475,22 +493,22 @@ class CompileJack{
         else if (peek === 'while') this.CompileWhile()
         else if (peek === 'do') this.CompileDo()
         else if (peek === 'return') this.CompileReturn()
-        else throw("Error statement invalid! expected let,if,while,do,or return")
+        else throw("Statement invalid! expected one of [let,if,while,do, return]")
     }
         
         
         
-    def CompileDo(){
+    CompileDo(){
         this.indent +=1
         var f = this.fetch
-        var token = f.advance() //do command
+        this.AssertAndAdvance('do'); //do command
         var peek = f.peek()
         while(peek !== ';'){
             this.CompileSubroutineCall()
             peek = f.peek()
         }
             
-        token = f.advance()// ';' end of do command
+        this.AssertAndAdvance(';');// ';' end of do command
         VMWriter.pop('temp',0) //all do commands pop and ignore local 0
         this.indent -=1
     }
@@ -499,7 +517,7 @@ class CompileJack{
     CompileLet(){
         this.indent +=1
         var f = this.fetch
-        f.advance()# let keyword
+        this.AssertAndAdvance('let');// let keyword
         var varName = f.advance()
         
         var peek = f.peek()
@@ -507,13 +525,13 @@ class CompileJack{
         var kind;
         if(peek === '['){
             array = True
-            f.advance() //'[' array open bracket
+            this.AssertAndAdvance('['); //'[' array open bracket
             peek = f.peek()
             if(peek !==']')
                 this.CompileExpression()
-            f.advance()//']' array close bracket
+            this.AssertAndAdvance(']');//']' array close bracket
             
-            var array_var_number = str(this.symbol.indexOf(varName))
+            var array_var_number = this.symbol.indexOf(varName).toString()
             kind = this.symbol.kindOf(varName)
             VMWriter.push(kind,array_var_number)
             CompileJack.print('add')
@@ -522,14 +540,14 @@ class CompileJack{
             
             
         
-        f.advance()// '=' 
+        this.AssertAndAdvance('=');// '=' 
         this.CompileExpression()
         
-        f.advance()// ';'
+        this.AssertAndAdvance(';'); // ';'
         var var_symbol_num = this.symbol.indexOf(varName)
         kind = this.symbol.kindOf(varName)
         
-        if array{
+        if (array){
             CompileJack.print('pop temp 0')
             CompileJack.print('pop pointer 1')
             CompileJack.print('push temp 0')
@@ -545,7 +563,7 @@ class CompileJack{
        
         
         
-    def CompileWhile(){
+     CompileWhile(){
         /* while(cond){ stuff}
         
         Label1
@@ -562,27 +580,27 @@ class CompileJack{
         VMWriter.writeLabel('WHILE_EXP'+wCount)
         
         var f = this.fetch
-        f.advance() //while
-        var token = f.advance()//'('
+        this.AssertAndAdvance('while'); //while
+        this.AssertAndAdvance('(');//'('
         var peek = f.peek()
         while(peek !== ')'){
             this.CompileExpression()
             peek = f.peek()
         }
             
-        f.advance()// ')'
+        this.AssertAndAdvance(')');// ')'
         CompileJack.print('not')
         
         CompileJack.print('if-goto '+'WHILE_END'+wCount)
        
-        f.advance()# '{'
+        this.AssertAndAdvance('{');// '{'
         peek = f.peek()
         while(peek !=='}'){
             this.CompileStatements()
             peek = f.peek()
         }
             
-        f.advance()// '}'
+        this.AssertAndAdvance('}');// '}'
         CompileJack.print('goto '+'WHILE_EXP'+wCount)
         VMWriter.writeLabel('WHILE_END'+wCount)
         
@@ -591,10 +609,10 @@ class CompileJack{
         
         
         
-    def CompileReturn(){
+    CompileReturn(){
         this.indent +=1
         var f = this.fetch
-        f.advance()// 'return'
+        this.AssertAndAdvance('return');// 'return'
         var peek = f.peek()
         while(peek !== ';'){
             this.CompileExpression()
@@ -602,7 +620,7 @@ class CompileJack{
         }
             
            
-        f.advance()// ';' end of return statement
+        this.AssertAndAdvance(';');// ';' end of return statement
         if(this.voidReturn)
             CompileJack.print('push constant 0')
         
@@ -613,7 +631,7 @@ class CompileJack{
     }
         
         
-    def CompileIf(){
+    CompileIf(){
         /*
         if(cond)
         s1
@@ -630,8 +648,8 @@ class CompileJack{
         */
         this.indent +=1
         var f = this.fetch
-        f.advance()//'if
-        f.advance()//'('
+        this.AssertAndAdvance('if');//'if
+        this.AssertAndAdvance('(');//'('
         var peek = f.peek()
         this.ifCount+=1
         var ifCount = this.ifCount.toString()
@@ -641,11 +659,11 @@ class CompileJack{
             peek = f.peek()
         }
             
-        f.advance()//')'
+        this.AssertAndAdvance(')');//')'
         CompileJack.print('if-goto IF_TRUE'+ifCount)
         CompileJack.print('goto IF_FALSE'+ifCount)
         CompileJack.print('label IF_TRUE'+ifCount)
-        f.advance()# '{'
+        this.AssertAndAdvance('{');// '{'
         
         peek = f.peek()
         while(peek!== '}'){
@@ -653,21 +671,21 @@ class CompileJack{
             peek = f.peek()
         }
             
-        f.advance()// '}'
+        this.AssertAndAdvance('}');// '}'
         
         
         peek = f.peek()
         if (peek === 'else'){
             CompileJack.print('goto IF_END'+ifCount)
             CompileJack.print('label IF_FALSE'+ifCount)
-            f.advance()//'else'
-            f.advance()// '{'
+            this.AssertAndAdvance('else');//'else'
+            this.AssertAndAdvance('{');// '{'
             while(peek!== '}'){
                 this.CompileStatements()
                 peek = f.peek()
             }
                 
-            f.advance()// '}'
+            this.AssertAndAdvance('}');// '}'
             
             CompileJack.print('label IF_END'+ifCount)
         }
@@ -680,7 +698,7 @@ class CompileJack{
     }
         
         
-    def CompileExpression(){
+    CompileExpression(){
          this.indent +=1
         //term (op term)*
         var f = this.fetch
@@ -702,7 +720,7 @@ class CompileJack{
        
        
         
-    def CompileTerm(self){
+    CompileTerm(self){
         //term (op term)*
         //if term is identifier, distinguish between
         //[ ( or .
@@ -729,7 +747,7 @@ class CompileJack{
             this.CompileExpression()
             token = f.advance()//) end of parenthisis
         } 
-        else if( ['-','~'].contains(token) ){
+        else if( ['-','~'].includes(token) ){
              this.CompileTerm()
             if (token === '-')
                 CompileJack.print('neg')
@@ -738,7 +756,7 @@ class CompileJack{
         }
            
         else if( type === 'identifier'){
-            peek = f.peek()
+            var peek = f.peek()
            
            //subroutine call
             if (peek ==='.'){
@@ -773,7 +791,7 @@ class CompileJack{
                 
         }
         else{
-            throw ("error unexpected term")
+            throw ("Error unexpected term: "+token)
         }
             
         
@@ -781,7 +799,7 @@ class CompileJack{
     }
        
                 
-    def CompileExpressionList(){
+    CompileExpressionList(){
         this.indent+=1
         var f = this.fetch
         var peek = f.peek()
@@ -791,7 +809,7 @@ class CompileJack{
             this.CompileExpression()
             peek = f.peek()
             if(peek === ','){
-                token = f.advance()// ',' seperates another expression
+                f.advance() // ',' seperates another expression
                 peek = f.peek()
             }
                 
@@ -805,9 +823,9 @@ class CompileJack{
         
        
     
-    def CompileSubroutineCall(className = ''){
+    CompileSubroutineCall(className = ''){
         var f = this.fetch
-        var token = f.advance() //could be a '.' or (
+        var token = f.advance(); //could be a '.' or (
         var num_subroutine_arguments = 0
         var subroutine_name;
         if (className !== ''){
@@ -852,7 +870,7 @@ class CompileJack{
            
         
         num_subroutine_arguments += this.CompileExpressionList()
-        token = f.advance() //')' end of subroutine call's arguments
+        token = this.AssertAndAdvance(')'); //')' end of subroutine call's arguments
         
         //this.symbol.printTables()
         
@@ -912,7 +930,7 @@ class SymbolTable{
         if(kind=== 'static' || kind === 'field')
             table = this.classTable
         for(var i = 0;i<table.length;i++){
-            if(i.kind === kind):
+            if(i.kind === kind)
                 num+=1
         }
             
@@ -970,7 +988,7 @@ class SymbolTable{
             var nameKind = this.kindOf(name);
             
             for(var i = 0;i<table.length;i++){
-                if(table[i].name === name && table[i].kind ==== nameKind){
+                if(table[i].name === name && table[i].kind === nameKind){
                     return i;
                 }
             }
@@ -1057,21 +1075,3 @@ class VMWriter{
     }
         
 }
-    
-   
-   
-    
-    
-    
-    /*
-if __name__ == "__main__":
-    try:
-        if(len(sys.argv)<2):
-            print('No input file specified!')
-        else:
-            CompilationEngine(sys.argv[1])
-    except Exception as e:
-        print(e)
-        input()
-        sys.exit()
-        */
