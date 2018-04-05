@@ -1,6 +1,7 @@
 class CpuEmulator{
     
-    //rom is an array of machine code
+    //rom is an array of machine code. each line is a 16-bit command
+    //
     constructor(rom){
         this.rom = rom;
         this.ram = {};
@@ -30,24 +31,41 @@ class CpuEmulator{
             dst = this.dst[dst];
             jmp = this.jmp[jmp];
             console.log(dst+'='+cmp';'+jmp)
-        }
-    }
-    
-    binToDec(bin){
-        var sum = 0;
-        var pow = 0;
-        for(var i = bin.length-1;i>=0;i--){
-            if(bin[i]==='1'){
-                sum+=Math.pow(2, pow );
+            
+            // 6 operations on output
+            
+            var x = 
+            var y = 
+            
             }
-            pow+=1;
         }
-        return sum;
+        
+    dec2bin(int) {
+    var u = new Uint32Array(1);
+    var nbit = 16;
+    u[0] = int;
+    int = Math.pow(2, 16) - 1;
+    return u[0] & int;
+    
     }
+
+    
+    bin2dec(bin){
+    return parseInt(bin, 2);
+}
+        
+        convertRomToInt(rom){
+            if(rom.charAt(0)==='1'){
+                rom= '1111111111111111'+rom;
+                return bin2dec(rom);
+            }
+            return bin2dec(rom);
+        }
+    
     
     buildTables(){
         this.cmd = {
-             '0101010':'0' , 
+            '0101010':'0' , 
             '0111111' :'1' , 
             '0111010' :'-1'  ,
             '0001100' :'D' , 
