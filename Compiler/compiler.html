@@ -7,13 +7,86 @@
 /**
  * A translator from our high level language to our VM language
  */
+function saveTextAsFile(textToWrite)
+{
+    
+    var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
+    var fileNameToSaveAs =  document.getElementById("downloadFileName").value //Your filename;
 
+    var downloadLink = document.createElement("a");
+    downloadLink.download = fileNameToSaveAs;
+    downloadLink.innerHTML = "Download File";
+    if (window.webkitURL != null)
+    {
+        // Chrome allows the link to be clicked
+        // without actually adding it to the DOM.
+        downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+    }
+    else
+    {
+        // Firefox requires the link to be added to the DOM
+        // before it can be clicked.
+        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+        downloadLink.onclick = destroyClickedElement;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+    }
+
+    downloadLink.click();
+}
 
 
 window.onload = function() {
     
+    document.getElementById("downloadButton").onclick = function () {
+        var textToSave = document.getElementById("outputBox2").value;
+        saveTextAsFile( textToSave )
+    }
+    
+    
+    
+
+function fetchTextFromFile(evt) {
+    //Retrieve the first file
+    var f = evt.target.files[0]; 
+
+    if (f) {
+      var r = new FileReader();
+      r.onload = function(e) { 
+	      var contents = e.target.result;
+         document.getElementById("inputBox").value = contents;
+          
+          updateDownloadFileName(f.name);
+          
+      }
+      r.readAsText(f);
+      
+    } else { 
+      alert("Failed to load file");
+    }
+  }
+    
+function updateDownloadFileName(name){
+    var newDownloadName;
+          if(name.slice(-4)==='jack'){
+              newDownloadName = name.slice(0,name.length-5)+'.vm';
+          }
+          else{
+              newDownloadName = name.slice(0,name.length-4)+'.vm';
+          }
+          
+         document.getElementById("downloadFileName").value = newDownloadName;
+}
+
+
+
+
+document.getElementById('fileUploader').addEventListener('change', fetchTextFromFile, false);
+   
+
+    
     var initialMessage = "/** \n\
- * Represents an array. Can be used to hold any type of object. \n\
+ * Example Program to represent an array. Click 'Compile' to compile this into VM. \n\
  */ \n\
 class Array { \n\
  \n\
@@ -47,7 +120,6 @@ class Array { \n\
    try{
        m.value = '';
        var a = new Analyzer(jackTest);
-       
        while(a.hasMoreTokens()){
            var token = a.advance();
            m.value += token+'\t\t\t('+a.tokenType(token)+')\n';
@@ -59,21 +131,42 @@ class Array { \n\
        m1.value = 'Error: '+err;
    
    }
+       
+       
+   m = document.getElementById("outputBox2");
+   try{
+       m.value = '';
+       var a = new CompileJack(jackTest);
+       for(var i = 0;i<a.lines.length;i++){
+           m.value += a.lines[i]+'\n';
+       }
+       m1.value = 'Analyzed Successfully!'
+   }
+   catch(err){
+       m1.value = 'Error: '+err;
    
+   }
 }
 }
     
 </script>
 </head>
 <body>
+Upload your .jack file, or copy/paste your code below, then hit 'compile'<br>
+<input id="fileUploader" name="myFile" type="file" accept=".txt, .jack"><br>
 <textarea id="inputBox" rows="10" cols="60">
-@3
-</textarea>
+</textarea><br>
+
 <br>
 <button type="button" id="runbutton" >Compile</button>
 <input type="text" id="compilerMessage" size="44" readonly><br>
 <br>
+Token<br>
 <textarea id="outputBox" rows="10" cols="60" readonly>
 </textarea>
+<br>VM Compiled<br>
+<textarea id="outputBox2" rows="10" cols="60" readonly>
+</textarea><br>
+<button type="button" id="downloadButton" >Download</button><input type="text" id="downloadFileName" value="download.vm">
 </body>
 </html>
