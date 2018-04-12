@@ -8,9 +8,6 @@ class CpuEmulator{
         this.PC = 0;
         this.A = 0;
         this.D = 0;
-        this.D_in = 0;
-        this.MA_in = 0;
-        this.ALU_out = 0;
         this.buildTables();
     }
     
@@ -22,7 +19,9 @@ class CpuEmulator{
             var dec = binToDec(command);
             this.A = dec;
             this.PC+=1;
-        }else{
+        }
+        else
+        {
             //C instruction
             var cmp = command.slice(3,10);
             var dst = command.slice(10,13);
@@ -31,36 +30,87 @@ class CpuEmulator{
             dst = this.dst[dst];
             jmp = this.jmp[jmp];
             console.log(dst+'='+cmp';'+jmp)
+            cmp = command.slice(3,10);
+            cmp = ALU(cmp);
+            console.log("D:"+this.D+", A:"+this.A+", M[A]:"+this.M[this.A]);
+            console.log("Computed: "+cmp);
+            if(dst[2]==='1'){
+                this.M[this.A] = cmp;
+            }
+            if(dst[1]==='1'){
+                this.D = cmp;
+            }
+            if(dst[0]==='1'){
+                this.A = cmp;
+            }
+            this.PC+=1;
             
-            // 6 operations on output
-            
-            var x = 
-            var y = 
+            if( (jmp==='JGT' && cmp>0 ) ||
+                (jmp==='JEQ' && cmp===0 ) || 
+               (jmp==='JGE' && cmp>=0 ) || 
+               (jmp==='JLT' && cmp<0 ) || 
+               (jmp==='JNE' && cmp!==0 ) || 
+               (jmp==='JLE' && cmp<=0 ) ||
+               (jmp==='JMP')){
+                this.PC == this.A;
+            }
+                     
             
             }
         }
         
-    dec2bin(int) {
+ dec2bin(int) {
     var u = new Uint32Array(1);
     var nbit = 16;
     u[0] = int;
     int = Math.pow(2, 16) - 1;
-    return u[0] & int;
-    
+    var converted = u[0] & int;
+	converted.toString(2);
+    return converted.toString(2).padStart(16,"0")
     }
 
     
-    bin2dec(bin){
+ bin2dec(bin){
     return parseInt(bin, 2);
 }
         
-        convertRomToInt(rom){
-            if(rom.charAt(0)==='1'){
-                rom= '1111111111111111'+rom;
-                return bin2dec(rom);
+        ALU(cmp){
+            var M=this.M[this.A];
+            
+            switch(cmp){
+            case '0101010':return 0;
+            case '0111111' : return 1 ; 
+            case '0111010' : return -1  ;
+            case '0001100' : return this.D ; 
+            case '0110000' : return this.A ; 
+            case '0001101' : return ~this.D ; 
+            case '0110001': return ~this.A ;  
+            case '0001111': return -this.D ;  
+            case '0110011': return -this.A ;  
+            case '0011111' : return this.D+1  ;
+            case '0110111' : return this.A+1  ;
+            case '0001110' : return this.D-1  ;
+            case '0110010' : return this.A-1  ;
+            case '0000010': return this.D+this.A ;  
+            case '0010011' : return this.D-this.A ; 
+            case '0000111' : return this.A-this.D ; 
+            case '0000000' : return this.D&this.A ; 
+            case '0010101' : return this.D|this.A ; 
+            case '1110000': return M ;  
+            case '1110001' : return ~M ; 
+            case '1110011' : return -M ;
+            case '1110111' : return M+1 ; 
+            case '1110010' : return M-1 ; 
+            case '1000010' : return this.D+M ; 
+            case '1010011' : return this.D-M ; 
+            case '1000111' : return M-this.D ; 
+            case '1000000' : return this.D&M ; 
+            case '1010101': return this.D|M;
+            default throw("unknown command")
             }
-            return bin2dec(rom);
-        }
+                    
+                   }
+        
     
     
     buildTables(){
