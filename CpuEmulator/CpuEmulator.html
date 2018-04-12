@@ -7,16 +7,10 @@
 /**
  * A translator from our high level language to our VM language
  */
+    
 
-window.onload = function() {
-    
-    document.getElementById("downloadButton").onclick = function () {
-        var textToSave = document.getElementById("outputBox2").value;
-        saveTextAsFile( textToSave )
-    }
-    
-    
-    
+    var CPU;
+    var ROM = [];
 function fetchTextFromFile(evt) {
     //Retrieve the first file
     var f = evt.target.files[0]; 
@@ -24,10 +18,13 @@ function fetchTextFromFile(evt) {
       var r = new FileReader();
       r.onload = function(e) { 
 	      var contents = e.target.result;
-         document.getElementById("inputBox").value = contents;
-          
-          updateDownloadFileName(f.name);
-          
+         document.getElementById("ROM").value = contents;
+          contents = contents.split('\n');
+          ROM = [];
+          for(var i = 0;i<contents.length;i++){
+              ROM.push(contents[i]);
+          }
+          resetCPU();
       }
       r.readAsText(f);
       
@@ -36,16 +33,75 @@ function fetchTextFromFile(evt) {
     }
   }
     
+function verifyMachineCode(value){
+    
+}
+    
+    function resetCPU(evt){
+        CPU = new CpuEmulator(ROM);
+        updateCPUValues();
+        window.c = CPU;
+        window.r = ROM;
+    }
+function getA(){
+    document.getElementById('A').value = CPU.A;
+}
+    function getPC(){
+    document.getElementById('PC').value = CPU.PC;
+}
+    function getD(){
+    document.getElementById('D').value = CPU.D;
+}
+    function getAluOut(){
+    document.getElementById('ALUOUT').value = CPU.ALUOUT;
+}
+    function getMemory(){
+        var m = CPU.M;
+        document.getElementById('RAM').value = '';
+        for (var key in m) {
+            document.getElementById('RAM').value+=key+': '+m[key]+'\n';
+        }
+    }
+function updateCPUValues(){
+        getA();
+        getPC();
+        getD();
+        getAluOut();
+    getMemory();
+    }
+function step(evt){
+        if(CPU){
+            CPU.execute();
+            updateCPUValues();
+        }
+    }
 
-document.getElementById('fileUploader').addEventListener('change', fetchTextFromFile, false);
+window.onload = function() {
+    
    
     
+  var initialvalue = "no file loaded";
     
     
-   document.getElementById("inputBox").value = "";
+   document.getElementById("ROM").value = initialvalue;
     
+   var blergaaa = initialvalue.split('\n');
+          for(var i = 0;i<blergaaa.length;i++){
+              ROM.push(blergaaa[i]);
+          }
+    window.r = ROM;
+    
+    resetCPU();
+
+document.getElementById('fileUploader').addEventListener('change', fetchTextFromFile);
+document.getElementById('resetbutton').addEventListener('click', resetCPU, false);
+document.getElementById('stepbutton').addEventListener('click', step, false);
+//document.getElementById('runbutton').addEventListener('onclick', fetchTextFromFile);
+   
+   
+    /*
    document.getElementById("runbutton").onclick = function () {
-   var jackTest = document.getElementById("ROM").value;
+   var romboxvalue = document.getElementById("ROM").value;
    
    var m = document.getElementById("outputBox");
    var m1 = document.getElementById("compilerMessage");
@@ -81,6 +137,7 @@ document.getElementById('fileUploader').addEventListener('change', fetchTextFrom
    
    }
 }
+*/
 }
     
 </script>
@@ -89,19 +146,19 @@ document.getElementById('fileUploader').addEventListener('change', fetchTextFrom
 <div class="row">
   <div class="column">
     Load your Binary or Assembly file, then step through your program.<br>
-    <input id="fileUploader" name="myFile" type="file" accept=".txt, .jack"><br>
+    <input id="fileUploader" name="myFile" type="file" accept=".txt, .jack, .asm, .hack"><br>
     ROM
-    <textarea id="ROM" rows="10" cols="20"></textarea><br>
-    <button type="button" id="runbutton" >Reset</button>
-    <button type="button" id="runbutton" >Step</button>
-    <button type="button" id="runbutton" >Run</button>
+    <textarea id="ROM" rows="10" cols="20" readonly></textarea><br>
+    <button type="button" id="resetbutton" >Reset</button>
+    <button type="button" id="stepbutton" >Step</button>
+    <button type="button" id="runbutton" >Run</button><br>
+      PC: <textarea id="PC" rows="1" cols="10" readonly></textarea>
     </div>
   <div class="column">
       RAM
-    <textarea id="RAM" rows="10" cols="10" readonly></textarea><br>
+    <textarea id="RAM" rows="10" cols="20" readonly></textarea><br>
       D: <textarea id="D" rows="1" cols="10" readonly></textarea>
       A: <textarea id="A" rows="1" cols="10" readonly></textarea>
-      M[A]: <textarea id="M" rows="1" cols="10" readonly></textarea>
       ALU Output: <textarea id="ALUOUT" rows="1" cols="10" readonly></textarea>
     
     </div>
