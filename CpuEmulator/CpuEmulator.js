@@ -4,21 +4,34 @@ class CpuEmulator{
     //
     constructor(rom){
         this.rom = rom;
-        this.ram = {};
+        this.M = {};
         this.PC = 0;
         this.A = 0;
         this.D = 0;
+        this.ALUOUT = 0;
         this.buildTables();
     }
     
     execute(){
-        var command = this.rom[this.PC];
-        console.log(command)
+        var command;
+        if(this.PC<0 || this.PC>32000){
+            throw("Out of Memory Bounds PC:"+this.pc)
+        }
+        if(this.PC>=this.rom.length){
+            command = this.dec2bin(0);
+        }
+        else{
+            command = this.rom[this.PC];
+        }
+        
+        
+        
         //A instruction
         if(command[0] === '0'){
-            var dec = binToDec(command);
+            var dec = this.bin2dec(command);
             this.A = dec;
             this.PC+=1;
+            console.log(command,': @'+dec)
         }
         else
         {
@@ -28,31 +41,33 @@ class CpuEmulator{
             var jmp = command.slice(13);
             cmp = this.cmd[cmp];
             dst = this.dst[dst];
+            console.log(jmp);
+            console.log(this.jmp)
+            console.log(this.jmp[jmp])
             jmp = this.jmp[jmp];
-            console.log(dst+'='+cmp';'+jmp)
+            console.log(jmp);
+            console.log(command,': '+dst+'='+cmp+';'+jmp)
             cmp = command.slice(3,10);
-            cmp = ALU(cmp);
-            console.log("D:"+this.D+", A:"+this.A+", M[A]:"+this.M[this.A]);
-            console.log("Computed: "+cmp);
+            this.ALUOUT = this.ALU(cmp);
+            
             if(dst[2]==='1'){
-                this.M[this.A] = cmp;
+                this.M[this.A] = this.ALUOUT;
             }
             if(dst[1]==='1'){
-                this.D = cmp;
+                this.D = this.ALUOUT;
             }
             if(dst[0]==='1'){
-                this.A = cmp;
+                this.A = this.ALUOUT;
             }
             this.PC+=1;
-            
-            if( (jmp==='JGT' && cmp>0 ) ||
-                (jmp==='JEQ' && cmp===0 ) || 
-               (jmp==='JGE' && cmp>=0 ) || 
-               (jmp==='JLT' && cmp<0 ) || 
-               (jmp==='JNE' && cmp!==0 ) || 
-               (jmp==='JLE' && cmp<=0 ) ||
+            if( (jmp==='JGT' && this.ALUOUT>0 ) ||
+                (jmp==='JEQ' && this.ALUOUT===0 ) || 
+               (jmp==='JGE' && this.ALUOUT>=0 ) || 
+               (jmp==='JLT' && this.ALUOUT<0 ) || 
+               (jmp==='JNE' && this.ALUOUT!==0 ) || 
+               (jmp==='JLE' && this.ALUOUT<=0 ) ||
                (jmp==='JMP')){
-                this.PC == this.A;
+                this.PC = this.A;
             }
                      
             
@@ -75,28 +90,31 @@ class CpuEmulator{
 }
         
         ALU(cmp){
-            var M=this.M[this.A];
+            if(!this.M[this.A]){
+                this.M[this.A] = 0;
+            }
             
+            var M = this.M[this.A];
             switch(cmp){
-            case '0101010':return 0;
+            case '0101010' :return 0;
             case '0111111' : return 1 ; 
             case '0111010' : return -1  ;
             case '0001100' : return this.D ; 
             case '0110000' : return this.A ; 
             case '0001101' : return ~this.D ; 
-            case '0110001': return ~this.A ;  
-            case '0001111': return -this.D ;  
-            case '0110011': return -this.A ;  
+            case '0110001' : return ~this.A ;  
+            case '0001111' : return -this.D ;  
+            case '0110011' : return -this.A ;  
             case '0011111' : return this.D+1  ;
             case '0110111' : return this.A+1  ;
             case '0001110' : return this.D-1  ;
             case '0110010' : return this.A-1  ;
-            case '0000010': return this.D+this.A ;  
+            case '0000010' : return this.D+this.A ;  
             case '0010011' : return this.D-this.A ; 
             case '0000111' : return this.A-this.D ; 
             case '0000000' : return this.D&this.A ; 
             case '0010101' : return this.D|this.A ; 
-            case '1110000': return M ;  
+            case '1110000' : return M ;  
             case '1110001' : return ~M ; 
             case '1110011' : return -M ;
             case '1110111' : return M+1 ; 
@@ -105,8 +123,8 @@ class CpuEmulator{
             case '1010011' : return this.D-M ; 
             case '1000111' : return M-this.D ; 
             case '1000000' : return this.D&M ; 
-            case '1010101': return this.D|M;
-            default throw("unknown command")
+            case '1010101' : return this.D|M;
+            default: throw("unknown command")
             }
                     
                    }
@@ -144,16 +162,17 @@ class CpuEmulator{
             '1000000' :'D&M' , 
             '1010101':'D|M'   };
         
-         this.jmp = { "001": 'JGT',
-                      "010": 'JEQ',
-                      "011": 'JGE',
-                      "100": 'JLT',
-                      "101": 'JNE',
-                      "110": 'JLE',
-                      "111": 'JMP'};
+         this.jmp = { '000': '', //no jump
+                      '001': 'JGT',
+                      '010': 'JEQ',
+                      '011': 'JGE',
+                      '100': 'JLT',
+                      '101': 'JNE',
+                      '110': 'JLE',
+                      '111': 'JMP'};
         
         this.dst = { 
-             '000': '0',
+             '000': '', //no destination to save
              '001' :'M' ,
              '010': 'D',
              '011': 'MD',
