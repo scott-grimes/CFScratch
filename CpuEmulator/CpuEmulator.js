@@ -2,8 +2,8 @@ class CpuEmulator{
     
     //rom is an array of machine code. each line is a 16-bit command
     //
-    constructor(rom){
-        this.rom = rom;
+    constructor(){
+        this.rom = [];
         this.M = {};
         this.PC = 0;
         this.A = 0;
@@ -11,6 +11,16 @@ class CpuEmulator{
         this.ALUOUT = 0;
         this.buildTables();
         this.DEBUG = false;
+        this.screenChanged = false;
+    }
+    
+    loadRom(rom){
+        this.rom = rom;
+    }
+    
+    //returns an image of the screen
+    screen(){
+        
     }
     
     execute(){
@@ -25,8 +35,6 @@ class CpuEmulator{
             command = this.rom[this.PC];
         }
         
-        
-        
         //A instruction
         if(command[0] === '0'){
             var dec = this.bin2dec(command);
@@ -37,6 +45,9 @@ class CpuEmulator{
         }
         else
         {
+            
+            if(command.slice(0,3)!=='111')
+                throw("invalid command");
             //C instruction
             var cmp = command.slice(3,10);
             var dst = command.slice(10,13);
@@ -46,12 +57,16 @@ class CpuEmulator{
             jmp = this.bin2dec(jmp);
             jmp = this.jmp[jmp];
             
-                
             cmp = command.slice(3,10);
             this.ALUOUT = this.ALU(cmp);
             
             if(dst[2]==='1'){
                 this.M[this.A] = this.ALUOUT;
+                if(this.A>=16384 && this.A<24576){
+                    this.screenChanged = true;
+                    this.screenChange = {[this.A]: [this.ALUOUT]};
+                }
+                    
             }
             if(dst[1]==='1'){
                 this.D = this.ALUOUT;
@@ -70,22 +85,13 @@ class CpuEmulator{
                 this.PC = this.A;
             }
             
-            //console logging
-            if(this.DEBUG){
-                cmp = this.cmd[cmp];
-            dst = this.dst[dst];
-            if(dst===''){
-                console.log(command,': '+cmp+';'+jmp)
-            }
-                
-            else{
-                console.log(command,': '+dst+'='+cmp+';'+jmp)
-            }        
-            }
             
-            
-            }
+        
+        if(this.DEBUG){
+            console.log(this.machineToAssembly(command));
         }
+        }
+    }
         
  dec2bin(int) {
     var u = new Uint32Array(1);
@@ -193,6 +199,50 @@ class CpuEmulator{
              '101'  : 'AM',
              '110' : 'AD',
              '111' : 'AMD'};
+    }
+    
+    machineToAssembly(command){
+        
+        //A instruction
+        if(command[0] === '0'){
+            var dec = this.bin2dec(command);
+            return '@'+dec;
+        }
+        else
+        {
+            if(command.slice(0,3)!=='111')
+                throw("invalid command");
+            //C instruction
+            var cmp = command.slice(3,10);
+            var dst = command.slice(10,13);
+            var jmp = command.slice(13);
+            
+            
+            jmp = this.bin2dec(jmp);
+            jmp = this.jmp[jmp];
+            cmp = this.cmd[cmp];
+            if(!cmp){
+                throw("Invalid Command")
+            }
+            dst = this.dst[dst];
+            if(dst===''){
+                return cmp+';'+jmp;
+            }
+                
+            else{
+                return dst+'='+cmp;
+            }        
+            }
+            
+            
+            
+    }
+    
+    getM(addr){
+        if(!this.M[addr]){
+            this.M[addr] = 0;
+        }
+        return this.M[addr];
     }
     
     
