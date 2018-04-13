@@ -1,4 +1,3 @@
-
 class Assembler {
     
     
@@ -108,7 +107,6 @@ class Assembler {
     parseLabels(){
         var lineNumber = 0;
         for(var i = 0;i<this.lines.length;i++){
-        
          if (this.lines[i].charAt(0) ==='('){
               var label = this.lines[i].slice(1,this.lines[i].length-1);
               this.symbolDict[label] = lineNumber;
@@ -142,8 +140,8 @@ class Assembler {
             }
             
             //adds the parsed line to our list of lines
-            
-            this.lines.push(lines[i]);
+            if(lines[i]!=='')
+                this.lines.push(lines[i]);
             
         }
         
@@ -154,7 +152,7 @@ class Assembler {
     buildLine(line){
         
         //ignore blank lines
-        if(line === '') return;
+        if(line === '') throw('blank line encountered';
     
         //ignore lines that start with ( 
         var commandType = this.commandType(line);
@@ -235,10 +233,10 @@ class Assembler {
         }
         // is the line a jump command?
         else if(line.indexOf(';')!= -1){
-            var dest = line.split(';')[0];
+            var cmd = line.split(';')[0];
             var jmp = line.split(';')[1];
-            if(this.dst[dest] && this.jmp[jmp]){
-                return '111'+'0000000'+this.dst[dest]+this.jmp[jmp];
+            if(this.cmd[cmd] && this.jmp[jmp]){
+                return '111'+this.cmd[cmd]+'000'+this.jmp[jmp];
             }
             
         }
