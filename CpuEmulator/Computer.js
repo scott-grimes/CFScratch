@@ -4,38 +4,65 @@ class Computer{
     constructor(){
         this.CPU = new CpuEmulator();
         this.mFrameStart = 0;
-        this.mFrameSize = 10;
+        this.mFrameSize = 20;
         this.DEBUG = false;
+        this.KEYBOARD = new Keyboard();
+    }
+    
+    createScreen(ctx){
+        this.SCREEN = new Screen(ctx);
+    }
+    
+    linkKeyboard(canvas,keyvaluebox){
+        canvas.addEventListener('keydown', (e) => {this.handlekeydown(e)}, false); //needed to keep 'this' context correct in handleeventfunctions
+        canvas.addEventListener('keyup', (e) => {this.handlekeyup(e)}, false);
+        this.keyvaluebox = keyvaluebox;
+        this.keyvaluebox.value = this.KEYBOARD.getKeyChar();
     }
     
     loadRom(rom){
         this.CPU.loadRom(rom);
     }
     
-    screenStart(context){
-        
-    }
     
     poke(addr,val){
         this.CPU.M[addr] = val;
     }
     
-    //returns an image of the screen
-    screen(context){
-        if(!this.SCREEN){
-            this.screenStart();
-        }
-        if(this.CPU.screenChanged){
-            this.CPU.screenChanged = false;
-            console.log(this.CPU.screenChange)
-        }
-        
-    }
     
     execute(){
         
         this.CPU.execute();
+        if(this.CPU.screenChanged){
+            this.CPU.screenChanged = false;
+            //console.log(this.CPU.screenChange)
+            this.SCREEN.poke(this.CPU.screenChange[0],this.CPU.screenChange[1])
+            this.CPU.screenChange = [];
+        }
+    }
+    
+    handlekeydown(event){
+        var k = event.keyCode;
+        this.KEYBOARD.handlekeydown(k);
+        this.keyboardInterupt();
         
+        
+    }
+    
+    handlekeyup(event){
+       
+        this.KEYBOARD.handlekeyup();
+        this.keyboardInterupt();
+        
+        
+    }
+    
+    keyboardInterupt(){
+        if(this.KEYBOARD.keyChanged){
+            this.KEYBOARD.keyChanged = false;
+            this.poke(24576,this.KEYBOARD.key)
+            this.keyvaluebox.value = this.KEYBOARD.getKeyChar();
+        }
     }
         
         
