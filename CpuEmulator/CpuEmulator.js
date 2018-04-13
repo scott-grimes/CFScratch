@@ -10,6 +10,7 @@ class CpuEmulator{
         this.D = 0;
         this.ALUOUT = 0;
         this.buildTables();
+        this.DEBUG = false;
     }
     
     execute(){
@@ -31,7 +32,8 @@ class CpuEmulator{
             var dec = this.bin2dec(command);
             this.A = dec;
             this.PC+=1;
-            console.log(command,': @'+dec)
+            if(this.DEBUG)
+                console.log(command,': @'+dec)
         }
         else
         {
@@ -39,14 +41,12 @@ class CpuEmulator{
             var cmp = command.slice(3,10);
             var dst = command.slice(10,13);
             var jmp = command.slice(13);
-            cmp = this.cmd[cmp];
-            dst = this.dst[dst];
-            console.log(jmp);
-            console.log(this.jmp)
-            console.log(this.jmp[jmp])
+            
+            
+            jmp = this.bin2dec(jmp);
             jmp = this.jmp[jmp];
-            console.log(jmp);
-            console.log(command,': '+dst+'='+cmp+';'+jmp)
+            
+                
             cmp = command.slice(3,10);
             this.ALUOUT = this.ALU(cmp);
             
@@ -69,7 +69,20 @@ class CpuEmulator{
                (jmp==='JMP')){
                 this.PC = this.A;
             }
-                     
+            
+            //console logging
+            if(this.DEBUG){
+                cmp = this.cmd[cmp];
+            dst = this.dst[dst];
+            if(dst===''){
+                console.log(command,': '+cmp+';'+jmp)
+            }
+                
+            else{
+                console.log(command,': '+dst+'='+cmp+';'+jmp)
+            }        
+            }
+            
             
             }
         }
@@ -160,26 +173,26 @@ class CpuEmulator{
             '1010011' :'D-M' , 
             '1000111' :'M-D' , 
             '1000000' :'D&M' , 
-            '1010101':'D|M'   };
+            '1010101':'D|M'  };
         
-         this.jmp = { '000': '', //no jump
-                      '001': 'JGT',
-                      '010': 'JEQ',
-                      '011': 'JGE',
-                      '100': 'JLT',
-                      '101': 'JNE',
-                      '110': 'JLE',
-                      '111': 'JMP'};
+         this.jmp = [  '', //no jump 00
+                       'JGT', //001
+                       'JEQ', //010
+                       'JGE', //011
+                       'JLT', //100
+                       'JNE', //101
+                       'JLE', //110
+                       'JMP']; //111
         
         this.dst = { 
-             '000': '', //no destination to save
+             '000' : '', //no destination to save
              '001' :'M' ,
-             '010': 'D',
-             '011': 'MD',
-             '100': 'A',
-             '101': 'AM',
-             '110': 'AD',
-             '111': 'AMD'};
+             '010' : 'D',
+             '011' : 'MD',
+             '100' : 'A',
+             '101'  : 'AM',
+             '110' : 'AD',
+             '111' : 'AMD'};
     }
     
     
