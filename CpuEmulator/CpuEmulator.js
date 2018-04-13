@@ -64,7 +64,7 @@ class CpuEmulator{
                 this.M[this.A] = this.ALUOUT;
                 if(this.A>=16384 && this.A<24576){
                     this.screenChanged = true;
-                    this.screenChange = {[this.A]: [this.ALUOUT]};
+                    this.screenChange = [this.A, this.dec2bin(this.ALUOUT)];
                 }
                     
             }
@@ -92,6 +92,8 @@ class CpuEmulator{
         }
         }
     }
+    
+    
         
  dec2bin(int) {
     var u = new Uint32Array(1);
@@ -172,7 +174,7 @@ class CpuEmulator{
             '0010101' :'D|A' , 
             '1110000':'M' ,  
             '1110001' :'!M' , 
-             '1110011' :'-M' ,
+            '1110011' :'-M' ,
             '1110111' :'M+1' , 
             '1110010' :'M-1' , 
             '1000010' :'D+M' , 
