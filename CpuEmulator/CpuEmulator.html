@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
 <title>Cpu Emulator Page</title></title>
-<head>
-<script src="CpuEmulator.js"
+<head><script src="CpuEmulator.js"
+    type="text/javascript"></script>
+<script src="Computer.js"
     type="text/javascript"></script><script>
 /**
  * A CPU emulator
  */
     
 
-    var CPU;
+    var C; //for computer
     var ROM = [];
 function fetchTextFromFile(evt) {
     //Retrieve the first file
@@ -18,12 +19,13 @@ function fetchTextFromFile(evt) {
       var r = new FileReader();
       r.onload = function(e) { 
 	      var contents = e.target.result;
-         document.getElementById("ROM").value = contents;
+         
           contents = contents.split('\n');
           ROM = [];
           for(var i = 0;i<contents.length;i++){
               ROM.push(contents[i]);
           }
+          showBinary();
           resetCPU();
       }
       r.readAsText(f);
@@ -33,32 +35,39 @@ function fetchTextFromFile(evt) {
     }
   }
     
-function verifyMachineCode(value){
-    
-}
-    
 function resetCPU(evt){
-        CPU = new CpuEmulator(ROM);
-        CPU.M[0] = 3;
+        C = new Computer();
+        C.loadRom(ROM);
+        C.poke(0,3);
         updateCPUValues();
-        window.c = CPU;
-        window.r = ROM;
+        
 }
+function showBinary(){
+    document.getElementById("ROM").value = '';
+    for(var i = 0;i<ROM.length;i++)
+        document.getElementById("ROM").value+=ROM[i]+'\n'
     
+}
+    function showAssembly(){
+        document.getElementById("ROM").value = '';
+    for(var i = 0;i<ROM.length;i++)
+        document.getElementById("ROM").value+=C.machineToAssembly(ROM[i])+'\n';
+    }
+       
 function getA(){
-    document.getElementById('A').value = CPU.A;
+    document.getElementById('A').value = C.CPU.A;
 }
     function getPC(){
-    document.getElementById('PC').value = CPU.PC;
+    document.getElementById('PC').value = C.CPU.PC;
 }
     function getD(){
-    document.getElementById('D').value = CPU.D;
+    document.getElementById('D').value = C.CPU.D;
 }
     function getAluOut(){
-    document.getElementById('ALUOUT').value = CPU.ALUOUT;
+    document.getElementById('ALUOUT').value = C.CPU.ALUOUT;
 }
     function getMemory(){
-        var m = CPU.M;
+        var m = C.getMemory();
         document.getElementById('RAM').value = '';
         for (var key in m) {
             document.getElementById('RAM').value+=key+': '+m[key]+'\n';
@@ -72,8 +81,8 @@ function updateCPUValues(){
         getMemory();
     }
 function step(evt){
-        if(CPU){
-            CPU.execute();
+        if(C){
+            C.execute();
             updateCPUValues();
         }
     }
@@ -103,6 +112,8 @@ document.getElementById('fileUploader').addEventListener('change', fetchTextFrom
 document.getElementById('resetbutton').addEventListener('click', resetCPU, false);
 document.getElementById('stepbutton').addEventListener('click', step, false);
 document.getElementById('runbutton').addEventListener('click', run,false);
+document.getElementById('showBinary').addEventListener('click', showBinary,false);
+document.getElementById('showAssembly').addEventListener('click', showAssembly,false);
    
    
     /*
@@ -155,8 +166,8 @@ document.getElementById('runbutton').addEventListener('click', run,false);
     <input id="fileUploader" name="myFile" type="file" accept=".asm, .hack"><br>
     ROM<br>
    <textarea id="ROM" rows="10" cols="20" readonly></textarea><br>
-    View:  <button type="button" id="viewassembly" >Assembly</button> 
-      <button type="button" id="viewmachinecode" >Binary</button><br>
+    View:  <button type="button" id="showAssembly" >Assembly</button> 
+      <button type="button" id="showBinary" >Binary</button><br>
     <button type="button" id="resetbutton" >Reset</button>
     <button type="button" id="stepbutton" >Step</button>
     <button type="button" id="runbutton" >Step x 1000</button><br>
