@@ -9,6 +9,7 @@ class Screen{
         
     }
     
+    
     poke(addr,value){
         //base 16384 [0-32 first row]. [33-64] second row
         //word row = (addr-16384)/32
@@ -20,7 +21,7 @@ class Screen{
         for(var i = 0;i<16;i++){
             //set the bits
             //r,g,b,a
-            if(value[i]==='1'){
+            if(value[15-i]==='1'){
                 this.ctx.fillStyle = this.BLACK;
             }else{
                 this.ctx.fillStyle = this.WHITE;
