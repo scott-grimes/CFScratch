@@ -18,10 +18,6 @@ class CpuEmulator{
         this.rom = rom;
     }
     
-    //returns an image of the screen
-    screen(){
-        
-    }
     
     execute(){
         var command;
@@ -64,7 +60,7 @@ class CpuEmulator{
                 this.M[this.A] = this.ALUOUT;
                 if(this.A>=16384 && this.A<24576){
                     this.screenChanged = true;
-                    this.screenChange = [this.A, this.dec2bin(this.ALUOUT)];
+                    this.screenChange = this.A;
                 }
                     
             }
