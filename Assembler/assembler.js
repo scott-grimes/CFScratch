@@ -119,7 +119,9 @@ class Assembler {
     
     /* 
     *   Fills this.lines with the given text, after whitespace, comments, and blank lines are removed.
-    *   If any invalid characters are found, throws an exception
+    *   If any invalid characters are found, 
+    
+    s an exception
     */
     read(text){
         var lines = text.split('\n');
@@ -152,7 +154,7 @@ class Assembler {
     buildLine(line){
         
         //ignore blank lines
-        if(line === '') throw('blank line encountered';
+        if(line === '') throw('blank line encountered');
     
         //ignore lines that start with ( 
         var commandType = this.commandType(line);
