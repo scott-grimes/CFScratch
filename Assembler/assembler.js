@@ -119,9 +119,7 @@ class Assembler {
     
     /* 
     *   Fills this.lines with the given text, after whitespace, comments, and blank lines are removed.
-    *   If any invalid characters are found, 
-    
-    s an exception
+    *   If any invalid characters are found, throws an exception
     */
     read(text){
         var lines = text.split('\n');
