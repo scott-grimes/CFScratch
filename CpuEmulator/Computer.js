@@ -7,6 +7,7 @@ class Computer{
         this.mFrameSize = 20;
         this.DEBUG = false;
         this.KEYBOARD = new Keyboard();
+        this.screenChanges = []; //screen is updated every few thousand cycles instead of every cycle to improve smoothness
     }
     
     createScreen(ctx){
@@ -29,15 +30,32 @@ class Computer{
         this.CPU.M[addr] = val;
     }
     
-    
-    execute(){
-        
+    executeWithoutScreenUpdate(){
         this.CPU.execute();
         if(this.CPU.screenChanged){
             this.CPU.screenChanged = false;
             //console.log(this.CPU.screenChange)
-            this.SCREEN.poke(this.CPU.screenChange[0],this.CPU.screenChange[1])
-            this.CPU.screenChange = [];
+            if(!this.screenChanges.includes(this.CPU.screenChange))
+                this.screenChanges.push(this.CPU.screenChange);
+            
+        }
+    }
+    
+    //called when there is a large list of screen changes to go through
+    updateScreen(){
+        for(var i = 0;i<this.screenChanges.length;i++){
+            var m = this.CPU.M[ this.screenChanges[i] ];
+            this.SCREEN.poke(this.screenChanges[i], this.CPU.dec2bin( m ))
+        }
+        this.screenChanges = [];
+    }
+    
+    execute(){
+        this.CPU.execute();
+        if(this.CPU.screenChanged){
+            this.CPU.screenChanged = false;
+            var m = this.CPU.M[ this.CPU.screenChange ];
+            this.SCREEN.poke(this.CPU.screenChange , this.CPU.dec2bin( m ));
         }
     }
     
