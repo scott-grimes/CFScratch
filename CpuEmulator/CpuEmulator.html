@@ -13,10 +13,13 @@
  * A CPU emulator
  */
     
-
     var C; //for computer
     var ROM = [];
     var intervalStepper;
+    var SCREENREFRESHRATE = 10000; //how many cpu cycles will run between each screen refresh?
+    var doneLoading = false;
+    var buttonList = ['load','binary','assembly','reset','step','run'];
+    
 function fetchTextFromFile(evt) {
     //Retrieve the first file
     var f = evt.target.files[0]; 
@@ -24,14 +27,14 @@ function fetchTextFromFile(evt) {
       var r = new FileReader();
       r.onload = function(e) { 
 	      var contents = e.target.result;
-         
           contents = contents.split('\n');
           ROM = [];
           for(var i = 0;i<contents.length;i++){
               ROM.push(contents[i]);
           }
-          showBinary();
+          
           resetCPU();
+          showBinary();
       }
       r.readAsText(f);
       
@@ -41,6 +44,8 @@ function fetchTextFromFile(evt) {
   }
     
 function resetCPU(evt){
+        doneLoading = false;
+        blankCPUValues();
         C = new Computer();
         stopRunning();
         var canvas = document.getElementById("screen");
@@ -48,10 +53,9 @@ function resetCPU(evt){
         var ctx = canvas.getContext("2d");
         C.createScreen(ctx);
         C.loadRom(ROM);
-        C.poke(0,15);
         updateCPUValues();
         C.linkKeyboard(canvas,keyvaluebox);
-            
+        doneLoading = true;
         
 }
     
@@ -66,6 +70,13 @@ function showBinary(){
         document.getElementById("ROM").value = '';
     for(var i = 0;i<ROM.length;i++)
         document.getElementById("ROM").value+=C.machineToAssembly(ROM[i])+'\n';
+    }
+    
+    function disableButton(button){
+        button.setAttribute('disabled', 'disabled');
+    }
+    function enableButton(button){
+        button.removeAttribute('disabled');
     }
        
 function getA(){
@@ -94,6 +105,14 @@ function updateCPUValues(){
         getAluOut();
         getMemory();
     }
+    
+function blankCPUValues(){
+        document.getElementById('A').value= '';
+        document.getElementById('D').value = '';
+        document.getElementById('PC').value = '';
+        document.getElementById('ALUOUT').value = '';
+    
+}
 function step(evt){
         if(C){
             C.execute();
@@ -101,26 +120,27 @@ function step(evt){
         }
     }
 
+
+    
 function stopRunning() {
     clearInterval(intervalStepper);
     updateCPUValues();
 }
     
+
+    
 function run(evt){
-        document.getElementById('A').value= '';
-        document.getElementById('D').value = '';
-        document.getElementById('PC').value = '';
-        document.getElementById('ALUOUT').value = '';
-        
+        blankCPUValues();
             intervalStepper = setInterval(function(){ 
                 try{
-            for(var i = 0;i<1000;i++){
-                C.execute();
+            for(var i = 0;i<SCREENREFRESHRATE;i++){
+                C.executeWithoutScreenUpdate();
             }
+                C.updateScreen();
             }catch(err){
         console.log(err);
         stopRunning();
-    }}, 10);
+    }}, 5);
         
     
     }
@@ -180,54 +200,16 @@ window.onload = function() {
     
     resetCPU();
     
-document.getElementById('fileUploader').addEventListener('change', fetchTextFromFile);
-document.getElementById('resetbutton').addEventListener('click', resetCPU, false);
-document.getElementById('stepbutton').addEventListener('click', step, false);
-document.getElementById('runbutton').addEventListener('click', run,false);
-document.getElementById('stopbutton').addEventListener('click', stopRunning,false);
-document.getElementById('showBinary').addEventListener('click', showBinary,false);
-document.getElementById('showAssembly').addEventListener('click', showAssembly,false);
+document.getElementById('load').addEventListener('change', fetchTextFromFile);
+document.getElementById('reset').addEventListener('click', resetCPU, false);
+document.getElementById('step').addEventListener('click', step, false);
+document.getElementById('run').addEventListener('click', run,false);
+document.getElementById('stop').addEventListener('click', stopRunning,false);
+document.getElementById('binary').addEventListener('click', showBinary,false);
+document.getElementById('assembly').addEventListener('click', showAssembly,false);
    
    
-    /*
-   document.getElementById("runbutton").onclick = function () {
-   var romboxvalue = document.getElementById("ROM").value;
-   
-   var m = document.getElementById("outputBox");
-   var m1 = document.getElementById("compilerMessage");
-   var answer;
-   m1.value = 'Compiling...';
-   try{
-       m.value = '';
-       var a = new Analyzer(jackTest);
-       while(a.hasMoreTokens()){
-           var token = a.advance();
-           m.value += token+'\t\t\t('+a.tokenType(token)+')\n';
-       }
-       m1.value = 'Analyzed Successfully!'
-   }
-   catch(err){
-       m.value = '';
-       m1.value = 'Error: '+err;
-   
-   }
-       
-       
-   m = document.getElementById("outputBox2");
-   try{
-       m.value = '';
-       var a = new CompileJack(jackTest);
-       for(var i = 0;i<a.lines.length;i++){
-           m.value += a.lines[i]+'\n';
-       }
-       m1.value = 'Analyzed Successfully!'
-   }
-   catch(err){
-       m1.value = 'Error: '+err;
-   
-   }
-}
-*/
+    
 }
     
 </script>
@@ -236,15 +218,15 @@ document.getElementById('showAssembly').addEventListener('click', showAssembly,f
 <div class="row">
   <div class="column">
     Load your Binary or Assembly file, then step through your program.<br>
-    <input id="fileUploader" name="myFile" type="file" accept=".asm, .hack"><br>
+    <input id="load" name="myFile" type="file" accept=".asm, .hack"><br>
     ROM<br>
    <textarea id="ROM" rows="10" cols="20" readonly></textarea><br>
-    View:  <button type="button" id="showBinary" >Binary</button>
-      <button type="button" id="showAssembly" >Assembly</button><br>
-    <button type="button" id="resetbutton" >Reset</button>
-    <button type="button" id="stepbutton" >Step</button>
-    <button type="button" id="runbutton" >Run</button><br>
-      <button type="button" id="stopbutton" >Stop</button><br>
+    View:  <button type="button" id="binary" >Binary</button>
+      <button type="button" id="assembly" >Assembly</button><br>
+    <button type="button" id="reset" >Reset</button>
+    <button type="button" id="step" >Step</button>
+    <button type="button" id="run" >Run</button><br>
+      <button type="button" id="stop" >Stop</button><br>
       PC: <textarea id="PC" rows="1" cols="10" readonly></textarea>
     </div>
   <div class="column">
@@ -267,3 +249,6 @@ Your browser does not support the canvas element.
 
 </body>
 </html>
+
+
+
