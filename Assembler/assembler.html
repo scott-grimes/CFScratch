@@ -1,54 +1,133 @@
 <!DOCTYPE html>
 <html>
-<title>Assembler Page</title></title>
+<title>Assembler Page</title>
 <head>
-<script src="Assembler.js"
+<script src="assembler.js"
     type="text/javascript"></script><script>
 /**
- * A translator from assmebly language to our machine language
+ * A compiler from assembly to machine code
  */
+function saveTextAsFile(textToWrite)
+{
+    
+    var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
+    var fileNameToSaveAs =  document.getElementById("downloadFileName").value //Your filename;
 
+    var downloadLink = document.createElement("a");
+    downloadLink.download = fileNameToSaveAs;
+    downloadLink.innerHTML = "Download File";
+    if (window.webkitURL != null)
+    {
+        // Chrome allows the link to be clicked
+        // without actually adding it to the DOM.
+        downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+    }
+    else
+    {
+        // Firefox requires the link to be added to the DOM
+        // before it can be clicked.
+        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+        downloadLink.onclick = destroyClickedElement;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+    }
+
+    downloadLink.click();
+}
 
 
 window.onload = function() {
-    document.getElementById("assbutton").onclick = function () {
-   var assText = document.getElementById("assembly").value;
-   var a = new Assembler();
-   var m = document.getElementById("machine");
+    
+    document.getElementById("downloadButton").onclick = function () {
+        var textToSave = document.getElementById("outputBox").value;
+        saveTextAsFile( textToSave )
+    }
+    
+    
+    
+
+function fetchTextFromFile(evt) {
+    //Retrieve the first file
+    var f = evt.target.files[0]; 
+
+    if (f) {
+      var r = new FileReader();
+      r.onload = function(e) { 
+	      var contents = e.target.result;
+         document.getElementById("inputBox").value = contents;
+          
+          updateDownloadFileName(f.name);
+          
+      }
+      r.readAsText(f);
+      
+    } else { 
+      alert("Failed to load file");
+    }
+  }
+    
+function updateDownloadFileName(name){
+    var newDownloadName = name.slice(0,name.length-4)+'.asm';
+       document.getElementById("downloadFileName").value = newDownloadName;
+}
+
+
+
+
+document.getElementById('fileUploader').addEventListener('change', fetchTextFromFile, false);
+   
+
+    
+    var initialMessage = "// Example Assembly Program\n\
+// Press Compile to convert to Binary Code!\n\
+@3\n\
+D=A\n\
+@0\n\
+M=D";
+    
+   document.getElementById("inputBox").value = initialMessage;
+    
+   document.getElementById("runbutton").onclick = function () {
+   var inputValue = document.getElementById("inputBox").value;
+   
+   var m = document.getElementById("outputBox");
    var m1 = document.getElementById("compilerMessage");
    var answer;
    m1.value = 'Compiling...';
    try{
-       answer = a.assemble(assText);
-      
        m.value = '';
-       for(var i = 0;i<answer.length;i++){
-           if(i===0) m.value = answer[0]
-           else
-           m.value = m.value+'\n'+answer[i];
+       var a = new Assembler(inputValue);
+       for(var i = 0;i<a.machineCode.length;i++){
+           m.value+=a.machineCode[i]+'\n';
        }
-       m1.value = 'Compiled Successfully!';
+       m.value = m.value.slice(0,-1)
+
+       m1.value = 'Analyzed Successfully!'
    }
    catch(err){
        m.value = '';
        m1.value = 'Error: '+err;
    
    }
-   
+       
 }
 }
     
 </script>
 </head>
 <body>
-<textarea id="assembly" rows="10" cols="60">
-@3
-</textarea>
+Upload your .asm file, or copy/paste your code below, then hit 'compile'<br>
+<input id="fileUploader" name="myFile" type="file" accept=".asm"><br>
+<textarea id="inputBox" rows="10" cols="60">
+</textarea><br>
+
 <br>
-<button type="button" id="assbutton" >Assemble</button>
-<input type="text" id="compilerMessage" size="44" readonly><br>
+<button type="button" id="runbutton" >Compile</button>
+<input type="text" id="compilerMessage" size="60" readonly><br>
 <br>
-<textarea id="machine" rows="10" cols="60" readonly>
+Machine Code<br>
+<textarea id="outputBox" rows="10" cols="60" readonly>
 </textarea>
+<button type="button" id="downloadButton" >Download</button><input type="text" id="downloadFileName" value="download.asm">
 </body>
 </html>
