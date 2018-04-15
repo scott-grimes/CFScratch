@@ -7,6 +7,7 @@
 /**
  * A translator from our high level language to our VM language
  */
+    
 function saveTextAsFile(textToWrite)
 {
     
@@ -120,12 +121,15 @@ class Array { \n\
    try{
        m.value = '';
        var a = new Analyzer(jackTest);
+       
        while(a.hasMoreTokens()){
            var token = a.advance();
            m.value += token+'\t\t\t('+a.tokenType(token)+')\n';
        }
        m1.value = 'Analyzed Successfully!'
+       m.value = m.value.slice(0,-1);
    }
+       
    catch(err){
        m.value = '';
        m1.value = 'Error: '+err;
@@ -141,6 +145,7 @@ class Array { \n\
            m.value += a.lines[i]+'\n';
        }
        m1.value = 'Analyzed Successfully!'
+       m.value = m.value.slice(0,-1);
    }
    catch(err){
        m1.value = 'Error: '+err;
