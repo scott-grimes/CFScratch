@@ -1,20 +1,21 @@
 class Assembler {
     
-    
-    assemble(text){
+    constructor(text){
+        
         
         this.buildDicts();
         this.machineCode = []; // to be filled with the assembled machine code commands
-        this.lines = []; //to be filled with the lines from our assembly program
+        this.lines = []; // [line conent , original line number ] to be filled with the parsed lines from our assembly program
         this.read(text);
+        
         this.parseLabels();
         
         for(var i = 0;i<this.lines.length;i++){
-            this.lineNumber = i+1;
+            this.lineNumber = i+1; 
             this.buildLine(this.lines[i]);
         }
         
-        return this.machineCode;
+        
     }
     
     buildDicts(){
@@ -107,11 +108,13 @@ class Assembler {
     parseLabels(){
         var lineNumber = 0;
         for(var i = 0;i<this.lines.length;i++){
-         if (this.lines[i].charAt(0) ==='('){
-              var label = this.lines[i].slice(1,this.lines[i].length-1);
+         if (this.lines[i][0].charAt(0) ==='('){
+              if(this.lines[i][0].slice(-1)!==')'){
+                  throw('Line: '+this.lines[i][1]+' incorrect label format: '+this.lines[i][0])
+              }
+              var label = this.lines[i][0].slice(1,this.lines[i].length-1);
               this.symbolDict[label] = lineNumber;
          }else{
-             
              lineNumber+=1;
          }
         }
@@ -135,13 +138,13 @@ class Assembler {
             //checks for invalid characters
             for(var j = 0;j<lines[i].length;j++){
                 if(this.validChars.indexOf( lines[i].charAt(j) ) === -1){
-                    throw('invalid character on line '+(i+1), lines[i])
+                    throw('Line: '+(i+1)+' invalid expression or character: ', lines[i])
                 }
             }
             
             //adds the parsed line to our list of lines
             if(lines[i]!=='')
-                this.lines.push(lines[i]);
+                this.lines.push([lines[i],(i+1)]);
             
         }
         
@@ -149,25 +152,27 @@ class Assembler {
     
                             
     //builds the machine code command associated with the given line                
-    buildLine(line){
-        
-        //ignore blank lines
-        if(line === '') throw('blank line encountered');
+    buildLine(linearr){
+        var line = linearr[0]
+        //no blank lines should be encountered at this point
+        if(line === '') 
+            throw('blank line encountered');
     
-        //ignore lines that start with ( 
+        //a command can be a label (, address @, or computation C
         var commandType = this.commandType(line);
         
         // ignore label lines
-        if(commandType==='L') return;
+        if(commandType==='L') 
+            return;
         
         var command;
         
         if(commandType==='A')
-            command = this.aCommand(line)
+            command = this.aCommand(linearr)
         else if(commandType==='C')
-            command = this.cCommand(line)
+            command = this.cCommand(linearr)
         else{
-            throw('invalid command: '+line+' on line: '+this.lineNumber);
+            throw('Line: '+linearr[1]+', invalid command',line);
         }
             
         this.machineCode.push(command);
@@ -190,16 +195,17 @@ class Assembler {
     // @SCREEN
     // @myVariable
     
-    aCommand(line){
+    aCommand(linearr){
+        var line = linearr[0]
         var number;
-        // is the first character a digit? 
-        
+        // is the first character after the @ a digit? if not we have a symbolic address
         if('0123456789'.indexOf( line.charAt(1) ) !== -1){
-            number = parseInt(line.slice(1,line.length));
+            //we have an integer
+            number = parseInt(line.slice(1));
         }
         else{
             //fetch the address of the symbol
-            var symbol = line.slice(1,line.length);
+            var symbol = line.slice(1);
             number = this.getAddress(symbol);
         }
         
@@ -221,8 +227,10 @@ class Assembler {
     // or
     // DST;JMP for jump commands
     // where DST,CMD, and JMP are assembly commands in the dictionaries dst,cmd,jmp
-    cCommand(line){
-       
+    cCommand(linearr){
+        
+       var line = linearr[0]
+      
         // is the line a computation command?
         if(line.indexOf('=')!= -1){
             var dst = line.split('=')[0];
@@ -241,9 +249,8 @@ class Assembler {
             
         }
        
-           
         //line is not built correcly, throw error
-           throw('invalid command: '+line+' on line: '+this.lineNumber);
+           throw('Line: '+linearr[1]+', invalid command: '+line);
     }
        
    
