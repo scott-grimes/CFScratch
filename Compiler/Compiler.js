@@ -1,3 +1,6 @@
+// TODO, fix compiling to account for what line the error occured on!
+
+
 //reads in a .jack file, compiles it into a .vm file, prints the results to stdout
 // need to add throws for error messages! give line number for original statements? 
 
@@ -21,61 +24,57 @@ class Analyzer {
         '<','>','=','~']
     
       
-        
-        var lines = f.split('\n')
-        var parsed = [];
+        var parsed = []; //contains an array of [parsed line, line number] with comments removed
        
-        for(var i = 0;i<lines.length;i++){
-            //replace tabs with spaces
-            var line = lines[i].replace('\t',' ')
-            //remove single line comments
-            var startSingleComment = line.indexOf('//')
-            if(startSingleComment !== -1)
-                line = line.slice(0,startSingleComment)
-            //ignore blank lines
-            if(line !== '')
-                parsed.push(line)
+        
+        
+        var lines = f.replace('\t',' ');
+        var startComment;
+        while( (startComment = lines.indexOf('//') )!==-1 ){
+            var first = lines.slice(0,startComment);
+            var endComment = lines.indexOf('\n',startComment)
+            var last = lines.slice(endComment);
+            lines = first+last;
         }
         
-        
-        //joins the lines together into one string
-        var inputStream = parsed.join('')
-        
-        //number of multi-line comments remaining in the file
-        var numberOfComments = (inputStream.match(/\/\*/g) || []).length; // searches for '/*'
-        
-        
-        // removes multiline comments
-        while(numberOfComments>0){
-            var startCut = inputStream.indexOf('/*')
-            var endCut = inputStream.indexOf('*/')+2
-            inputStream = inputStream.slice(0,startCut)+inputStream.slice(endCut);
-            numberOfComments-=1
-        }
-        
-        // removes newlines
-        this.inputStream = inputStream.replace('\n',' ')
-        
-        //checks for mismatched (leftover closing) comments
-        if(inputStream.indexOf('*/') !== -1)
-                throw("Cannot compile! Mismatched comment close statement found!");
-            
+        this.inputStream = lines;
+        this.lineCount = 1; //start on the first line, every time \n encountered increment. used for debugging
         
     }
        
-    hasMoreTokens(){
-         return this.inputStream.replace(' ','').length > 0;
-    }
+    
     
     advance(){
         //returns the next token. If no tokens left,
         //returns null
         
-        if(!this.hasMoreTokens())
-            return null;
-        
         //removes leading whitespace
         this.inputStream = this.inputStream.trim()
+        
+        // checks to see if we are looking at a multi-line comment, skips ahead if so
+        if(this.inputStream.slice(0,2)==='/*'){
+            
+            var endCut = this.inputStream.indexOf('*/');
+            
+            if(endCut===-1)
+                throw('unexpected opening of multiline comment , close that thang!')
+            endCut+=2;
+            //counts the number of new lines in our multiline comment
+            
+            this.lineCount+= (this.inputStream.slice(0,endCut).match(/\n/g) || []).length 
+            this.inputStream = this.inputStream.slice(endCut)
+            return this.advance()
+        }
+        
+        //if we encounter a new line, skip it and increment the linecount
+        if(this.inputStream.charAt(0)==='\n'){
+            this.lineCount+=1;
+            return this.advance();
+        }
+        
+        
+        if(this.inputStream.replace(' ','').length === 0)
+            return null;
         
         //checks to see if we are looking at a string (leading char is \")
         // if so, pull the entire string as a token
@@ -121,13 +120,19 @@ class Analyzer {
         return token
         
     }
+    
+    hasMoreTokens(){
+        if(this.peek())
+            return true;
+        return false;
+    }
         
         
     peek(){
         // returns the next symbol without removing it from the stream
-        if(!this.hasMoreTokens())
-            return null;
         var token = this.advance();
+        if(!token)
+            return null;
         this.inputStream = token+" "+this.inputStream;
         return token;
     }
