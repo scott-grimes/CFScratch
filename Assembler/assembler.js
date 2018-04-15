@@ -1,3 +1,4 @@
+//TODO: need to detect incorrect A commands. parseint ignores chars
 class Assembler {
     
     constructor(text){
