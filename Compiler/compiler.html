@@ -85,7 +85,6 @@ function updateDownloadFileName(name){
 document.getElementById('fileUploader').addEventListener('change', fetchTextFromFile, false);
    
 
-    
     var initialMessage = "/** \n\
  * Example Program to represent an array. Click 'Compile' to compile this into VM. \n\
  */ \n\
@@ -118,10 +117,12 @@ class Array { \n\
    var m1 = document.getElementById("compilerMessage");
    var answer;
    m1.value = 'Compiling...';
+   var a;
+       
    try{
        m.value = '';
-       var a = new Analyzer(jackTest);
-       
+        a = new Analyzer(jackTest);
+        window.a = a;
        while(a.hasMoreTokens()){
            var token = a.advance();
            m.value += token+'\t\t\t('+a.tokenType(token)+')\n';
@@ -132,15 +133,17 @@ class Array { \n\
        
    catch(err){
        m.value = '';
-       m1.value = 'Error: '+err;
+       m1.value = err;
    
    }
        
        
    m = document.getElementById("outputBox2");
+
    try{
        m.value = '';
-       var a = new CompileJack(jackTest);
+       a = new CompileJack(jackTest);
+    
        for(var i = 0;i<a.lines.length;i++){
            m.value += a.lines[i]+'\n';
        }
@@ -148,7 +151,7 @@ class Array { \n\
        m.value = m.value.slice(0,-1);
    }
    catch(err){
-       m1.value = 'Error: '+err;
+       m1.value = err;
    
    }
 }
