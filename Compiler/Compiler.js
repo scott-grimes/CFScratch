@@ -1,6 +1,3 @@
-// TODO, fix compiling to account for what line the error occured on!
-
-
 //reads in a .jack file, compiles it into a .vm file, prints the results to stdout
 // need to add throws for error messages! give line number for original statements? 
 
@@ -24,7 +21,7 @@ class Analyzer {
         '<','>','=','~']
     
       
-        var parsed = []; //contains an array of [parsed line, line number] with comments removed
+        //var parsed = []; //contains an array of [parsed line, line number] with comments removed
        
         
         
@@ -38,7 +35,7 @@ class Analyzer {
         }
         
         this.inputStream = lines;
-        this.lineCount = 1; //start on the first line, every time \n encountered increment. used for debugging
+        Analyzer.prototype.lineCount = 1; //start on the first line, every time \n encountered increment. used for debugging
         
     }
        
@@ -49,7 +46,15 @@ class Analyzer {
         //returns null
         
         //removes leading whitespace
-        this.inputStream = this.inputStream.trim()
+        
+        if(this.inputStream.charAt(0)=== ' ' || this.inputStream.charAt(0)=== '\t' ){
+           
+           this.inputStream = this.inputStream.slice(1);
+          
+           return this.advance();
+           }
+           
+        
         
         // checks to see if we are looking at a multi-line comment, skips ahead if so
         if(this.inputStream.slice(0,2)==='/*'){
@@ -57,18 +62,20 @@ class Analyzer {
             var endCut = this.inputStream.indexOf('*/');
             
             if(endCut===-1)
-                throw('unexpected opening of multiline comment , close that thang!')
+                throw('Line '+Analyzer.prototype.lineCount+' Comment is not closed!')
             endCut+=2;
             //counts the number of new lines in our multiline comment
             
-            this.lineCount+= (this.inputStream.slice(0,endCut).match(/\n/g) || []).length 
+            Analyzer.prototype.lineCount+= (this.inputStream.slice(0,endCut).match(/\n/g) || []).length 
             this.inputStream = this.inputStream.slice(endCut)
             return this.advance()
         }
         
         //if we encounter a new line, skip it and increment the linecount
         if(this.inputStream.charAt(0)==='\n'){
-            this.lineCount+=1;
+            
+            Analyzer.prototype.lineCount+=1;
+            this.inputStream = this.inputStream.slice(1);
             return this.advance();
         }
         
@@ -100,6 +107,7 @@ class Analyzer {
         // example:   "A=M+3;" returns foundInside = [';','+','=']
         
         var potential_token= this.inputStream.split(' ',1)[0];
+        
         var foundInside = [];
         
         // add one of each symbol found inside the potential token to the list of "found inside"
@@ -117,6 +125,7 @@ class Analyzer {
         //chops out the token from our input stream and returns it
         var token = potential_token
         this.inputStream = this.inputStream.slice(token.length).trim();
+        
         return token
         
     }
@@ -308,7 +317,7 @@ class CompileJack{
             if(value === token)
                 return token;
         }
-        throw('Expected: '+value+' but got :'+token);
+        throw('Line: '+ Analyzer.prototype.lineCount +' expected "'+value+'" but got "'+token+'"');
     }
         
     
@@ -386,6 +395,7 @@ class CompileJack{
         
         
         if (sub_type === 'constructor'){
+            
             CompileJack.print ('push constant '+classVariables.toString() )
             CompileJack.print('call Memory.alloc 1')
             CompileJack.print('pop pointer 0')
@@ -421,6 +431,8 @@ class CompileJack{
             peek = f.peek()
             if (peek === ',')
                 f.advance()
+            else if(peek !== ')')
+                throw('Line: '+Analyzer.prototype.lineCount)
         }
             
         this.indent -=1
@@ -480,11 +492,15 @@ class CompileJack{
         this.indent +=1
         var f = this.fetch
         var peek = f.peek()
-        while(['let','if','while','do','return'].includes(peek)){
+        //what if an invalid statement is seen?
+        do{
             this.CompileStatement()
             peek = f.peek()
         }
+        while(['let','if','while','do','return'].includes(peek));
             
+        
+        
         
         this.indent -=1
     }
@@ -498,7 +514,7 @@ class CompileJack{
         else if (peek === 'while') this.CompileWhile()
         else if (peek === 'do') this.CompileDo()
         else if (peek === 'return') this.CompileReturn()
-        else throw("Statement invalid! expected one of [let,if,while,do, return]")
+        else throw("Line: "+Analyzer.prototype.lineCount+ ' invalid statement, expected one of [let,if,while,do,return]')
     }
         
         
@@ -538,6 +554,11 @@ class CompileJack{
             
             var array_var_number = this.symbol.indexOf(varName).toString()
             kind = this.symbol.kindOf(varName)
+            //if arrayvar number is broken! throw
+            
+            if(array_var_number === null){
+                throw('Line: '+Analyzer.prototype.lineCount)
+            }
             VMWriter.push(kind,array_var_number)
             CompileJack.print('add')
         }
@@ -710,6 +731,7 @@ class CompileJack{
         var peek = f.peek()
         this.CompileTerm()
         peek = f.peek()
+        //what is valid after a term? a symbol or end of line????
         while ( ['+','-','*','/','&','|',
                     '<','>','='].includes(peek)){
             var token = f.advance()
@@ -750,7 +772,7 @@ class CompileJack{
         //( expression )
         else if( token == '('){
             this.CompileExpression()
-            token = f.advance()//) end of parenthisis
+            this.AssertAndAdvance(')') //token = f.advance()//) end of parenthisis
         } 
         else if( ['-','~'].includes(token) ){
              this.CompileTerm()
@@ -774,9 +796,9 @@ class CompileJack{
                 var varName = token
                 var kind = this.symbol.kindOf(varName)
                 
-                f.advance()//[
+                this.AssertAndAdvance('[')
                 this.CompileExpression()
-                f.advance()// ]
+                this.AssertAndAdvance(']')
                 
                 var var_symbol_num = this.symbol.indexOf(varName)
                 VMWriter.push(kind, var_symbol_num)
@@ -796,7 +818,7 @@ class CompileJack{
                 
         }
         else{
-            throw ("Error unexpected term: "+token)
+            throw ("Line: "+Analyzer.prototype.lineCount+" unexpected term: "+token)
         }
             
         
@@ -860,6 +882,9 @@ class CompileJack{
             var index = this.symbol.indexOf(className)
             var kind = this.symbol.kindOf(className)
             var type = this.symbol.typeOf(className)
+            if(index===null || kind === null || type ===null){
+                throw('Line: '+Analyzer.prototype.lineCount)
+            }
             subroutine_name = type+'.'+subroutine_name.split('.',1)[1] //[1]? in javascript
             VMWriter.push(kind,index)
             num_subroutine_arguments+=1
@@ -1012,7 +1037,9 @@ class VMWriter{
         
     }
      static push(segment,index){
-         
+         if(index === null){
+             throw('Line: '+Analyzer.prototype.lineCount)
+         }
          if (segment === 'arg')
             segment = 'argument'
         if (segment === 'field')
@@ -1021,6 +1048,7 @@ class VMWriter{
          
      }
          static pop(segment,index){
+             
             if (segment === 'arg')
                 segment = 'argument'
             if (segment === 'field')
@@ -1033,12 +1061,14 @@ class VMWriter{
     }
     
     static writeCall(name,nArgs){
+        
         CompileJack.print('call '+name+' '+ nArgs.toString() )
         
     }
         
         
     static writeFunction(name,nLocals){
+        
         CompileJack.print('function '+name+' '+ nLocals.toString() )
         
     }
