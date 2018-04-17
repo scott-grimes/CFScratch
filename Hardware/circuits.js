@@ -1,11 +1,13 @@
 //each toolbox inside contains the components required to build the desired chip
 var thingsToBuild = ['NOT','AND','OR','XOR','MUX','DMUX','NOT16','AND16','OR16','MUX16','OR8WAY','MUX4WAY16','MUX8WAY16','DMUX4WAY','DMUX8WAY','HALFADDER','FULLADDER','ADD16','INC16','ALU','DFF','BIT','REGISTER','RAM8','RAM64','RAM512','RAM4K','RAM16K','PC'];
 var toolboxes = {}; // the toolbox required for each component to be built
-var setup = {}; //the setup required for each component to be built
+var devices = {}; //the setup required for each component to be built
 
 // TOOLBOXES
 //GATES
-toolboxes.NOT = [{"type":"NAND"}];
+toolboxes.NOT = [{"type":"NAND"},
+                  {"type":"A"},
+                  {"type":"B"}];
 toolboxes.AND = [{"type":"NAND"},
                  {"type":"NOT"}];
 toolboxes.OR = [{"type":"NAND"},
@@ -82,6 +84,14 @@ toolboxes.PC = [{"type":"REGISTER"},
 
 
 // SETUP
+
+devices.NOT = [
+    {"type":"A","id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
+    {"type":"B","id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
+    {"type":"NAND","id":"dev2","x":150,"y":100,"label":"Nand"},
+    {"type":"LED","id":"dev3","x":250,"y":100,"label":"LED"}
+  ];
+//{"type":"BusIn","numOutputs":8} change to 16?
 
 /*
     
