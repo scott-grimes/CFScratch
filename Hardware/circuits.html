@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<script type="text/javascript" src="circuits.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous"></script>
+<script type="text/javascript" src="simcirjs/simcir.js"></script>
+<link rel="stylesheet" type="text/css" href="simcirjs/simcir.css" />
+<script type="text/javascript" src="simcirjs/simcir-basicset.js"></script>
+<link rel="stylesheet" type="text/css" href="simcirjs/simcir-basicset.css" />
+<script type="text/javascript" src="simcirjs/simcir-library.js"></script>
+<style type="text/css">
+* {
+  font-family: arial, sans-serif;
+}
+
+</style>
+<title>SimcirJS</title>
+<script type="text/javascript">
+    
+    /*
+    var getCircuitData = function() {
+    return $s.controller(
+        $simcir.find('.simcir-workspace') ).text();
+  };
+  var setCircuitData = function(data) {
+    $s.setupSimcir($simcir, JSON.parse(data) );
+  };
+  */
+    function setLibrary (itemName){
+        var data = {};
+        
+        data["width"] = 800;
+        data["height"]=400;
+        if(itemName!=='RESET'){
+            data["toolbox"] =toolboxes[itemName];
+        }
+         var $s = simcir;
+         var $mysim = $('#circuitBox');
+
+        $s.setupSimcir($mysim,data)
+        
+        return;
+    }
+    window.onload = function(){
+        var toolbar = document.getElementById("toolbar");
+        //used to reset
+        var myButton = document.createElement("input");
+            myButton.type = "button";
+            var itemName = 'RESET';
+            myButton.value = itemName
+            myButton.id = 'RESET_button';
+            toolbar.appendChild(myButton);
+        document.getElementById("RESET_button").addEventListener("click", function(){setLibrary(this.value)},false);
+        
+        //add all our stuff
+        for(var i = 0;i<thingsToBuild.length;i++){
+            if(i%8===0){
+                toolbar.appendChild( document.createElement('br') );
+
+            }
+            var myButton = document.createElement("input");
+            myButton.type = "button";
+            var itemName = thingsToBuild[i];
+            myButton.value = itemName
+            myButton.id = itemName+'_button';
+            toolbar.appendChild(myButton);
+            document.getElementById(myButton.id).addEventListener("click", function(){setLibrary( this.value)},false);
+        }
+        
+    }
+    
+</script>
+</head>
+<body>
+
+<h1>Circuits</h1>
+
+
+<h2>Usage</h2>
+<ul>
+  <li>Choose a device from the toolbox and move to right side.</li>
+  <li>Connect them by drag operation.</li>
+  <li>Click an input node to disconnect.</li>
+  <li>Move a device back to the toolbox if you don't use.</li>
+  <li>Ctrl+Click(Mac:command+Click) to toggle view (Live circuit or JSON data).</li>
+  <li>Double-Click a label to edit device name.</li>
+  <li>Double-Click a library to open the circuit inside.</li>
+</ul>
+<div id="toolbar"></div>
+<!--
+Specify width and height only.
+All the other attributes will be used defaults.
+-->
+<div class="simcir" id="circuitBox">
+{
+  "width":800,
+  "height":400
+}
+</div>
+<br>
+Ctrl+Click(Mac:command+Click) on your circuit and copy a circuit data.
+
+
+
+
+</body>
+</html>
