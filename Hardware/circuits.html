@@ -12,6 +12,8 @@
 <script type="text/javascript" src="simcirjs/simcir-basicset.js"></script>
 <link rel="stylesheet" type="text/css" href="simcirjs/simcir-basicset.css" />
 <script type="text/javascript" src="simcirjs/simcir-library.js"></script>
+<script type="text/javascript" src="customComponents.js"></script>
+<script type="text/javascript" src="simcir_testing_components.js"></script>
 <style type="text/css">
 * {
   font-family: arial, sans-serif;
@@ -33,11 +35,15 @@
     function setLibrary (itemName){
         var data = {};
         
+        
         data["width"] = 800;
         data["height"]=400;
         if(itemName!=='RESET'){
             data["toolbox"] =toolboxes[itemName];
+            if(devices[itemName])
+                data["devices"] = devices[itemName];
         }
+         
          var $s = simcir;
          var $mysim = $('#circuitBox');
 
@@ -46,6 +52,7 @@
         return;
     }
     window.onload = function(){
+        //registerTestingComponents();
         var toolbar = document.getElementById("toolbar");
         //used to reset
         var myButton = document.createElement("input");
@@ -60,7 +67,6 @@
         for(var i = 0;i<thingsToBuild.length;i++){
             if(i%8===0){
                 toolbar.appendChild( document.createElement('br') );
-
             }
             var myButton = document.createElement("input");
             myButton.type = "button";
@@ -70,7 +76,6 @@
             toolbar.appendChild(myButton);
             document.getElementById(myButton.id).addEventListener("click", function(){setLibrary( this.value)},false);
         }
-        
     }
     
 </script>
