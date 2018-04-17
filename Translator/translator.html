@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<title>Translator Page</title></title>
+<head>
+<script src="Translator.js"
+    type="text/javascript"></script><script>
+/**
+ * A translator from our high level language to our VM language
+ */
+var files;
+function saveTextAsFile(textToWrite)
+{
+    var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
+    var fileNameToSaveAs =  document.getElementById("downloadFileName").value //Your filename;
+    
+    var downloadLink = document.createElement("a");
+    downloadLink.download = fileNameToSaveAs;
+    downloadLink.innerHTML = "Download File";
+    if (window.webkitURL != null)
+    {
+        // Chrome allows the link to be clicked
+        // without actually adding it to the DOM.
+        downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+    }
+    else
+    {
+        // Firefox requires the link to be added to the DOM
+        // before it can be clicked.
+        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+        downloadLink.onclick = destroyClickedElement;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+    }
+
+    downloadLink.click();
+}
+
+window.onload = function() {
+    
+    document.getElementById("downloadButton").onclick = function () {
+        var textToSave = document.getElementById("outputBox2").value;
+        saveTextAsFile( textToSave )
+    }
+    
+function fetchTextFromSingleFile(f){
+    return new Promise(function(resolve, reject) {
+
+  if (f) {
+          
+      var r = new FileReader();
+      r.onload = function(e) { 
+	      var contents = e.target.result;
+          var fName = f.name;
+          files.push({fileName: fName, data:contents})
+          document.getElementById("inputBox").value += 'Uploaded '+fName+'\n';
+      }
+      r.readAsText(f);
+      resolve;
+    } else { 
+      reject;
+    }
+
+});
+    
+}
+
+function fetchTextFromFiles(evt) {
+    files = []; // array of {fileName: 'name', data: 'data'}
+    //Retrieve the first file
+    var fileList = evt.target.files; 
+    document.getElementById("inputBox").value = ''
+    
+    var promiseArray = [];
+    for(var i = 0;i<fileList.length;i++){
+        promiseArray.push(fetchTextFromSingleFile(fileList[i]));
+    }
+    
+    Promise.all( promiseArray ).then(function() {
+    document.getElementById("inputBox").value = 'ALl Files Uploaded'
+}).catch(function(err){
+        alert('Failed to load files!')
+    });
+    
+    
+  }
+
+
+document.getElementById('fileUploader').addEventListener('change', fetchTextFromFiles, false);
+   
+
+    var initialMessage = "No Files Loaded";
+    
+   document.getElementById("inputBox").value = initialMessage;
+    
+   document.getElementById("runbutton").onclick = function () {
+   
+   var m = document.getElementById("outputBox");
+   var m1 = document.getElementById("compilerMessage");
+   m1.value = 'Translating...';
+   var a;
+
+   try{
+       m.value = '';
+       a = new Parser(files);
+    
+       for(var i = 0;i<a.output.length;i++){
+           m.value += a.output[i]+'\n';
+       }
+       m1.value = 'Analyzed Successfully!'
+       m.value = m.value.slice(0,-1);
+   }
+   catch(err){
+       m1.value = a.currentReadingLine+err;
+   }
+}
+}
+    
+</script>
+</head>
+<body>
+Upload your .vm files, then then hit 'translate'<br>
+<input id="fileUploader" name="myFile" type="file" accept=".vm" multiple><br>
+<textarea id="inputBox" rows="10" cols="60">
+</textarea><br>
+
+<br>
+<button type="button" id="runbutton" >Translate</button>
+<input type="text" id="compilerMessage" size="44" readonly><br>
+<br>Translated Assembly Code<br>
+<textarea id="outputBox" rows="10" cols="60" readonly>
+</textarea><br>
+<button type="button" id="downloadButton" >Download</button><input type="text" id="downloadFileName" value="download.asm">
+</body>
+</html>
