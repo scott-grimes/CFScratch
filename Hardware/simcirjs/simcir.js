@@ -1,5 +1,6 @@
 //
-// SimcirJS
+// BASED ON SimcirJS
+// Scott Grimes: Added immobility to devices
 //
 // Copyright (c) 2014 Kazuhiko Arase
 //
@@ -9,15 +10,11 @@
 //  http://www.opensource.org/licenses/mit-license.php
 //
 
-// includes following device types:
-//  In
-//  Out
-//  Joint
 
 'use strict';
 
 var simcir = {};
-
+window.s = simcir;
 //
 // https://github.com/kazuhikoarase/lessQuery
 //
@@ -977,6 +974,11 @@ simcir.$ = function() {
     if (!headless) {
       $dev.attr('class', 'simcir-device');
     }
+      
+      if(deviceDef.immobile){
+          $dev.attr('immobile',true)
+      }
+      
     controller($dev, createDeviceController(
         {$ui: $dev, deviceDef: deviceDef,
           headless: headless, scope: scope, doc: null}) );
@@ -2010,6 +2012,12 @@ simcir.$ = function() {
 
     var beginMoveDevice = function(event, $target) {
       var $dev = $target.closest('.simcir-device');
+        
+        //added to prevent users from moving immobile devices
+        if($dev[0].attributes.immobile)
+            return
+            
+        
       var pos = transform($dev);
       if (!controller($dev).isSelected() ) {
         deselectAll();
@@ -2103,6 +2111,7 @@ simcir.$ = function() {
       if (isActiveNode($target) ) {
         beginConnect(event, $target);
       } else if ($target.closest('.simcir-device').length == 1) {
+         
         if ($target.closest('.simcir-toolbox').length == 1) {
           beginNewDevice(event, $target);
         } else {
