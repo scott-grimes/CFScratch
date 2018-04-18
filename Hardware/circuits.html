@@ -13,7 +13,7 @@
 <link rel="stylesheet" type="text/css" href="simcirjs/simcir-basicset.css" />
 <script type="text/javascript" src="simcirjs/simcir-library.js"></script>
 <script type="text/javascript" src="customComponents.js"></script>
-<script type="text/javascript" src="simcir_testing_components.js"></script>
+<script type="text/javascript" src="tester.js"></script>
 <style type="text/css">
 * {
   font-family: arial, sans-serif;
@@ -23,25 +23,69 @@
 <title>SimcirJS</title>
 <script type="text/javascript">
     
-    /*
+    
     var getCircuitData = function() {
+        var $s = simcir; 
+         var $mysim = $('#circuitBox');
     return $s.controller(
-        $simcir.find('.simcir-workspace') ).text();
+        $mysim.find('.simcir-workspace') ).data();
   };
-  var setCircuitData = function(data) {
-    $s.setupSimcir($simcir, JSON.parse(data) );
-  };
-  */
+    
+    var setCircuitData = function(data){
+        
+    simcir.setupSimcir( $('#circuitBox'), data );
+  
+    }
+    
+    
+    
+    var test = function(){
+        
+        var data = getCircuitData();
+        var results = runTest(data.tests)
+        console.log(results);
+        /*
+        var getIndexOfLabel = function(label){
+        for(var i = 0;i<data.devices.length;i++){
+            if (data.devices[i]['label']===label)
+                return i;
+        }
+        return null;
+    }
+        var getState  = function(label){
+            var i = getIndexOfLabel(label);
+            return data.devices[i].state['on']
+        }
+        
+        var setState = function(label,state){
+            var i = getIndexOfLabel(label);
+            return data.devices[i].state['on'] = state;
+            
+        }
+        
+        console.log('initial: ', getState("IN"));
+        setState("IN",false);
+        setCircuitData(data);        
+        console.log('after false: ', getState("IN"));
+        
+        console.log('initial: ', getState("IN"));
+        setState("IN",true);
+        setCircuitData(data);
+        console.log('after true: ', getState("IN"));
+        return;
+        */
+    };
+  
     function setLibrary (itemName){
         var data = {};
-        
-        
         data["width"] = 800;
         data["height"]=400;
         if(itemName!=='RESET'){
             data["toolbox"] =toolboxes[itemName];
             if(devices[itemName])
-                data["devices"] = devices[itemName];
+                data["devices"] = devices[itemName]["devices"];
+                data["connectors"] = devices[itemName]["connectors"]
+                data["tests"] = devices[itemName]["tests"]
         }
          
          var $s = simcir;
@@ -53,6 +97,7 @@
     }
     window.onload = function(){
         //registerTestingComponents();
+        
         var toolbar = document.getElementById("toolbar");
         //used to reset
         var myButton = document.createElement("input");
@@ -75,8 +120,10 @@
             myButton.id = itemName+'_button';
             toolbar.appendChild(myButton);
             document.getElementById(myButton.id).addEventListener("click", function(){setLibrary( this.value)},false);
-        }
-    }
+            
+  }
+      document.getElementById("test").addEventListener("click", function(){ test() },false);  
+    };
     
 </script>
 </head>
@@ -107,6 +154,7 @@ All the other attributes will be used defaults.
 }
 </div>
 <br>
+<input type="button" id="test" value="Test"></input>
 Ctrl+Click(Mac:command+Click) on your circuit and copy a circuit data.
 
 
