@@ -10,7 +10,7 @@
   // red/black
   var defaultLEDColor = '#ff0000';
   var defaultLEDBgColor = '#000000';
-
+  
   var onValue = 1;
   var offValue = null;
   var isHot = function(v) { return v != null; };
@@ -91,8 +91,7 @@
     };
 };
     
-    $s.registerDevice('A', createCustomInputFactory('Toggle') );
-    $s.registerDevice('B', createCustomInputFactory('Toggle') );
+    $s.registerDevice('SINGLEINPUT', createCustomInputFactory('Toggle') );
 
    /*
   // register direct current source
