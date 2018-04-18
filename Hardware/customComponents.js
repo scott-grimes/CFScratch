@@ -6,6 +6,55 @@
 
   // unit size
   var unit = $s.unit;
+    var multiplyColor = function() {
+    var HEX = '0123456789abcdef';
+    var toIColor = function(sColor) {
+      if (!sColor) {
+        return 0;
+      }
+      sColor = sColor.toLowerCase();
+      if (sColor.match(/^#[0-9a-f]{3}$/i) ) {
+        var iColor = 0;
+        for (var i = 0; i < 6; i += 1) {
+          iColor = (iColor << 4) | HEX.indexOf(sColor.charAt( (i >> 1) + 1) );
+        }
+        return iColor;
+      } else if (sColor.match(/^#[0-9a-f]{6}$/i) ) {
+        var iColor = 0;
+        for (var i = 0; i < 6; i += 1) {
+          iColor = (iColor << 4) | HEX.indexOf(sColor.charAt(i + 1) );
+        }
+        return iColor;
+      }
+      return 0;
+    };
+    var toSColor = function(iColor) {
+      var sColor = '#';
+      for (var i = 0; i < 6; i += 1) {
+        sColor += HEX.charAt( (iColor >>> (5 - i) * 4) & 0x0f);
+      }
+      return sColor;
+    };
+    var toRGB = function(iColor) {
+      return {
+        r: (iColor >>> 16) & 0xff,
+        g: (iColor >>> 8) & 0xff,
+        b: iColor & 0xff};
+    };
+    var multiplyColor = function(iColor1, iColor2, ratio) {
+      var c1 = toRGB(iColor1);
+      var c2 = toRGB(iColor2);
+      var mc = function(v1, v2, ratio) {
+        return ~~Math.max(0, Math.min( (v1 - v2) * ratio + v2, 255) );
+      };
+      return (mc(c1.r, c2.r, ratio) << 16) |
+        (mc(c1.g, c2.g, ratio) << 8) | mc(c1.b, c2.b, ratio);
+    };
+    return function(color1, color2, ratio) {
+      return toSColor(multiplyColor(
+          toIColor(color1), toIColor(color2), ratio) );
+    };
+  }();
 
   // red/black
   var defaultLEDColor = '#ff0000';
@@ -15,6 +64,53 @@
   var offValue = null;
   var isHot = function(v) { return v != null; };
   var intValue = function(v) { return isHot(v)? 1 : 0; };
+  var isOn = function(v) { return isHot(v)? true : false; };
+    
+    
+     // register simple LED
+  $s.registerDevice('SINGLEOUTPUT', function(device) {
+    var in1 = device.addInput();
+      device.deviceDef.state = {'on':isOn(in1.getValue() )};
+    var super_createUI = device.createUI;
+    device.createUI = function() {
+      super_createUI();
+      var hiColor = device.deviceDef.color || defaultLEDColor;
+      var bgColor = device.deviceDef.bgColor || defaultLEDBgColor;
+      device.deviceDef.state = {'on':isOn(in1.getValue() )};
+      var loColor = multiplyColor(hiColor, bgColor, 0.25);
+      var bLoColor = multiplyColor(hiColor, bgColor, 0.2);
+      var bHiColor = multiplyColor(hiColor, bgColor, 0.8);
+      var size = device.getSize();
+      var $ledbase = $s.createSVGElement('circle').
+        attr({cx: size.width / 2, cy: size.height / 2, r: size.width / 4}).
+        attr('stroke', 'none').
+        attr('fill', bLoColor);
+      device.$ui.append($ledbase);
+      var $led = $s.createSVGElement('circle').
+        attr({cx: size.width / 2, cy: size.height / 2, r: size.width / 4 * 0.8}).
+        attr('stroke', 'none').
+        attr('fill', loColor);
+      device.$ui.append($led);
+      device.$ui.on('inputValueChange', function() {
+        $ledbase.attr('fill', isHot(in1.getValue() )? bHiColor : bLoColor);
+        $led.attr('fill', isHot(in1.getValue() )? hiColor : loColor);
+        device.deviceDef.state = {'on':isOn(in1.getValue() )};
+      });
+      device.doc = {
+        params: [
+          {name: 'color', type: 'string',
+            defaultValue: defaultLEDColor,
+            description: 'color in hexadecimal.'},
+          {name: 'bgColor', type: 'string',
+            defaultValue: defaultLEDBgColor,
+            description: 'background color in hexadecimal.'}
+        ],
+        code: '{"type":"' + device.deviceDef.type +
+        '","color":"' + defaultLEDColor + '"}'
+      };
+        
+    };
+  });
 
     
  var createCustomInputFactory = function(type) {
@@ -93,23 +189,7 @@
     
     $s.registerDevice('SINGLEINPUT', createCustomInputFactory('Toggle') );
 
-   /*
-  // register direct current source
-  $s.registerDevice('DC', function(device) {
-    device.addOutput();
-    var super_createUI = device.createUI;
-    device.createUI = function() {
-      super_createUI();
-      device.$ui.addClass('simcir-basicset-dc');
-    };
-    device.$ui.on('deviceAdd', function() {
-      device.getOutputs()[0].setValue(onValue);
-    });
-    device.$ui.on('deviceRemove', function() {
-      device.getOutputs()[0].setValue(null);
-    });
-  });
-*/
+    
   
 
 }(simcir);
