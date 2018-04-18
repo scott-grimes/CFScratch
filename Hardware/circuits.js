@@ -5,9 +5,7 @@ var devices = {}; //the setup required for each component to be built
 
 // TOOLBOXES
 //GATES
-toolboxes.NOT = [{"type":"NAND"},
-                  {"type":"A"},
-                  {"type":"B"}];
+toolboxes.NOT = [{"type":"NAND"}];
 toolboxes.AND = [{"type":"NAND"},
                  {"type":"NOT"}];
 toolboxes.OR = [{"type":"NAND"},
@@ -86,10 +84,10 @@ toolboxes.PC = [{"type":"REGISTER"},
 // SETUP
 
 devices.NOT = {"devices":[
-    {"type":"A","id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
-    {"type":"B","id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
     {"type":"NAND","id":"dev2","x":150,"y":100,"label":"Nand"},
-    {"type":"LED","id":"dev3","x":250,"y":100,"label":"LED"}
+    {"type":"LED","immobile":true,"id":"dev3","x":250,"y":100,"label":"OUT"}
   ],
   "connectors":[
     {"from":"dev2.in0","to":"dev0.out0"},
@@ -99,11 +97,11 @@ devices.NOT = {"devices":[
 };
 
 devices.AND = {"devices":[
-    {"type":"A","id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
-    {"type":"B","id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
     {"type":"NAND","id":"dev2","x":150,"y":100,"label":"NAND"},
     {"type":"NOT","id":"dev3","x":250,"y":100,"label":"NOT"},
-    {"type":"LED","id":"dev4","x":350,"y":100,"label":"OUT"}
+    {"type":"LED","immobile":true,"id":"dev4","x":350,"y":100,"label":"OUT"}
   ],
   "connectors":[
     {"from":"dev2.in0","to":"dev0.out0"},
@@ -113,12 +111,12 @@ devices.AND = {"devices":[
   ]};
 
 devices.OR = { "devices":[
-    {"type":"A","id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
-    {"type":"B","id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
     {"type":"NOT","id":"dev2","x":150,"y":50,"label":"NOT"},
     {"type":"NOT","id":"dev3","x":150,"y":150,"label":"NOT"},
     {"type":"NAND","id":"dev4","x":250,"y":100,"label":"NAND"},
-    {"type":"LED","id":"dev5","x":350,"y":100,"label":"OUT"}
+    {"type":"LED","immobile":true,"id":"dev5","x":350,"y":100,"label":"OUT"}
   ],
   "connectors":[
     {"from":"dev2.in0","to":"dev0.out0"},
@@ -131,14 +129,14 @@ devices.OR = { "devices":[
 
 devices.XOR = {
   "devices":[
-    {"type":"A","id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
-    {"type":"B","id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
     {"type":"NOT","id":"dev2","x":150,"y":0,"label":"NOT"},
     {"type":"NOT","id":"dev3","x":150,"y":200,"label":"NOT"},
     {"type":"AND","id":"dev4","x":250,"y":150,"label":"AND"},
     {"type":"AND","id":"dev5","x":250,"y":50,"label":"AND"},
     {"type":"OR","id":"dev6","x":350,"y":100,"label":"OR"},
-    {"type":"LED","id":"dev7","x":450,"y":100,"label":"OUT"}
+    {"type":"LED","immobile":true,"id":"dev7","x":450,"y":100,"label":"OUT"}
   ],
   "connectors":[
     {"from":"dev2.in0","to":"dev0.out0"},
@@ -154,13 +152,13 @@ devices.XOR = {
 };
 
 devices.MUX = {"devices":[
-    {"type":"A","id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
-    {"type":"B","id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
-    {"type":"SEL","id":"dev2","x":50,"y":250,"label":"SEL","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev2","x":50,"y":250,"label":"SEL","state":{"on":false}},
     {"type":"NOT","id":"dev3","x":150,"y":250,"label":"NOT"},
     {"type":"AND","id":"dev4","x":150,"y":150,"label":"AND"},
     {"type":"OR","id":"dev5","x":250,"y":150,"label":"OR"},
-    {"type":"LED","id":"dev6","x":350,"y":150,"label":"OUT"},
+    {"type":"LED","immobile":true,"id":"dev6","x":350,"y":150,"label":"OUT"},
     {"type":"AND","id":"dev7","x":200,"y":50,"label":"AND"}
   ],
   "connectors":[
@@ -177,13 +175,13 @@ devices.MUX = {"devices":[
 
 devices.DMUX = {
   "devices":[
-    {"type":"IN","id":"dev0","x":50,"y":50,"label":"IN","state":{"on":false}},
-    {"type":"SEL","id":"dev1","x":50,"y":250,"label":"SEL","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"IN","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":50,"y":250,"label":"SEL","state":{"on":false}},
     {"type":"NOT","id":"dev2","x":150,"y":250,"label":"NOT"},
     {"type":"AND","id":"dev3","x":200,"y":50,"label":"AND"},
     {"type":"AND","id":"dev4","x":200,"y":150,"label":"AND"},
-    {"type":"LED","id":"dev5","x":350,"y":100,"label":"A"},
-    {"type":"LED","id":"dev6","x":350,"y":200,"label":"B"}
+    {"type":"LED","immobile":true,"id":"dev5","x":350,"y":100,"label":"A"},
+    {"type":"LED","immobile":true,"id":"dev6","x":350,"y":200,"label":"B"}
   ],
   "connectors":[
     {"from":"dev2.in0","to":"dev1.out0"},
@@ -198,8 +196,8 @@ devices.DMUX = {
 
 devices.NOT16 = {
   "devices":[
-    {"type":"BusIn","id":"dev0","x":50,"y":150,"numOutputs":16,"label":"IN"},
-    {"type":"BusOut","id":"dev1","x":400,"y":150,"numInputs":16,"label":"OUT"},
+    {"type":"BusIn","immobile":true,"id":"dev0","x":50,"y":150,"numOutputs":16,"label":"IN"},
+    {"type":"BusOut","immobile":true,"id":"dev1","x":400,"y":150,"numInputs":16,"label":"OUT"},
     {"type":"NOT","id":"dev2","x":200,"y":0,"label":"NOT"},
     {"type":"NOT","id":"dev3","x":200,"y":50,"label":"NOT"},
     {"type":"NOT","id":"dev4","x":200,"y":100,"label":"NOT"},
@@ -254,9 +252,9 @@ devices.NOT16 = {
 };
 devices.AND16 = {
   "devices":[
-    {"type":"BusIn","id":"dev0","x":50,"y":150,"numOutputs":16,"label":"A"},
-    {"type":"BusIn","id":"dev18","x":50,"y":350,"numOutputs":16,"label":"B"},
-    {"type":"BusOut","id":"dev1","x":400,"y":150,"numInputs":16,"label":"OUT"},
+    {"type":"BusIn","immobile":true,"id":"dev0","x":50,"y":150,"numOutputs":16,"label":"A"},
+    {"type":"BusIn","immobile":true,"id":"dev18","x":50,"y":350,"numOutputs":16,"label":"B"},
+    {"type":"BusOut","immobile":true,"id":"dev1","x":400,"y":150,"numInputs":16,"label":"OUT"},
     {"type":"AND","id":"dev2","x":200,"y":0,"label":"AND"},
     {"type":"AND","id":"dev3","x":200,"y":50,"label":"AND"},
     {"type":"AND","id":"dev4","x":200,"y":100,"label":"AND"},
@@ -274,7 +272,7 @@ devices.AND16 = {
     {"type":"AND","id":"dev16","x":200,"y":700,"label":"AND"},
     {"type":"AND","id":"dev17","x":200,"y":750,"label":"AND"}
   ],
-  "connectANDs":[
+  "connectors":[
     {"from":"dev1.in0","to":"dev2.out0"},
     {"from":"dev1.in1","to":"dev3.out0"},
     {"from":"dev1.in2","to":"dev4.out0"},
@@ -329,9 +327,9 @@ devices.AND16 = {
 
 devices.OR16 = {
   "devices":[
-    {"type":"BusIn","id":"dev0","x":50,"y":150,"numOutputs":16,"label":"A"},
-    {"type":"BusIn","id":"dev18","x":50,"y":350,"numOutputs":16,"label":"B"},
-    {"type":"BusOut","id":"dev1","x":400,"y":150,"numInputs":16,"label":"OUT"},
+    {"type":"BusIn","immobile":true,"id":"dev0","x":50,"y":150,"numOutputs":16,"label":"A"},
+    {"type":"BusIn","immobile":true,"id":"dev18","x":50,"y":350,"numOutputs":16,"label":"B"},
+    {"type":"BusOut","immobile":true,"id":"dev1","x":400,"y":150,"numInputs":16,"label":"OUT"},
     {"type":"OR","id":"dev2","x":200,"y":0,"label":"OR"},
     {"type":"OR","id":"dev3","x":200,"y":50,"label":"OR"},
     {"type":"OR","id":"dev4","x":200,"y":100,"label":"OR"},
@@ -403,15 +401,16 @@ devices.OR16 = {
 
 
 devices.MUX16 = [
-    {"type":"BusIn","id":"dev0","x":50,"y":150,"numOutputs":16,"label":"IN"},
-    {"type":"BusOut","id":"dev1","x":400,"y":150,"numInputs":16,"label":"OUT"},
-    {"type":"SEL","id":"dev1","x":50,"y":350,"label":"SEL","state":{"on":false}}
+    {"type":"BusIn","immobile":true,"id":"dev0","x":50,"y":150,"numOutputs":16,"label":"IN"},
+    {"type":"BusOut","immobile":true,"id":"dev1","x":400,"y":150,"numInputs":16,"label":"OUT"},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":50,"y":350,"label":"SEL","state":{"on":false}}
 ];
 devices.OR8WAY = [
-    {"type":"BusIn","id":"dev0","x":50,"y":150,"numOutputs":8,"label":"IN"},
-    {"type":"LED","id":"dev1","x":400,"y":175,"label":"OUT"}
+    {"type":"BusIn","immobile":true,"id":"dev0","x":50,"y":150,"numOutputs":8,"label":"IN"},
+    {"type":"LED","immobile":true,"id":"dev1","x":400,"y":175,"label":"OUT"}
 ];
 
 devices.MUX4WAY16 = [
 
 ];
+
