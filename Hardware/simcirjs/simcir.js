@@ -1222,6 +1222,7 @@ simcir.$ = function() {
         connect(nodeFrom.$ui, nodeTo.$ui);
       }
     });
+      
     return $devices;
   };
 
@@ -1688,6 +1689,7 @@ simcir.$ = function() {
       toolbox: defaultToolbox,
       devices: [],
       connectors: [],
+      tests:{}
     }, data);
 
     var scope = {};
@@ -1889,7 +1891,8 @@ simcir.$ = function() {
         editable: data.editable,
         toolbox: toolbox,
         devices: devices,
-        connectors: connectors
+        connectors: connectors,
+        tests: data.tests
       };
     };
     var getText = function() {
