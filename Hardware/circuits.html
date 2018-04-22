@@ -23,7 +23,7 @@
 <title>SimcirJS</title>
 <script type="text/javascript">
     
-    
+    var TESTING = false;
     var getCircuitData = function() {
         var $s = simcir; 
          var $mysim = $('#circuitBox');
@@ -36,14 +36,41 @@
     simcir.setupSimcir( $('#circuitBox'), data );
   
     }
-    
-    
+
+    var createTestResults = function(testobj,results){
+            var t = document.getElementById("testresultstable");
+            var passedAll = true;
+            var rowlen = t.rows[1].cells.length;           
+            for(let testNumber = 0;testNumber<results["number"];testNumber++){
+                let row = t.rows[testNumber+1];
+                for(let i = 0;i<results["devicesToCheck"].length;i++){
+                    
+                    let dev = results["devicesToCheck"][i];
+                    if( results[dev][testNumber] !== testobj[dev][testNumber]){
+                        passedAll=false;
+                        row.cells[rowlen-1].innerHTML = "X";
+
+                    }else{
+
+                        row.cells[rowlen-1].innerHTML = "✓";
+                    }
+                    row.cells.namedItem( dev+'_'+testNumber).innerHTML = results[ dev ][testNumber];
+                }
+            }
+    }    
     
     var test = function(){
-        
+        if(TESTING){ return; }
+        TESTING = true;
         var data = getCircuitData();
-        var results = runTest(data.tests)
-        console.log(results);
+        runTest(data.tests)
+        .then(results=>{
+            createTestResults(data.tests,results);
+            TESTING = false;
+
+        })
+        .catch(err=>{console.log('error',err); TESTING = false;})
+        
         /*
         var getIndexOfLabel = function(label){
         for(var i = 0;i<data.devices.length;i++){
@@ -92,7 +119,50 @@
          var $mysim = $('#circuitBox');
 
         $s.setupSimcir($mysim,data)
+
+        var tests = data["tests"];
+        if(!tests){return;}
+        var table = document.getElementById("testresultstable")
+        table.innerHTML = "";
+        //set up head of table
+        var header = table.createTHead();
+        let row = header.insertRow(0);
+        for(let i = 0;i<tests.toSet.length;i++){
+            let cell = row.insertCell(-1);
+            cell.innerHTML = tests.toSet[i];
+        }
+        //expected
+        for(let i = 0;i<tests.toCheck.length;i++){
+         
+            let cell = row.insertCell(-1);
+            cell.innerHTML = tests.toCheck[i]+'<sub>exp</sub>';   
+        }
+        //actual
+        for(let i = 0;i<tests.toCheck.length;i++){ 
+            let cell = row.insertCell(-1);
+            cell.innerHTML = tests.toCheck[i]+'<sub>act</sub>';   
+        }
+        //results cell for checkboxes
+        row.insertCell(-1);
         
+        //set up cells
+        for(let test = 0;test<tests.number;test++){
+            let row = table.insertRow(-1);
+            for(let i = 0;i<tests.toSet.length;i++){
+                let cell = row.insertCell(-1);
+                cell.innerHTML = tests[ tests.toSet[i] ][test];
+            }
+            for(let i = 0;i<tests.toCheck.length;i++){
+                let cell = row.insertCell(-1);
+                cell.innerHTML = tests[ tests.toCheck[i] ][test];
+                cell = row.insertCell(-1);
+                cell.innerHTML = ' ';
+                cell.id = tests.toCheck[i]+'_'+test;
+
+            }
+            row.insertCell(-1); //box at end for checkboxes
+        }
+
         return;
     }
     window.onload = function(){
@@ -152,7 +222,7 @@ All the other attributes will be used defaults.
   "width":800,
   "height":400
 }
-</div>
+</div><div id="testResults"><hr>Tests</hr><table id="testresultstable"></table></div>
 <br>
 <input type="button" id="test" value="Test"></input>
 Ctrl+Click(Mac:command+Click) on your circuit and copy a circuit data.
