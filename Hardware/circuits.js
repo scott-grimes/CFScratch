@@ -112,7 +112,13 @@ devices.AND = {"devices":[
     {"from":"dev2.in1","to":"dev1.out0"},
     {"from":"dev3.in0","to":"dev2.out0"},
     {"from":"dev4.in0","to":"dev3.out0"}
-  ]};
+  ],
+    "tests":{   "number":4,
+                "toSet":["A","B"],
+                "toCheck":["OUT"],
+                "A":[0,1,0,1],
+                "B":[0,0,1,1],
+                "OUT":[0,0,0,1]}};
 
 devices.OR = { "devices":[
     {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
