@@ -6,8 +6,19 @@ var runTest = function(testobj){
         var numTests = testobj["number"];
         var devicesToSet = testobj["toSet"];
         var devicesToCheck = testobj["toCheck"];
-        var output = [];
-        var line = [];
+        var output = {};
+
+        output["number"] = numTests;
+        output["devicesToSet"] = devicesToSet;
+        output["devicesToCheck"] = devicesToCheck;
+
+        for(let i = 0;i<devicesToCheck.length;i++){
+            output[ devicesToCheck[i] ] = [];
+        }
+        for(let i = 0;i<devicesToSet.length;i++){
+            output[ devicesToSet[i] ] = [];
+        }
+
         var data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
         var boolToBin = function(x){ return (x? 1:0); };
         
@@ -19,7 +30,6 @@ var runTest = function(testobj){
                 //console.log('uploading new circuit data')
                     setTimeout(() => {//console.log('returning from uploading');
                      resolve()}, 50); // (*)
-
             });  
         };  
 
@@ -47,51 +57,29 @@ var runTest = function(testobj){
         var runSingleTest =function(i){
                 return new Promise(function(resolve, reject) {
                     
-                    
-                    var line = [];
-                    //console.log('starting test '+(i+1)+' of '+numTests)
-
-                    for(let j = 0;j<1;j++){
+                    //pushing set pins into results object
+                    for(let j = 0;j<devicesToSet.length;j++){
                         var valueToSet = testobj[devicesToSet[j]][i] ? true : false;
                         setState(devicesToSet[j],  valueToSet)
                         valueToSet = boolToBin(valueToSet);
-                        line.push(valueToSet)
+                        output[ devicesToSet[j] ].push( valueToSet )  ;
                     }
                    //console.log('starting to set circuit data');
 
                     setCircuitData(data)
                     .then( ()=> {
                         return new Promise(function(resolve, reject) {
-                            //console.log('returned to get circuit data')
-                            //console.log('getting answers to test')
+                            //adding set pin to output
                             for(let j = 0;j<devicesToCheck.length;j++){
-
-                                line.push( getState(devicesToCheck[j]) );
-                            }
-                            output.push(line);
-                            //console.log('finished test'+(i+1)+' of '+numTests)
-                            resolve();
+                                
+                                output[ devicesToCheck[j] ].push(getState(devicesToCheck[j]));
+                                
+                            }resolve();
                         }); 
                     })
                     .then(()=> resolve() );
             });
             }
-
-
-    //add the label of the devices to the first row of our output
-    for(var i = 0;i<devicesToSet.length;i++)
-        {
-            line.push(devicesToSet[i])
-        }
-    for(var i = 0;i<devicesToCheck.length;i++)
-        {   
-            line.push('Expected '+devicesToCheck[i])
-        }
-    for(var i = 0;i<devicesToCheck.length;i++)
-        {   
-            line.push('Actual '+devicesToCheck[i])
-        }
-    output.push(line);
 
     var chain = Promise.resolve();
     //check each test, push the values into our output 
