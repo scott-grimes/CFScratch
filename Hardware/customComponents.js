@@ -118,9 +118,9 @@
     device.halfPitch = true;
     device.deviceDef['isBus'] = true;
 
-    var max = Math.pow(2,numInputs-1)-1;
-    var min = -32768;
-
+    //if we have a 16 bit bus, allow signed numbers. otherwise use unsigned
+    var max = Math.pow(2,numInputs)-1;
+    var min = 0;
 
     if(!device.deviceDef['value'])
         device.deviceDef['value']= 0;
@@ -139,6 +139,9 @@
       var myforeign = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject')
       var textdiv = document.createElement("div");
       var text = device.deviceDef['value'];
+      if(numInputs===16 && text> 32768)
+        text = text-Math.pow(2,16);
+
       var textnode = document.createTextNode(text);
       textdiv.appendChild(textnode);
       textdiv.setAttribute("contentEditable", "true");
@@ -166,14 +169,22 @@
                   //dest.setAttribute('display', 'inline-block')
                   var tval = textdiv.innerText;
                   tval = parseInt(tval);
-                  if(tval!==null && tval!== undefined && tval<=32767 && tval>=-32768){
-                    device.deviceDef['value'] = tval;
+                  //make sure the number the user entered is valid!
+                  if(tval!==null && tval!== undefined){
+                    if( tval<=max && ( tval>=min || ( numInputs===16 && tval>= -65537) ) ){
+
+                      if(numInputs===16){
+                        tval = bin2dec( dec2bin(tval) );
+                      }
+                      device.deviceDef['value'] = tval;
+                      device.$ui.trigger('inputValueChange');
                   }
                   
-                  device.$ui.trigger('inputValueChange');
+                  
+                }
 
-              
-          } 
+              }
+          
           textdiv.onblur = null;
           myforeign.remove()
           
@@ -195,7 +206,9 @@
       textdiv.focus();
     }
 
-
+    var bin2dec = function(bin){
+      return parseInt(bin, 2);
+    }
     var dec2bin = function(int) {
       var u = new Uint32Array(1);
       var nbit = 16;
@@ -212,15 +225,23 @@
       var busValue = [];
       
       let binvalue = dec2bin(device.deviceDef['value']);
-      for (var i = numInputs-1; i >=0; i -= 1) {
+      
+      let start = binvalue.length-1;
+      let end = start-numInputs;
+      for (var i = start; i > end ; i -= 1) {
         let value = binvalue.charAt(i);
 
         busValue.push( value==='1' ? 1 : null );
       }
-
+      
       device.getOutputs()[0].setValue(
           busValue);
-      $textInput.text(device.deviceDef['value'])
+      var tval = device.deviceDef['value'];
+      if(numInputs === 16 && tval> 32768){
+          tval = tval-Math.pow(2,16);
+        }
+      $textInput.text( tval )
+      
     }
 
     device.addOutput('', 'x' + numInputs);
@@ -235,8 +256,14 @@
       var size = device.getSize();
         var w = size.width;
         var h = size.height;
+        var tval = device.deviceDef['value'];
+        //display signed 2-s complement number if we have 16bits for this bus,
+                    //otherwise just display the unsigned value
+        if(numInputs === 16 && tval>32768){
+          tval = tval-Math.pow(2,16);
+        }
           $textInput.
-          text(device.deviceDef['value']).
+          text(tval).
           css('font-size', 12 + 'px').
           attr('class', 'simcir-device-label').
           attr({x: w / 2, y: h/2 });
@@ -353,7 +380,6 @@
   $s.registerDevice('SINGLEINPUT', createCustomInputFactory('Toggle') );
 
 
-
   $s.registerDevice('CUSTOMBUSIN', function(device) {
 
     var numOutputs = Math.max(2, device.deviceDef.numOutputs || 16);
@@ -363,7 +389,6 @@
     device.addInput('', 'x' + numOutputs);
 
     var $textDisplay = $s.createSVGElement('text');
-    
 
     device.$ui.on('inputValueChange', function() {
       var busValue = device.getInputs()[0].getValue();
@@ -381,6 +406,10 @@
           else{ throw('bus not build correctly')}
           pow+=1;
         }
+         if(numOutputs === 16 && sum> 32768){
+          sum = sum-Math.pow(2,16);
+        }
+
       device.deviceDef['value'] = sum;
       }
       
@@ -394,8 +423,12 @@
         var size = device.getSize();
         var w = size.width;
         var h = size.height;
+        var tval = device.deviceDef['value'];
+          if(numOutputs === 16 && tval> 32768){
+          tval = tval-Math.pow(2,16);
+        }
           $textDisplay.
-          text(device.deviceDef['value']).
+          text(tval).
           css('font-size', 12 + 'px').
           attr('class', 'simcir-device-label').
           attr('editable',true).
