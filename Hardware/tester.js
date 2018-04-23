@@ -43,13 +43,27 @@ var runTest = function(testobj){
         var getState  = function(label){
             data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
             var i = getIndexOfLabel(label);
+            
+            if(data.devices[i]['isBus']){
+                //2s compliment
+                if(data.devices['numInputs']===16 || data.devices['numOutputs']===16  ){
+                    return data.devices[i].value-Math.pow(2,15);
+                }
+                return data.devices[i].value;
+            }
+            
             i = data.devices[i].state['on']
             return boolToBin(i)
         };
         
         var setState = function(label,value){
             var i = getIndexOfLabel(label);
-            data.devices[i].state['on'] = value;
+            if(data.devices[i].isBus){
+                data.devices[i].value = value;
+            }else{
+                data.devices[i].state['on'] = value;
+            }
+            
         };
 
 
@@ -59,9 +73,22 @@ var runTest = function(testobj){
                     
                     //pushing set pins into results object
                     for(let j = 0;j<devicesToSet.length;j++){
-                        var valueToSet = testobj[devicesToSet[j]][i] ? true : false;
+
+                        let valueToSet;
+                        let deviceIndex = getIndexOfLabel(devicesToSet[j]);
+                        if(devices[deviceIndex].isBus){
+                            console.log(devices[deviceIndex])
+                            valueToSet = testobj[ devicesToSet[j] ][i];
+                        }else{
+                            valueToSet = testobj[ devicesToSet[j] ][i] ? true : false;
+
+                        }
+
                         setState(devicesToSet[j],  valueToSet)
-                        valueToSet = boolToBin(valueToSet);
+
+                        if(!devicesToSet[j].isBus)
+                            valueToSet = boolToBin(valueToSet);
+
                         output[ devicesToSet[j] ].push( valueToSet )  ;
                     }
                    //console.log('starting to set circuit data');
