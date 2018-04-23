@@ -16,9 +16,6 @@
 <script type="text/javascript" src="simcirjs/simcir-library.js"></script>
 <script type="text/javascript" src="customComponents.js"></script>
 <script type="text/javascript" src="tester.js"></script>
-<script type="text/javascript" src="editableTextBox.js"></script>
-
-
 
 
 <style type="text/css">
@@ -47,8 +44,10 @@
 
     var createTestResults = function(testobj,results){
             var t = document.getElementById("testresultstable");
+
             var passedAll = true;
-            var rowlen = t.rows[1].cells.length;           
+            var rowlen = t.rows[1].cells.length; 
+            
             for(let testNumber = 0;testNumber<results["number"];testNumber++){
                 let row = t.rows[testNumber+1];
                 for(let i = 0;i<results["devicesToCheck"].length;i++){
