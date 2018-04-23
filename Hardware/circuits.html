@@ -146,16 +146,22 @@
         row.insertCell(-1);
         
         //set up cells
+        //fill setter cells
         for(let test = 0;test<tests.number;test++){
             let row = table.insertRow(-1);
             for(let i = 0;i<tests.toSet.length;i++){
                 let cell = row.insertCell(-1);
                 cell.innerHTML = tests[ tests.toSet[i] ][test];
             }
+            //fill checker cells with expected value
             for(let i = 0;i<tests.toCheck.length;i++){
                 let cell = row.insertCell(-1);
                 cell.innerHTML = tests[ tests.toCheck[i] ][test];
-                cell = row.insertCell(-1);
+                
+            }
+            //create blank checker cells for actual value
+            for(let i = 0;i<tests.toCheck.length;i++){
+                let cell = row.insertCell(-1);
                 cell.innerHTML = ' ';
                 cell.id = tests.toCheck[i]+'_'+test;
 
