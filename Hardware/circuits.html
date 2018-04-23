@@ -2,19 +2,27 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-<script type="text/javascript" src="circuits.js"></script>
-    <script
-      src="https://code.jquery.com/jquery-3.2.1.min.js"
-      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-      crossorigin="anonymous"></script>
-<script type="text/javascript" src="simcirjs/simcir.js"></script>
+
 <link rel="stylesheet" type="text/css" href="simcirjs/simcir.css" />
-<script type="text/javascript" src="simcirjs/simcir-basicset.js"></script>
 <link rel="stylesheet" type="text/css" href="simcirjs/simcir-basicset.css" />
+
+<script type="text/javascript" src="circuits.js"></script>
+    
+<script src="jquery-3.2.1.min.js"></script>
+
+
+<script type="text/javascript" src="simcirjs/simcir.js"></script>
+<script type="text/javascript" src="simcirjs/simcir-basicset.js"></script>
 <script type="text/javascript" src="simcirjs/simcir-library.js"></script>
 <script type="text/javascript" src="customComponents.js"></script>
 <script type="text/javascript" src="tester.js"></script>
+<script type="text/javascript" src="editableTextBox.js"></script>
+
+
+
+
 <style type="text/css">
+/* http://jsfiddle.net/gordonwoodhull/undr1kx6/44/ */
 * {
   font-family: arial, sans-serif;
 }
@@ -173,7 +181,8 @@
     }
     window.onload = function(){
         //registerTestingComponents();
-        
+       
+
         var toolbar = document.getElementById("toolbar");
         //used to reset
         var myButton = document.createElement("input");
@@ -232,7 +241,7 @@ All the other attributes will be used defaults.
 <br>
 <input type="button" id="test" value="Test"></input>
 Ctrl+Click(Mac:command+Click) on your circuit and copy a circuit data.
-
+<br>
 
 
 
