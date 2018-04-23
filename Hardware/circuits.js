@@ -45,8 +45,7 @@ toolboxes.FULLADDER = [{"type":"HALFADDER"},
                        {"type":"OR"}]; 
 
 
-toolboxes.ADD16 = [{"type":"HALFADDER"},
-                   {"type":"FULLADDER"}]; 
+toolboxes.ADD16 = [{"type":"FULLADDER"}]; 
 
 toolboxes.INC16 = [{"type":"ADD16"}]; //todo NEEDS A TRUE GATE
 
@@ -613,4 +612,158 @@ devices.MUX4WAY16 = {
   ]
 
 };
+
+devices.HALFADDER = {
+	   "devices":[
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":88,"y":168,"label":"A"},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":88,"y":72,"label":"B"},
+    {"type":"XOR","id":"dev2","x":240,"y":72,"label":"XOR"},
+    {"type":"AND","id":"dev3","x":248,"y":168,"label":"AND"},
+    {"type":"SINGLEOUTPUT","immobile":true,"id":"dev4","x":400,"y":72,"label":"SUM"},
+    {"type":"SINGLEOUTPUT","immobile":true,"id":"dev5","x":400,"y":168,"label":"CARRY"}
+  ],
+  "connectors":[
+    {"from":"dev2.in0","to":"dev1.out0"},
+    {"from":"dev2.in1","to":"dev0.out0"},
+    {"from":"dev3.in0","to":"dev1.out0"},
+    {"from":"dev3.in1","to":"dev0.out0"},
+    {"from":"dev4.in0","to":"dev2.out0"},
+    {"from":"dev5.in0","to":"dev3.out0"}
+  ]
+}
+
+devices.FULLADDER = {
+	"devices":[
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":56,"y":40,"label":"A"},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":56,"y":120,"label":"B"},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev2","x":56,"y":200,"label":"C"},
+    {"type":"HALFADDER","id":"dev3","x":144,"y":160,"label":"HALFADDER"},
+    {"type":"HALFADDER","id":"dev4","x":240,"y":72,"label":"HALFADDER"},
+    {"type":"SINGLEOUTPUT","immobile":true,"id":"dev5","x":432,"y":160,"label":"CARRY"},
+    {"type":"SINGLEOUTPUT","immobile":true,"id":"dev6","x":440,"y":64,"label":"SUM"},
+    {"type":"OR","id":"dev7","x":344,"y":160,"label":"OR"}
+  ],
+  "connectors":[
+    {"from":"dev3.in0","to":"dev1.out0"},
+    {"from":"dev3.in1","to":"dev2.out0"},
+    {"from":"dev4.in0","to":"dev0.out0"},
+    {"from":"dev4.in1","to":"dev3.out0"},
+    {"from":"dev5.in0","to":"dev7.out0"},
+    {"from":"dev6.in0","to":"dev4.out0"},
+    {"from":"dev7.in0","to":"dev4.out1"},
+    {"from":"dev7.in1","to":"dev3.out1"}
+  ]
+}
+
+devices.ADD16 = {
+	"devices":[
+    {"type":"CUSTOMBUSOUT","immobile":true,"isBus":true,"value":0,"id":"dev0","x":40,"y":32,"label":"A"},
+    {"type":"CUSTOMBUSOUT","immobile":true,"isBus":true,"value":0,"id":"dev1","x":40,"y":160,"label":"B"},
+    {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev2","x":144,"y":16,"label":"BusIn"},
+    {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev3","x":144,"y":200,"label":"BusIn"},
+    {"type":"BusOut","numInputs":16,"immobile":true,"id":"dev4","x":536,"y":104,"label":"BusOut"},
+    {"type":"CUSTOMBUSIN","immobile":true,"isBus":true,"value":0,"id":"dev5","x":624,"y":128,"label":"OUT"},
+    {"type":"FULLADDER","id":"dev6","x":312,"y":8,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev7","x":312,"y":72,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev8","x":312,"y":136,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev9","x":312,"y":210,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev10","x":312,"y":280,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev11","x":312,"y":350,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev12","x":312,"y":420,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev13","x":312,"y":490,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev14","x":312,"y":560,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev15","x":312,"y":660,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev16","x":312,"y":760,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev17","x":312,"y":860,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev18","x":312,"y":960,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev19","x":312,"y":1060,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev20","x":312,"y":1160,"label":"FULLADDER"},
+    {"type":"FULLADDER","id":"dev21","x":312,"y":1260,"label":"FULLADDER"}
+  ],
+  "connectors":[
+    {"from":"dev2.in0","to":"dev0.out0"},
+    {"from":"dev3.in0","to":"dev1.out0"},
+    {"from":"dev4.in0","to":"dev6.out1"},
+    {"from":"dev4.in1","to":"dev7.out1"},
+    {"from":"dev4.in2","to":"dev8.out1"},
+    {"from":"dev4.in3","to":"dev9.out1"},
+    {"from":"dev4.in4","to":"dev10.out1"},
+    {"from":"dev4.in5","to":"dev11.out1"},
+    {"from":"dev4.in6","to":"dev12.out1"},
+    {"from":"dev4.in7","to":"dev13.out1"},
+    {"from":"dev4.in8","to":"dev14.out1"},
+    {"from":"dev4.in9","to":"dev15.out1"},
+    {"from":"dev4.in10","to":"dev16.out1"},
+    {"from":"dev4.in11","to":"dev17.out1"},
+    {"from":"dev4.in12","to":"dev18.out1"},
+    {"from":"dev4.in13","to":"dev19.out1"},
+    {"from":"dev4.in14","to":"dev20.out1"},
+    {"from":"dev4.in15","to":"dev21.out1"},
+    {"from":"dev5.in0","to":"dev4.out0"},
+    {"from":"dev6.in0","to":"dev2.out0"},
+    {"from":"dev6.in1","to":"dev3.out0"},
+    {"from":"dev7.in0","to":"dev2.out1"},
+    {"from":"dev7.in1","to":"dev3.out1"},
+    {"from":"dev7.in2","to":"dev6.out0"},
+    {"from":"dev8.in0","to":"dev2.out2"},
+    {"from":"dev9.in0","to":"dev2.out3"},
+    {"from":"dev10.in0","to":"dev2.out4"},
+    {"from":"dev11.in0","to":"dev2.out5"},
+    {"from":"dev12.in0","to":"dev2.out6"},
+    {"from":"dev13.in0","to":"dev2.out7"},
+    {"from":"dev14.in0","to":"dev2.out8"},
+    {"from":"dev15.in0","to":"dev2.out9"},
+    {"from":"dev16.in0","to":"dev2.out10"},
+    {"from":"dev17.in0","to":"dev2.out11"},
+    {"from":"dev18.in0","to":"dev2.out12"},
+    {"from":"dev19.in0","to":"dev2.out13"},
+    {"from":"dev20.in0","to":"dev2.out14"},
+    {"from":"dev21.in0","to":"dev2.out15"},
+    {"from":"dev8.in1","to":"dev3.out2"},
+    {"from":"dev9.in1","to":"dev3.out3"},
+    {"from":"dev10.in1","to":"dev3.out4"},
+    {"from":"dev11.in1","to":"dev3.out5"},
+    {"from":"dev12.in1","to":"dev3.out6"},
+    {"from":"dev13.in1","to":"dev3.out7"},
+    {"from":"dev14.in1","to":"dev3.out8"},
+    {"from":"dev15.in1","to":"dev3.out9"},
+    {"from":"dev16.in1","to":"dev3.out10"},
+    {"from":"dev17.in1","to":"dev3.out11"},
+    {"from":"dev18.in1","to":"dev3.out12"},
+    {"from":"dev19.in1","to":"dev3.out13"},
+    {"from":"dev20.in1","to":"dev3.out14"},
+    {"from":"dev21.in1","to":"dev3.out15"},
+    {"from":"dev8.in2","to":"dev7.out0"},
+    {"from":"dev9.in2","to":"dev8.out0"},
+    {"from":"dev10.in2","to":"dev9.out0"},
+    {"from":"dev11.in2","to":"dev10.out0"},
+    {"from":"dev12.in2","to":"dev11.out0"},
+    {"from":"dev13.in2","to":"dev12.out0"},
+    {"from":"dev14.in2","to":"dev13.out0"},
+    {"from":"dev15.in2","to":"dev14.out0"},
+    {"from":"dev16.in2","to":"dev15.out0"},
+    {"from":"dev17.in2","to":"dev16.out0"},
+    {"from":"dev18.in2","to":"dev17.out0"},
+    {"from":"dev19.in2","to":"dev18.out0"},
+    {"from":"dev20.in2","to":"dev19.out0"},
+    {"from":"dev21.in2","to":"dev20.out0"}
+  ]
+}
+
+devices.INC16 = {
+	"devices":[
+    {"type":"DC","id":"dev0","x":56,"y":176,"label":"DC"},
+    {"type":"BusOut","numInputs":16,"id":"dev1","x":168,"y":184,"label":"BusOut"},
+    {"type":"CUSTOMBUSOUT","id":"dev2","x":56,"y":64,"label":"In"},
+    {"type":"ADD16","id":"dev3","x":304,"y":112,"label":"ADD16"},
+    {"type":"CUSTOMBUSIN","id":"dev4","x":464,"y":112,"label":"Out"}
+  ],
+  "connectors":[
+    {"from":"dev1.in0","to":"dev0.out0"},
+    {"from":"dev3.in0","to":"dev2.out0"},
+    {"from":"dev3.in1","to":"dev1.out0"},
+    {"from":"dev4.in0","to":"dev3.out0"}
+  ]
+}
+ 
 
