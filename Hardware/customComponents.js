@@ -115,19 +115,58 @@
 
   $s.registerDevice('CUSTOMBUSOUT', function(device) {
     var numInputs = Math.max(2, device.deviceDef.numInputs || 16);
+
+    var bin2dec = function(bin){
+      return parseInt(bin, 2);
+    }
+    var dec2bin = function(int) {
+      var u = new Uint32Array(1);
+      var nbit = 16;
+      u[0] = int;
+      int = Math.pow(2, 16) - 1;
+      var converted = u[0] & int;
+      converted.toString(2);
+      return converted.toString(2).padStart(16,"0")
+    }
+
+    
     device.halfPitch = true;
     device.deviceDef['isBus'] = true;
+
+    if(!device.deviceDef['numInputs']){
+      device.deviceDef['numInputs'] = numInputs;
+    }
 
     //if we have a 16 bit bus, allow signed numbers. otherwise use unsigned
     var max = Math.pow(2,numInputs)-1;
     var min = 0;
-
-    if(!device.deviceDef['value'])
+    //if no value is defined, use 0
+    if(! device.deviceDef['value'])
         device.deviceDef['value']= 0;
-    else if(device.deviceDef['value']>max)
-      device.deviceDef['value']= max;
-    else if(device.deviceDef['value']< min )
-      device.deviceDef['value']= min;
+
+    //takes an integer and makes sure it fits within the required bits of our bus
+    var parseIntVal = function(value){
+      //if value is too big for number of bits, set to max possible value
+      if(value>max){
+        value = max;
+      }
+
+      //if a device is a 16bit bus, we allow 2's compliment negative numbers to be defined. they are stored as uints
+      if(device.deviceDef['isBus'] && device.deviceDef.numInputs === 16){
+        //device can allow signed values
+        if( value < 0)
+          value = bin2dec( dec2bin( value ) )
+
+      }
+
+      if( value < min )
+        value = min;
+      return value;
+    }
+
+    device.deviceDef['value'] = parseIntVal( device.deviceDef['value'] );
+    
+    
 
 /*a pop-up box which is used to edit the value of the device */
     var editablebox = function () {
@@ -139,8 +178,7 @@
       var myforeign = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject')
       var textdiv = document.createElement("div");
       var text = device.deviceDef['value'];
-      if(numInputs===16 && text> 32768)
-        text = text-Math.pow(2,16);
+
 
       var textnode = document.createTextNode(text);
       textdiv.appendChild(textnode);
@@ -155,7 +193,7 @@
       svg.appendChild(myforeign);
       
       myforeign.appendChild(textdiv);
-          
+        
       var range = document.createRange();
       range.selectNodeContents(textdiv);
       var sel = window.getSelection();
@@ -171,18 +209,11 @@
                   tval = parseInt(tval);
                   //make sure the number the user entered is valid!
                   if(tval!==null && tval!== undefined){
-                    if( tval<=max && ( tval>=min || ( numInputs===16 && tval>= -65537) ) ){
-
-                      if(numInputs===16){
-                        tval = bin2dec( dec2bin(tval) );
-                      }
+                      tval = parseIntVal(tval)
                       device.deviceDef['value'] = tval;
                       device.$ui.trigger('inputValueChange');
                   }
                   
-                  
-                }
-
               }
           
           textdiv.onblur = null;
@@ -206,18 +237,7 @@
       textdiv.focus();
     }
 
-    var bin2dec = function(bin){
-      return parseInt(bin, 2);
-    }
-    var dec2bin = function(int) {
-      var u = new Uint32Array(1);
-      var nbit = 16;
-      u[0] = int;
-      int = Math.pow(2, 16) - 1;
-      var converted = u[0] & int;
-      converted.toString(2);
-      return converted.toString(2).padStart(16,"0")
-    }
+    
 
     var $textInput = $s.createSVGElement('text');
 
@@ -237,7 +257,7 @@
       device.getOutputs()[0].setValue(
           busValue);
       var tval = device.deviceDef['value'];
-      if(numInputs === 16 && tval> 32768){
+      if(numInputs === 16 && tval> 32767){
           tval = tval-Math.pow(2,16);
         }
       $textInput.text( tval )
@@ -259,7 +279,7 @@
         var tval = device.deviceDef['value'];
         //display signed 2-s complement number if we have 16bits for this bus,
                     //otherwise just display the unsigned value
-        if(numInputs === 16 && tval>32768){
+        if(numInputs === 16 && tval>32767){
           tval = tval-Math.pow(2,16);
         }
           $textInput.
@@ -388,6 +408,10 @@
     device.deviceDef['value']= 0;
     device.addInput('', 'x' + numOutputs);
 
+    if(!device.deviceDef['numOutputs']){
+      device.deviceDef['numOutputs'] = numOutputs;
+    }
+
     var $textDisplay = $s.createSVGElement('text');
 
     device.$ui.on('inputValueChange', function() {
@@ -406,7 +430,7 @@
           else{ throw('bus not build correctly')}
           pow+=1;
         }
-         if(numOutputs === 16 && sum> 32768){
+         if(numOutputs === 16 && sum> 32767){
           sum = sum-Math.pow(2,16);
         }
 
@@ -424,7 +448,7 @@
         var w = size.width;
         var h = size.height;
         var tval = device.deviceDef['value'];
-          if(numOutputs === 16 && tval> 32768){
+          if(numOutputs === 16 && tval> 32767){
           tval = tval-Math.pow(2,16);
         }
           $textDisplay.
@@ -643,7 +667,7 @@ let add16data = {
     {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev2","x":144,"y":16,"label":"BusIn"},
     {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev3","x":144,"y":200,"label":"BusIn"},
     {"type":"BusOut","numInputs":16,"immobile":true,"id":"dev4","x":536,"y":104,"label":"BusOut"},
-    {"type":"Out","immobile":true,"isBus":true,"value":0,"id":"dev5","x":624,"y":128,"label":"OUT"},
+    {"type":"Out","immobile":true,"isBus":true,"value":0,"id":"dev5","x":624,"y":128,"label":"SUM"},
     {"type":"FULLADDER","id":"dev6","x":312,"y":8,"label":"FULLADDER"},
     {"type":"FULLADDER","id":"dev7","x":312,"y":72,"label":"FULLADDER"},
     {"type":"FULLADDER","id":"dev8","x":312,"y":136,"label":"FULLADDER"},
