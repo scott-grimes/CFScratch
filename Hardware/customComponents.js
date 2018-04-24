@@ -1,8 +1,16 @@
 !function($s) {
 
   'use strict';
-
+  //var decls
   var $ = $s.$;
+  // red/black
+  var defaultLEDColor = '#ff0000';
+  var defaultLEDBgColor = '#000000';
+  var onValue = 1;
+  var offValue = null;
+  var isHot = function(v) { return v != null; };
+  var intValue = function(v) { return isHot(v)? 1 : 0; };
+  var isOn = function(v) { return isHot(v)? true : false; };
 
   // unit size
   var unit = $s.unit;
@@ -56,18 +64,7 @@
     };
   }();
 
-  // red/black
-  var defaultLEDColor = '#ff0000';
-  var defaultLEDBgColor = '#000000';
-  
-  var onValue = 1;
-  var offValue = null;
-  var isHot = function(v) { return v != null; };
-  var intValue = function(v) { return isHot(v)? 1 : 0; };
-  var isOn = function(v) { return isHot(v)? true : false; };
-    
-    
-     // register simple LED
+  // one-bit output as an LED with a value attribute 
   $s.registerDevice('SINGLEOUTPUT', function(device) {
     var in1 = device.addInput();
       device.deviceDef.state = {'on':isOn(in1.getValue() )};
@@ -112,7 +109,7 @@
     };
   });
 
-
+  // multi-bit Input with clickable custom value attribute
   $s.registerDevice('CUSTOMBUSOUT', function(device) {
     var numInputs = Math.max(2, device.deviceDef.numInputs || 16);
 
@@ -165,10 +162,8 @@
     }
 
     device.deviceDef['value'] = parseIntVal( device.deviceDef['value'] );
-    
-    
 
-/*a pop-up box which is used to edit the value of the device */
+    /*a pop-up box which is used to edit the value of the device */
     var editablebox = function () {
       /*
       if(dest) {
@@ -322,8 +317,8 @@
     };
   });
 
-    
- var createCustomInputFactory = function(type) {
+  // clickable single bit input with toggled LED
+  var createCustomInputFactory = function(type) {
     return function(device) {
       var out1 = device.addOutput();
       var on = false;
@@ -396,10 +391,9 @@
       };
     };
   };
-    
   $s.registerDevice('SINGLEINPUT', createCustomInputFactory('Toggle') );
 
-
+  // multi-bit Output 
   $s.registerDevice('CUSTOMBUSIN', function(device) {
 
     var numOutputs = Math.max(2, device.deviceDef.numOutputs || 16);
@@ -472,8 +466,6 @@
       
     });
 
-
-
 let muxdata = {
   "width":600,
   "height":400,
@@ -500,113 +492,9 @@ let muxdata = {
   ],
     "layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,
     "nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}}
-
 }
 $s.registerDevice('MUX',muxdata);
 
-let mux16data = {
-
-  "width":600,
-  "height":400,
-  "showToolbox":false,
-
-
-       "devices":[
-    {"type":"In","immobile":true,"isBus":true,"id":"dev0","x":48,"y":40,"label":"A"},
-    {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev1","x":168,"y":16,"label":"BusIn"},
-    {"type":"In","immobile":true,"isBus":true,"id":"dev2","x":48,"y":232,"label":"B"},
-    {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev3","x":168,"y":184,"label":"BusIn"},
-    {"type":"Out","immobile":true,"isBus":true,"id":"dev4","x":650,"y":144,"label":"OUT"},
-    {"type":"BusOut","numInputs":16,"immobile":true,"id":"dev5","x":536,"y":88,"label":"BusOut"},
-    {"type":"In","immobile":true,"id":"dev6","x":48,"y":328,"label":"SEL"},
-    {"type":"MUX","id":"dev7","x":336,"y":0,"label":"MUX"},
-    {"type":"MUX","id":"dev8","x":336,"y":100,"label":"MUX"},
-    {"type":"MUX","id":"dev9","x":336,"y":200,"label":"MUX"},
-    {"type":"MUX","id":"dev10","x":336,"y":300,"label":"MUX"},
-    {"type":"MUX","id":"dev11","x":336,"y":400,"label":"MUX"},
-    {"type":"MUX","id":"dev12","x":336,"y":500,"label":"MUX"},
-    {"type":"MUX","id":"dev13","x":336,"y":600,"label":"MUX"},
-    {"type":"MUX","id":"dev14","x":336,"y":700,"label":"MUX"},
-    {"type":"MUX","id":"dev15","x":336,"y":800,"label":"MUX"},
-    {"type":"MUX","id":"dev16","x":336,"y":900,"label":"MUX"},
-    {"type":"MUX","id":"dev17","x":336,"y":1000,"label":"MUX"},
-    {"type":"MUX","id":"dev18","x":336,"y":1100,"label":"MUX"},
-    {"type":"MUX","id":"dev19","x":336,"y":1200,"label":"MUX"},
-    {"type":"MUX","id":"dev20","x":336,"y":1300,"label":"MUX"},
-    {"type":"MUX","id":"dev21","x":336,"y":1400,"label":"MUX"},
-    {"type":"MUX","id":"dev22","x":336,"y":1500,"label":"MUX"}
-  ],
-  "connectors":[
-    {"from":"dev1.in0","to":"dev0.out0"},
-    {"from":"dev3.in0","to":"dev2.out0"},
-    {"from":"dev4.in0","to":"dev5.out0"},
-    {"from":"dev5.in0","to":"dev7.out0"},
-    {"from":"dev5.in1","to":"dev8.out0"},
-    {"from":"dev5.in2","to":"dev9.out0"},
-    {"from":"dev5.in3","to":"dev10.out0"},
-    {"from":"dev5.in4","to":"dev11.out0"},
-    {"from":"dev5.in5","to":"dev12.out0"},
-    {"from":"dev5.in6","to":"dev13.out0"},
-    {"from":"dev5.in7","to":"dev14.out0"},
-    {"from":"dev5.in8","to":"dev15.out0"},
-    {"from":"dev5.in9","to":"dev16.out0"},
-    {"from":"dev5.in10","to":"dev17.out0"},
-    {"from":"dev5.in11","to":"dev18.out0"},
-    {"from":"dev5.in12","to":"dev19.out0"},
-    {"from":"dev5.in13","to":"dev20.out0"},
-    {"from":"dev5.in14","to":"dev21.out0"},
-    {"from":"dev5.in15","to":"dev22.out0"},
-    {"from":"dev7.in0","to":"dev1.out0"},
-    {"from":"dev7.in1","to":"dev3.out0"},
-    {"from":"dev7.in2","to":"dev6.out0"},
-    {"from":"dev8.in0","to":"dev1.out1"},
-    {"from":"dev8.in1","to":"dev3.out1"},
-    {"from":"dev8.in2","to":"dev6.out0"},
-    {"from":"dev9.in0","to":"dev1.out2"},
-    {"from":"dev9.in1","to":"dev3.out2"},
-    {"from":"dev9.in2","to":"dev6.out0"},
-    {"from":"dev10.in0","to":"dev1.out3"},
-    {"from":"dev10.in1","to":"dev3.out3"},
-    {"from":"dev10.in2","to":"dev6.out0"},
-    {"from":"dev11.in0","to":"dev1.out4"},
-    {"from":"dev11.in1","to":"dev3.out4"},
-    {"from":"dev11.in2","to":"dev6.out0"},
-    {"from":"dev12.in0","to":"dev1.out5"},
-    {"from":"dev12.in1","to":"dev3.out5"},
-    {"from":"dev12.in2","to":"dev6.out0"},
-    {"from":"dev13.in0","to":"dev1.out6"},
-    {"from":"dev13.in1","to":"dev3.out6"},
-    {"from":"dev13.in2","to":"dev6.out0"},
-    {"from":"dev14.in0","to":"dev1.out7"},
-    {"from":"dev14.in1","to":"dev3.out7"},
-    {"from":"dev14.in2","to":"dev6.out0"},
-    {"from":"dev15.in0","to":"dev1.out8"},
-    {"from":"dev15.in1","to":"dev3.out8"},
-    {"from":"dev15.in2","to":"dev6.out0"},
-    {"from":"dev16.in0","to":"dev1.out9"},
-    {"from":"dev16.in1","to":"dev3.out9"},
-    {"from":"dev16.in2","to":"dev6.out0"},
-    {"from":"dev17.in0","to":"dev1.out10"},
-    {"from":"dev17.in1","to":"dev3.out10"},
-    {"from":"dev17.in2","to":"dev6.out0"},
-    {"from":"dev18.in0","to":"dev1.out11"},
-    {"from":"dev18.in1","to":"dev3.out11"},
-    {"from":"dev18.in2","to":"dev6.out0"},
-    {"from":"dev19.in0","to":"dev1.out12"},
-    {"from":"dev19.in1","to":"dev3.out12"},
-    {"from":"dev19.in2","to":"dev6.out0"},
-    {"from":"dev20.in0","to":"dev1.out13"},
-    {"from":"dev20.in1","to":"dev3.out13"},
-    {"from":"dev20.in2","to":"dev6.out0"},
-    {"from":"dev21.in0","to":"dev1.out14"},
-    {"from":"dev21.in1","to":"dev3.out14"},
-    {"from":"dev21.in2","to":"dev6.out0"},
-    {"from":"dev22.in0","to":"dev1.out15"},
-    {"from":"dev22.in1","to":"dev3.out15"},
-    {"from":"dev22.in2","to":"dev6.out0"}
-  ]
-}
-$s.registerDevice('MUX16',mux16data);
 
 let halfadderdata = {
    "devices":[
@@ -616,21 +504,18 @@ let halfadderdata = {
     {"type":"AND","id":"dev3","x":248,"y":168,"label":"AND"},
     {"type":"Out","id":"dev4","x":400,"y":72,"label":"SUM"},
     {"type":"Out","id":"dev5","x":400,"y":168,"label":"CARRY"}
-  ],
-  "connectors":[
+   ],
+   "connectors":[
     {"from":"dev2.in0","to":"dev1.out0"},
     {"from":"dev2.in1","to":"dev0.out0"},
     {"from":"dev3.in0","to":"dev1.out0"},
     {"from":"dev3.in1","to":"dev0.out0"},
     {"from":"dev4.in0","to":"dev2.out0"},
     {"from":"dev5.in0","to":"dev3.out0"}
-  ],
+   ],
     "layout":{"rows":4,"cols":8,"hideLabelOnWorkspace":false,
     "nodes":{"A":"L1","B":"L3","SUM":"R1","CARRY":"R3"}}
-
 }
-
-
 $s.registerDevice('HALFADDER',halfadderdata)
 
 
@@ -644,8 +529,8 @@ let fulladderdata = {
     {"type":"Out","id":"dev5","x":432,"y":160,"label":"CARRY"},
     {"type":"Out","id":"dev6","x":440,"y":64,"label":"SUM"},
     {"type":"OR","id":"dev7","x":344,"y":160,"label":"OR"}
-  ],
-  "connectors":[
+   ],
+   "connectors":[
     {"from":"dev3.in0","to":"dev1.out0"},
     {"from":"dev3.in1","to":"dev2.out0"},
     {"from":"dev4.in0","to":"dev0.out0"},
@@ -654,107 +539,289 @@ let fulladderdata = {
     {"from":"dev6.in0","to":"dev4.out0"},
     {"from":"dev7.in0","to":"dev4.out1"},
     {"from":"dev7.in1","to":"dev3.out1"}
-  ],
+   ],
     "layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,
     "nodes":{"A":"L1","B":"L3","C":"L5","SUM":"R2","CARRY":"R4"}}
 }
 $s.registerDevice('FULLADDER',fulladderdata)
 
-let add16data = {
-  "devices":[
-    {"type":"In","immobile":true,"isBus":true,"value":0,"id":"dev0","x":40,"y":32,"label":"A"},
-    {"type":"In","immobile":true,"isBus":true,"value":0,"id":"dev1","x":40,"y":160,"label":"B"},
-    {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev2","x":144,"y":16,"label":"BusIn"},
-    {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev3","x":144,"y":200,"label":"BusIn"},
-    {"type":"BusOut","numInputs":16,"immobile":true,"id":"dev4","x":536,"y":104,"label":"BusOut"},
-    {"type":"Out","immobile":true,"isBus":true,"value":0,"id":"dev5","x":624,"y":128,"label":"SUM"},
-    {"type":"FULLADDER","id":"dev6","x":312,"y":8,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev7","x":312,"y":72,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev8","x":312,"y":136,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev9","x":312,"y":210,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev10","x":312,"y":280,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev11","x":312,"y":350,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev12","x":312,"y":420,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev13","x":312,"y":490,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev14","x":312,"y":560,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev15","x":312,"y":660,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev16","x":312,"y":760,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev17","x":312,"y":860,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev18","x":312,"y":960,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev19","x":312,"y":1060,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev20","x":312,"y":1160,"label":"FULLADDER"},
-    {"type":"FULLADDER","id":"dev21","x":312,"y":1260,"label":"FULLADDER"}
-  ],
-  "connectors":[
-    {"from":"dev2.in0","to":"dev0.out0"},
-    {"from":"dev3.in0","to":"dev1.out0"},
-    {"from":"dev4.in0","to":"dev6.out1"},
-    {"from":"dev4.in1","to":"dev7.out1"},
-    {"from":"dev4.in2","to":"dev8.out1"},
-    {"from":"dev4.in3","to":"dev9.out1"},
-    {"from":"dev4.in4","to":"dev10.out1"},
-    {"from":"dev4.in5","to":"dev11.out1"},
-    {"from":"dev4.in6","to":"dev12.out1"},
-    {"from":"dev4.in7","to":"dev13.out1"},
-    {"from":"dev4.in8","to":"dev14.out1"},
-    {"from":"dev4.in9","to":"dev15.out1"},
-    {"from":"dev4.in10","to":"dev16.out1"},
-    {"from":"dev4.in11","to":"dev17.out1"},
-    {"from":"dev4.in12","to":"dev18.out1"},
-    {"from":"dev4.in13","to":"dev19.out1"},
-    {"from":"dev4.in14","to":"dev20.out1"},
-    {"from":"dev4.in15","to":"dev21.out1"},
-    {"from":"dev5.in0","to":"dev4.out0"},
-    {"from":"dev6.in0","to":"dev2.out0"},
-    {"from":"dev6.in1","to":"dev3.out0"},
-    {"from":"dev7.in0","to":"dev2.out1"},
-    {"from":"dev7.in1","to":"dev3.out1"},
-    {"from":"dev7.in2","to":"dev6.out0"},
-    {"from":"dev8.in0","to":"dev2.out2"},
-    {"from":"dev9.in0","to":"dev2.out3"},
-    {"from":"dev10.in0","to":"dev2.out4"},
-    {"from":"dev11.in0","to":"dev2.out5"},
-    {"from":"dev12.in0","to":"dev2.out6"},
-    {"from":"dev13.in0","to":"dev2.out7"},
-    {"from":"dev14.in0","to":"dev2.out8"},
-    {"from":"dev15.in0","to":"dev2.out9"},
-    {"from":"dev16.in0","to":"dev2.out10"},
-    {"from":"dev17.in0","to":"dev2.out11"},
-    {"from":"dev18.in0","to":"dev2.out12"},
-    {"from":"dev19.in0","to":"dev2.out13"},
-    {"from":"dev20.in0","to":"dev2.out14"},
-    {"from":"dev21.in0","to":"dev2.out15"},
-    {"from":"dev8.in1","to":"dev3.out2"},
-    {"from":"dev9.in1","to":"dev3.out3"},
-    {"from":"dev10.in1","to":"dev3.out4"},
-    {"from":"dev11.in1","to":"dev3.out5"},
-    {"from":"dev12.in1","to":"dev3.out6"},
-    {"from":"dev13.in1","to":"dev3.out7"},
-    {"from":"dev14.in1","to":"dev3.out8"},
-    {"from":"dev15.in1","to":"dev3.out9"},
-    {"from":"dev16.in1","to":"dev3.out10"},
-    {"from":"dev17.in1","to":"dev3.out11"},
-    {"from":"dev18.in1","to":"dev3.out12"},
-    {"from":"dev19.in1","to":"dev3.out13"},
-    {"from":"dev20.in1","to":"dev3.out14"},
-    {"from":"dev21.in1","to":"dev3.out15"},
-    {"from":"dev8.in2","to":"dev7.out0"},
-    {"from":"dev9.in2","to":"dev8.out0"},
-    {"from":"dev10.in2","to":"dev9.out0"},
-    {"from":"dev11.in2","to":"dev10.out0"},
-    {"from":"dev12.in2","to":"dev11.out0"},
-    {"from":"dev13.in2","to":"dev12.out0"},
-    {"from":"dev14.in2","to":"dev13.out0"},
-    {"from":"dev15.in2","to":"dev14.out0"},
-    {"from":"dev16.in2","to":"dev15.out0"},
-    {"from":"dev17.in2","to":"dev16.out0"},
-    {"from":"dev18.in2","to":"dev17.out0"},
-    {"from":"dev19.in2","to":"dev18.out0"},
-    {"from":"dev20.in2","to":"dev19.out0"},
-    {"from":"dev21.in2","to":"dev20.out0"}
-  ]
-}
-$s.registerDevice('ADD16',add16data)
+//mux16 16
+
+var mux16data = function() {
+    return function(device) {
+      var numInputs = 3;
+      device.halfPitch = numInputs > 2;
+
+      device.addInput('A', 'x' + 16);
+
+      device.addInput('B', 'x' + 16);
+      
+      device.addInput('SEL');
+      
+      device.addOutput('OUT', 'x' + 16);
+
+
+      device.deviceDef['layout'] = {"rows":6,"cols":8,"hideLabelOnWorkspace":false,
+    "nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}}
+
+
+      var inputs = device.getInputs();
+      var outputs = device.getOutputs();
+
+
+      device.$ui.on('inputValueChange', function() {
+      let selVal = device.getInputs()[2].getValue();
+
+
+      var aBusVal = device.getInputs()[0].getValue();
+      var bBusVal = device.getInputs()[1].getValue();
+
+      if(selVal){
+      device.getOutputs()[0].setValue(bBusVal);
+      }else{
+      device.getOutputs()[0].setValue(aBusVal);
+      }
+    var super_createUI = device.createUI;
+
+    });
+
+      var super_createUI = device.createUI;
+      device.createUI = function() {
+        super_createUI();
+        var size = device.getSize();
+        //var g = $s.graphics(device.$ui);
+        //g.attr['class'] = 'simcir-basicset-symbol';
+        //draw(g, 
+        //  (size.width - unit) / 2,
+        //  (size.height - unit) / 2,
+        //  unit, unit);
+        
+      };
+    };
+  };
+$s.registerDevice('MUX16', mux16data() );
+
+
+var not16data = function() {
+    return function(device) {
+      var numInputs = 1;
+      device.halfPitch = numInputs > 2;
+
+      device.addInput('IN', 'x' + 16);
+      
+      device.addOutput('OUT', 'x' + 16);
+
+      var inputs = device.getInputs();
+      var outputs = device.getOutputs();
+
+
+      device.$ui.on('inputValueChange', function() {
+      var inValBuff = device.getInputs()[0].getValue();
+      let buff = []
+      if(!inValBuff)
+        return;
+      
+      for(let i = 0;i<inValBuff.length;i++){
+        buff.push(inValBuff[i]?null:true)
+      }
+
+      device.getOutputs()[0].setValue(buff);
+      
+    var super_createUI = device.createUI;
+
+    });
+
+      var super_createUI = device.createUI;
+      device.createUI = function() {
+        super_createUI();
+        var size = device.getSize();
+        //var g = $s.graphics(device.$ui);
+        //g.attr['class'] = 'simcir-basicset-symbol';
+        //draw(g, 
+        //  (size.width - unit) / 2,
+        //  (size.height - unit) / 2,
+        //  unit, unit);
+        
+      };
+    };
+  };
+$s.registerDevice('NOT16', not16data() );
+
+
+var and16data = function() {
+    return function(device) {
+      var numInputs = 2;
+      device.halfPitch = numInputs > 2;
+
+      device.addInput('A', 'x' + 16);
+      device.addInput('B', 'x' + 16);
+      
+      device.addOutput('OUT', 'x' + 16);
+
+      var inputs = device.getInputs();
+      var outputs = device.getOutputs();
+
+      var extractValue = function(busValue, i) {
+      return (busValue != null && typeof busValue == 'object' &&
+          typeof busValue[i] != 'undefined')? busValue[i] : null;
+    };
+
+      device.$ui.on('inputValueChange', function() {
+      console.log(device.getInputs()[0].getValue())
+      var aValBuff = device.getInputs()[0].getValue();
+      var bValBuff = device.getInputs()[1].getValue();
+      let buff = []
+      if(!aValBuff && !bValBuff)
+        return;
+      for(let i = 0;i<aValBuff.length;i++){
+        buff.push( extractValue(aValBuff,i)& extractValue(bValBuff,i))
+      }
+
+      device.getOutputs()[0].setValue(buff);
+      
+    var super_createUI = device.createUI;
+
+    });
+
+      var super_createUI = device.createUI;
+      device.createUI = function() {
+        super_createUI();
+        var size = device.getSize();
+        //var g = $s.graphics(device.$ui);
+        //g.attr['class'] = 'simcir-basicset-symbol';
+        //draw(g, 
+        //  (size.width - unit) / 2,
+        //  (size.height - unit) / 2,
+        //  unit, unit);
+        
+      };
+    };
+  };
+$s.registerDevice('AND16', and16data() );
+
+var add16data = function() {
+    return function(device) {
+      var bin2dec = function(bin){
+      return parseInt(bin, 2);
+    }
+    var dec2bin = function(int) {
+      var u = new Uint32Array(1);
+      var nbit = 16;
+      u[0] = int;
+      int = Math.pow(2, 16) - 1;
+      var converted = u[0] & int;
+      converted.toString(2);
+      return converted.toString(2).padStart(16,"0")
+    }
+      var numInputs = 2;
+      device.halfPitch = numInputs > 2;
+
+      device.addInput('A', 'x' + 16);
+      device.addInput('B', 'x' + 16);
+      
+      device.addOutput('OUT', 'x' + 16);
+
+      var inputs = device.getInputs();
+      var outputs = device.getOutputs();
+
+
+      device.$ui.on('inputValueChange', function() {
+      var aValBuff = device.getInputs()[0].getValue();
+      var bValBuff = device.getInputs()[1].getValue();
+      let avaldec = 0;
+      let bvaldec = 0;
+      let pow = 0;
+      for(let i = aValBuff.length-1;i>0;i++){
+        avaldec+= aValBuff[i]? Math.pow(2,pow) : 0; 
+        bvaldec+= bValBuff[i]? Math.pow(2,pow) : 0; 
+        pow++;
+      }
+
+      let sum = avaldec+bvaldec;
+      sum = dec2bin(sum);
+      sum = bin2dec(sum);
+
+      let buff = [];
+
+      for(let i = aValBuff.length-1;i>0;i++){
+        buff.push(sum[i]==='1'? true: null)
+      }
+
+      device.getOutputs()[0].setValue(buff);
+      
+    var super_createUI = device.createUI;
+
+    });
+
+      var super_createUI = device.createUI;
+      device.createUI = function() {
+        super_createUI();
+        var size = device.getSize();
+        //var g = $s.graphics(device.$ui);
+        //g.attr['class'] = 'simcir-basicset-symbol';
+        //draw(g, 
+        //  (size.width - unit) / 2,
+        //  (size.height - unit) / 2,
+        //  unit, unit);
+        
+      };
+    };
+  };
+$s.registerDevice('ADD16', and16data() );
+
+var or8waydata = function() {
+    return function(device) {
+
+      var numInputs = 8;
+      device.halfPitch = numInputs > 2;
+
+      for(let i = 0;i<numInputs;i++)
+        device.addInput();
+      
+      device.addOutput();
+
+      var inputs = device.getInputs();
+      var outputs = device.getOutputs();
+
+
+      device.$ui.on('inputValueChange', function() {
+
+      var invals = device.getInputs()[0].getValue();
+      
+      for(let i = 0;i<numInputs.length;i++){
+        if(invals[i]){
+          device.getOutputs()[0].setValue(true);
+          device.createUI
+          return;
+        }
+
+      }
+
+
+
+      device.getOutputs()[0].setValue(null);
+        
+      
+    var super_createUI = device.createUI;
+
+    });
+
+      var super_createUI = device.createUI;
+      device.createUI = function() {
+        super_createUI();
+        var size = device.getSize();
+        //var g = $s.graphics(device.$ui);
+        //g.attr['class'] = 'simcir-basicset-symbol';
+        //draw(g, 
+        //  (size.width - unit) / 2,
+        //  (size.height - unit) / 2,
+        //  unit, unit);
+        
+      };
+    };
+  };
+$s.registerDevice('OR8WAY', or8waydata() );
+
 
 let inc16data = {"devices":[
     {"type":"DC","id":"dev0","x":56,"y":176,"label":"DC"},
@@ -762,14 +829,60 @@ let inc16data = {"devices":[
     {"type":"In","id":"dev2","x":56,"y":64,"label":"In"},
     {"type":"ADD16","id":"dev3","x":304,"y":112,"label":"ADD16"},
     {"type":"Out","id":"dev4","x":464,"y":112,"label":"Out"}
-  ],
-  "connectors":[
+   ],
+   "connectors":[
     {"from":"dev1.in0","to":"dev0.out0"},
     {"from":"dev3.in0","to":"dev2.out0"},
     {"from":"dev3.in1","to":"dev1.out0"},
     {"from":"dev4.in0","to":"dev3.out0"}
-  ]}
+   ]
+}
 $s.registerDevice('INC16',inc16data)
+
+let dffdata = {
+  "devices":[
+    {"type":"NAND","id":"dev0","x":240,"y":184,"label":"NAND"},
+    {"type":"NAND","id":"dev1","x":176,"y":88,"label":"NAND"},
+    {"type":"NAND","id":"dev2","x":336,"y":80,"label":"NAND"},
+    {"type":"NOT","id":"dev3","x":160,"y":160,"label":"NOT"},
+    {"type":"NAND","id":"dev4","x":336,"y":176,"label":"NAND"},
+    {"type":"In","immobile":true,"id":"dev5","x":40,"y":80,"label":"IN","state":{"on":false}},
+    {"type":"In","freq":10,"id":"dev6","x":40,"y":200,"label":"CLK"},
+    {"type":"Out","immobile":true,"id":"dev7","x":456,"y":136,"label":"OUT"}
+  ],
+  "connectors":[
+    {"from":"dev0.in0","to":"dev3.out0"},
+    {"from":"dev0.in1","to":"dev6.out0"},
+    {"from":"dev1.in0","to":"dev5.out0"},
+    {"from":"dev1.in1","to":"dev6.out0"},
+    {"from":"dev2.in0","to":"dev1.out0"},
+    {"from":"dev2.in1","to":"dev4.out0"},
+    {"from":"dev3.in0","to":"dev5.out0"},
+    {"from":"dev4.in0","to":"dev2.out0"},
+    {"from":"dev4.in1","to":"dev0.out0"},
+    {"from":"dev7.in0","to":"dev2.out0"}
+  ]
+}
+$s.registerDevice('DFF',dffdata)
+
+let bitdata = {"devices":[
+    {"type":"Out","immobile":true,"id":"dev0","x":456,"y":136,"label":"OUT"},
+    {"type":"D-FF","id":"dev1","x":304,"y":208,"label":"D-FF"},
+    {"type":"In","immobile":true,"freq":10,"id":"dev2","x":32,"y":224,"label":"CLK"},
+    {"type":"In","immobile":true,"id":"dev3","x":32,"y":40,"label":"IN","state":{"on":false}},
+    {"type":"In","immobile":true,"id":"dev4","x":32,"y":120,"label":"LOAD","state":{"on":true}},
+    {"type":"MUX","id":"dev5","x":208,"y":112,"label":"MUX"}
+  ],
+  "connectors":[
+    {"from":"dev0.in0","to":"dev1.out0"},
+    {"from":"dev1.in0","to":"dev5.out0"},
+    {"from":"dev1.in1","to":"dev2.out0"},
+    {"from":"dev5.in0","to":"dev1.out0"},
+    {"from":"dev5.in1","to":"dev3.out0"},
+    {"from":"dev5.in2","to":"dev4.out0"}
+  ]}
+$s.registerDevice('BIT',bitdata)
+
 }(simcir);
 
 
