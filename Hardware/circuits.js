@@ -52,8 +52,9 @@ toolboxes.INC16 = [{"type":"ADD16"}]; //todo NEEDS A TRUE GATE
 toolboxes.ALU = [{"type":"MUX16"},
                    {"type":"NOT16"},
                    {"type":"ADD16"},
-                   {"type":"OR8WAY"},
+                   {"type":"AND16"},
                    {"type":"OR"},
+                   {"type":"OR8WAY"},
                    {"type":"NOT"}]; 
 
 toolboxes.DFF = []; //todo this
@@ -78,6 +79,12 @@ toolboxes.RAM16K = [{"type":"MUX8WAY16"},
 toolboxes.PC = [{"type":"REGISTER"},
                   {"type":"INC16"},
                   {"type":"MUX16"}];
+toolboxes.DFF = [{"type":"NAND"},
+                  {"type":"NOT"}];
+
+
+toolboxes.BIT = [{"type":"D-FF"},
+                  {"type":"MUX"}];
 
 
 // SETUP
@@ -847,6 +854,226 @@ devices.INC16 = {
                 "IN":[5,-1338,32767,-1],
                 "OUT":[6,-1337,-32768,0,]
             }
+}
+
+devices.DFF = {"devices":[
+    {"type":"NAND","id":"dev0","x":240,"y":184,"label":"NAND"},
+    {"type":"NAND","id":"dev1","x":176,"y":88,"label":"NAND"},
+    {"type":"NAND","id":"dev2","x":336,"y":80,"label":"NAND"},
+    {"type":"NOT","id":"dev3","x":160,"y":160,"label":"NOT"},
+    {"type":"NAND","id":"dev4","x":336,"y":176,"label":"NAND"},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev5","x":40,"y":80,"label":"IN","state":{"on":false}},
+    {"type":"OSC","freq":10,"id":"dev6","x":40,"y":200,"label":"OSC"},
+    {"type":"LED","immobile":true,"id":"dev7","x":456,"y":136,"label":"OUT"}
+  ],
+  "connectors":[
+    {"from":"dev0.in0","to":"dev3.out0"},
+    {"from":"dev0.in1","to":"dev6.out0"},
+    {"from":"dev1.in0","to":"dev5.out0"},
+    {"from":"dev1.in1","to":"dev6.out0"},
+    {"from":"dev2.in0","to":"dev1.out0"},
+    {"from":"dev2.in1","to":"dev4.out0"},
+    {"from":"dev3.in0","to":"dev5.out0"},
+    {"from":"dev4.in0","to":"dev2.out0"},
+    {"from":"dev4.in1","to":"dev0.out0"},
+    {"from":"dev7.in0","to":"dev2.out0"}
+  ]
+}
+
+devices.BIT = {"devices":[
+    {"type":"SINGLEOUTPUT","immobile":true,"id":"dev0","x":456,"y":136,"label":"OUT"},
+    {"type":"DFF","id":"dev1","x":304,"y":208,"label":"DFF"},
+    {"type":"OSC","immobile":true,"freq":10,"id":"dev2","x":32,"y":224,"label":"OSC"},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev3","x":32,"y":40,"label":"IN","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev4","x":32,"y":120,"label":"LOAD","state":{"on":true}},
+    {"type":"MUX","id":"dev5","x":208,"y":112,"label":"MUX"}
+  ],
+  "connectors":[
+    {"from":"dev0.in0","to":"dev1.out0"},
+    {"from":"dev1.in0","to":"dev5.out0"},
+    {"from":"dev1.in1","to":"dev2.out0"},
+    {"from":"dev5.in0","to":"dev1.out0"},
+    {"from":"dev5.in1","to":"dev3.out0"},
+    {"from":"dev5.in2","to":"dev4.out0"}
+  ]
+}
+
+
+devices.REGISTER = {  "devices":[
+    {"type":"CUSTOMBUSIN","numInputs":16,"immobile":true,"id":"dev0","x":456,"y":136,"label":"OUT","state":{"on":false},"isBus":true,"value":0,"numOutputs":16},
+    {"type":"OSC","immobile":true,"freq":10,"id":"dev1","x":32,"y":224,"label":"OSC"},
+    {"type":"CUSTOMBUSOUT","immobile":true,"numOutputs":16,"id":"dev2","x":32,"y":40,"label":"IN","state":{"on":false},"isBus":true,"numInputs":16,"value":0},
+    {"type":"SINGLEINPUT","immobile":true,"id":"dev3","x":32,"y":120,"label":"LOAD","state":{"on":true}},
+    {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev4","x":96,"y":16,"label":"BusIn"},
+    {"type":"BusOut","numInputs":16,"immobile":true,"id":"dev5","x":400,"y":112,"label":"BusOut"},
+    {"type":"BIT","id":"dev6","x":248,"y":0,"label":"BIT"},
+    {"type":"BIT","id":"dev7","x":248,"y":50,"label":"BIT"},
+    {"type":"BIT","id":"dev8","x":248,"y":100,"label":"BIT"},
+    {"type":"BIT","id":"dev9","x":248,"y":150,"label":"BIT"},
+    {"type":"BIT","id":"dev10","x":248,"y":200,"label":"BIT"},
+    {"type":"BIT","id":"dev11","x":248,"y":250,"label":"BIT"},
+    {"type":"BIT","id":"dev12","x":248,"y":300,"label":"BIT"},
+    {"type":"BIT","id":"dev13","x":248,"y":350,"label":"BIT"},
+    {"type":"BIT","id":"dev14","x":248,"y":400,"label":"BIT"},
+    {"type":"BIT","id":"dev15","x":248,"y":450,"label":"BIT"},
+    {"type":"BIT","id":"dev16","x":248,"y":500,"label":"BIT"},
+    {"type":"BIT","id":"dev17","x":248,"y":550,"label":"BIT"},
+    {"type":"BIT","id":"dev18","x":248,"y":600,"label":"BIT"},
+    {"type":"BIT","id":"dev19","x":248,"y":650,"label":"BIT"},
+    {"type":"BIT","id":"dev20","x":248,"y":700,"label":"BIT"},
+    {"type":"BIT","id":"dev21","x":248,"y":750,"label":"BIT"}
+  ],
+  "connectors":[
+    {"from":"dev0.in0","to":"dev5.out0"},
+    {"from":"dev4.in0","to":"dev2.out0"},
+    {"from":"dev5.in0","to":"dev6.out0"},
+    {"from":"dev5.in1","to":"dev7.out0"},
+    {"from":"dev5.in2","to":"dev8.out0"},
+    {"from":"dev5.in3","to":"dev9.out0"},
+    {"from":"dev5.in4","to":"dev10.out0"},
+    {"from":"dev5.in5","to":"dev11.out0"},
+    {"from":"dev5.in6","to":"dev12.out0"},
+    {"from":"dev5.in7","to":"dev13.out0"},
+    {"from":"dev5.in8","to":"dev14.out0"},
+    {"from":"dev5.in9","to":"dev15.out0"},
+    {"from":"dev5.in10","to":"dev16.out0"},
+    {"from":"dev5.in11","to":"dev17.out0"},
+    {"from":"dev5.in12","to":"dev18.out0"},
+    {"from":"dev5.in13","to":"dev19.out0"},
+    {"from":"dev5.in14","to":"dev20.out0"},
+    {"from":"dev5.in15","to":"dev21.out0"},
+    {"from":"dev6.in0","to":"dev4.out0"},
+    {"from":"dev6.in1","to":"dev3.out0"},
+    {"from":"dev6.in2","to":"dev1.out0"},
+    {"from":"dev7.in0","to":"dev4.out1"},
+    {"from":"dev7.in1","to":"dev3.out0"},
+    {"from":"dev7.in2","to":"dev1.out0"},
+    {"from":"dev8.in0","to":"dev4.out2"},
+    {"from":"dev8.in1","to":"dev3.out0"},
+    {"from":"dev8.in2","to":"dev1.out0"},
+    {"from":"dev9.in0","to":"dev4.out3"},
+    {"from":"dev9.in1","to":"dev3.out0"},
+    {"from":"dev9.in2","to":"dev1.out0"},
+    {"from":"dev10.in0","to":"dev4.out4"},
+    {"from":"dev10.in1","to":"dev3.out0"},
+    {"from":"dev10.in2","to":"dev1.out0"},
+    {"from":"dev11.in0","to":"dev4.out5"},
+    {"from":"dev11.in1","to":"dev3.out0"},
+    {"from":"dev11.in2","to":"dev1.out0"},
+    {"from":"dev12.in0","to":"dev4.out6"},
+    {"from":"dev12.in1","to":"dev3.out0"},
+    {"from":"dev12.in2","to":"dev1.out0"},
+    {"from":"dev13.in0","to":"dev4.out7"},
+    {"from":"dev13.in1","to":"dev3.out0"},
+    {"from":"dev13.in2","to":"dev1.out0"},
+    {"from":"dev14.in0","to":"dev4.out8"},
+    {"from":"dev14.in1","to":"dev3.out0"},
+    {"from":"dev14.in2","to":"dev1.out0"},
+    {"from":"dev15.in0","to":"dev4.out9"},
+    {"from":"dev15.in1","to":"dev3.out0"},
+    {"from":"dev15.in2","to":"dev1.out0"},
+    {"from":"dev16.in0","to":"dev4.out10"},
+    {"from":"dev16.in1","to":"dev3.out0"},
+    {"from":"dev16.in2","to":"dev1.out0"},
+    {"from":"dev17.in0","to":"dev4.out11"},
+    {"from":"dev17.in1","to":"dev3.out0"},
+    {"from":"dev17.in2","to":"dev1.out0"},
+    {"from":"dev18.in0","to":"dev4.out12"},
+    {"from":"dev18.in1","to":"dev3.out0"},
+    {"from":"dev18.in2","to":"dev1.out0"},
+    {"from":"dev19.in0","to":"dev4.out13"},
+    {"from":"dev19.in1","to":"dev3.out0"},
+    {"from":"dev19.in2","to":"dev1.out0"},
+    {"from":"dev20.in0","to":"dev4.out14"},
+    {"from":"dev20.in1","to":"dev3.out0"},
+    {"from":"dev20.in2","to":"dev1.out0"},
+    {"from":"dev21.in0","to":"dev4.out15"},
+    {"from":"dev21.in1","to":"dev3.out0"},
+    {"from":"dev21.in2","to":"dev1.out0"}
+  ]
+}
+
+devices.ALU = {  "devices":[
+    {"type":"SINGLEINPUT","id":"dev0","x":32,"y":112,"label":"ZX","state":{"on":false}},
+    {"type":"SINGLEINPUT","id":"dev1","x":32,"y":160,"label":"NX","state":{"on":false}},
+    {"type":"SINGLEINPUT","id":"dev2","x":32,"y":208,"label":"ZY","state":{"on":false}},
+    {"type":"SINGLEINPUT","id":"dev3","x":32,"y":256,"label":"NY","state":{"on":false}},
+    {"type":"SINGLEINPUT","id":"dev4","x":32,"y":304,"label":"F","state":{"on":false}},
+    {"type":"SINGLEINPUT","id":"dev5","x":32,"y":352,"label":"NO","state":{"on":false}},
+    {"type":"CUSTOMBUSOUT","numInputs":16,"id":"dev6","x":32,"y":64,"label":"Y","isBus":true,"value":0},
+    {"type":"CUSTOMBUSOUT","numInputs":16,"id":"dev7","x":32,"y":8,"label":"X","isBus":true,"value":0},
+    {"type":"SINGLEOUTPUT","id":"dev8","x":648,"y":216,"label":"ZR"},
+    {"type":"CUSTOMBUSIN","numInputs":16,"id":"dev9","x":648,"y":120,"label":"OUT","isBus":true,"value":0,"numOutputs":16},
+    {"type":"SINGLEOUTPUT","id":"dev10","x":648,"y":328,"label":"NG"},
+    {"type":"NOT16","id":"dev11","x":192,"y":8,"label":"NOT16"},
+    {"type":"MUX16","id":"dev12","x":112,"y":56,"label":"MUX16","layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,"nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}}},
+    {"type":"MUX16","id":"dev13","x":96,"y":192,"label":"MUX16","layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,"nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}}},
+    {"type":"NOT16","id":"dev14","x":152,"y":152,"label":"NOT16"},
+    {"type":"MUX16","id":"dev15","x":184,"y":224,"label":"MUX16","layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,"nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}}},
+    {"type":"MUX16","id":"dev16","x":240,"y":88,"label":"MUX16","layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,"nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}}},
+    {"type":"AND16","id":"dev17","x":312,"y":128,"label":"AND16"},
+    {"type":"ADD16","id":"dev18","x":288,"y":200,"label":"ADD16"},
+    {"type":"MUX16","layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,"nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}},"id":"dev19","x":368,"y":232,"label":"MUX16"},
+    {"type":"NOT16","id":"dev20","x":424,"y":272,"label":"NOT16"},
+    {"type":"MUX16","layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,"nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}},"id":"dev21","x":480,"y":224,"label":"MUX16"},
+    {"type":"BusIn","numOutputs":16,"id":"dev22","x":472,"y":24,"label":"BusIn"},
+    {"type":"OR8WAY","id":"dev23","x":544,"y":24,"label":"OR8WAY"},
+    {"type":"OR8WAY","id":"dev24","x":544,"y":112,"label":"OR8WAY"},
+    {"type":"OR","id":"dev25","x":592,"y":72,"label":"OR"},
+    {"type":"NOT","id":"dev26","x":568,"y":272,"label":"NOT"}
+  ],
+  "connectors":[
+    {"from":"dev8.in0","to":"dev26.out0"},
+    {"from":"dev9.in0","to":"dev21.out0"},
+    {"from":"dev10.in0","to":"dev22.out0"},
+    {"from":"dev11.in0","to":"dev12.out0"},
+    {"from":"dev12.in0","to":"dev7.out0"},
+    {"from":"dev12.in2","to":"dev0.out0"},
+    {"from":"dev13.in0","to":"dev6.out0"},
+    {"from":"dev13.in2","to":"dev2.out0"},
+    {"from":"dev14.in0","to":"dev13.out0"},
+    {"from":"dev15.in0","to":"dev13.out0"},
+    {"from":"dev15.in1","to":"dev14.out0"},
+    {"from":"dev15.in2","to":"dev3.out0"},
+    {"from":"dev16.in0","to":"dev12.out0"},
+    {"from":"dev16.in1","to":"dev11.out0"},
+    {"from":"dev16.in2","to":"dev1.out0"},
+    {"from":"dev17.in0","to":"dev16.out0"},
+    {"from":"dev17.in1","to":"dev15.out0"},
+    {"from":"dev18.in0","to":"dev16.out0"},
+    {"from":"dev18.in1","to":"dev15.out0"},
+    {"from":"dev19.in0","to":"dev17.out0"},
+    {"from":"dev19.in1","to":"dev18.out0"},
+    {"from":"dev19.in2","to":"dev4.out0"},
+    {"from":"dev20.in0","to":"dev19.out0"},
+    {"from":"dev21.in0","to":"dev19.out0"},
+    {"from":"dev21.in1","to":"dev20.out0"},
+    {"from":"dev21.in2","to":"dev5.out0"},
+    {"from":"dev22.in0","to":"dev21.out0"},
+    {"from":"dev23.in0","to":"dev22.out0"},
+    {"from":"dev23.in1","to":"dev22.out1"},
+    {"from":"dev23.in2","to":"dev22.out2"},
+    {"from":"dev23.in3","to":"dev22.out3"},
+    {"from":"dev23.in4","to":"dev22.out4"},
+    {"from":"dev23.in5","to":"dev22.out5"},
+    {"from":"dev23.in6","to":"dev22.out6"},
+    {"from":"dev23.in7","to":"dev22.out7"},
+    {"from":"dev24.in0","to":"dev22.out8"},
+    {"from":"dev24.in1","to":"dev22.out9"},
+    {"from":"dev24.in2","to":"dev22.out10"},
+    {"from":"dev24.in3","to":"dev22.out11"},
+    {"from":"dev24.in4","to":"dev22.out12"},
+    {"from":"dev24.in5","to":"dev22.out13"},
+    {"from":"dev24.in6","to":"dev22.out14"},
+    {"from":"dev24.in7","to":"dev22.out15"},
+    {"from":"dev25.in0","to":"dev23.out0"},
+    {"from":"dev25.in1","to":"dev24.out0"},
+    {"from":"dev26.in0","to":"dev25.out0"}
+  ]
+}
+
+devices.RAM8 = {
+
 }
  
 
