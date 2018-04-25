@@ -859,8 +859,8 @@
     {"type":"AND","id":"dev4","x":200,"y":150,"label":"AND"},
     {"type":"Out","immobile":true,"id":"dev5","x":350,"y":100,"label":"A","state":{"on":false}},
     {"type":"Out","immobile":true,"id":"dev6","x":350,"y":200,"label":"B","state":{"on":false}}
-  ],
-  "connectors":[
+    ],
+    "connectors":[
     {"from":"dev2.in0","to":"dev1.out0"},
     {"from":"dev3.in0","to":"dev0.out0"},
     {"from":"dev3.in1","to":"dev1.out0"},
@@ -868,7 +868,8 @@
     {"from":"dev4.in1","to":"dev2.out0"},
     {"from":"dev5.in0","to":"dev4.out0"},
     {"from":"dev6.in0","to":"dev3.out0"}
-  ]}
+    ]
+  }
   $s.registerDevice('DMUX',dmuxdata)
 
   let dffdata = {
@@ -915,6 +916,108 @@
      ]
   }
   $s.registerDevice('BIT',bitdata)
+
+
+
+
+
+  var ALUFactory = function() {
+      return function(device) {
+        var numInputs = 8;
+        var numOutputs = 3;
+
+        device.halfPitch = numInputs > 2;
+
+        
+        device.addInput('X','x16');
+        device.addInput('Y','x16');
+        device.addInput('ZX');
+        device.addInput('NX');
+        device.addInput('ZY');
+        device.addInput('NY');
+        device.addInput('F');
+        device.addInput('NO');
+        
+        device.addOutput('OUT','x16');
+        device.addOutput('ZR');
+        device.addOutput('NG');
+
+        var inputs = device.getInputs();
+        var outputs = device.getOutputs();
+
+        device.$ui.on('inputValueChange', function() {
+       
+          let xIn = inputs[0].getValue();
+          let yIn = inputs[1].getValue();
+          let x = [];
+          let y = [];
+          //convert x and y into 16bit arrays
+          for(let i = 0;i<16;i++){
+            x.push( extractValue(xIn,i) );
+            y.push( extractValue(yIn,i) );
+
+          }
+
+          //get values from 6 command pins
+          let zx = isHot( inputs[2].getValue() );
+          let nx = isHot( inputs[3].getValue() );
+          let zy = isHot( inputs[4].getValue() );
+          let ny = isHot( inputs[5].getValue() );
+          let f = isHot( inputs[6].getValue() );
+          let no = isHot( inputs[7].getValue() );
+          
+
+          // prep our outputs
+          let out = [];
+          let zr = null;
+          let ng = null;
+          if(zx) {x = x.map(i => null);}
+          if(nx) {x = x.map(i => (i===1? null: 1));}
+          if(zy) {y = y.map(i => null);}
+          if(ny) {y = y.map(i => (i===1? null: 1));}
+          let inputArr = [x,y];
+          if(f){
+            // add  
+            out = add16funct(inputArr);
+          }else{
+            // and 
+            out = and16funct(inputArr);
+          }
+
+          if(no) {out = out.map(i => (i===1? null: 1));}
+
+          if(out[15]===1) ng = 1;
+          const sumHotBits = (acc, currVal) => acc + currVal;
+          let hotBitCount = out.reduce(sumHotBits)
+          if(hotBitCount===0) zr = 1;
+
+          outputs[0].setValue( out );
+          outputs[1].setValue( zr );
+          outputs[2].setValue( ng );
+
+          device.createUI;
+
+        });
+
+        var super_createUI = device.createUI;
+
+        device.createUI = function() {
+          super_createUI();
+          var size = device.getSize();
+          var g = $s.graphics(device.$ui);
+          g.attr['class'] = 'simcir-basicset-symbol';
+
+          /*draw(g, 
+            (size.width - unit) / 2,
+            (size.height - unit) / 2,
+            unit, unit);
+            */
+          
+        };
+      };
+  };
+
+  $s.registerDevice('ALU',ALUFactory())
 
 }(simcir);
 
