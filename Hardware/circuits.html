@@ -78,54 +78,29 @@
         })
         .catch(err=>{console.log('error',err); TESTING = false;})
         
-        /*
-        var getIndexOfLabel = function(label){
-        for(var i = 0;i<data.devices.length;i++){
-            if (data.devices[i]['label']===label)
-                return i;
-        }
-        return null;
-    }
-        var getState  = function(label){
-            var i = getIndexOfLabel(label);
-            return data.devices[i].state['on']
-        }
-        
-        var setState = function(label,state){
-            var i = getIndexOfLabel(label);
-            return data.devices[i].state['on'] = state;
-            
-        }
-        
-        console.log('initial: ', getState("IN"));
-        setState("IN",false);
-        setCircuitData(data);        
-        console.log('after false: ', getState("IN"));
-        
-        console.log('initial: ', getState("IN"));
-        setState("IN",true);
-        setCircuitData(data);
-        console.log('after true: ', getState("IN"));
-        return;
-        */
     };
   
     function setLibrary (itemName){
         var data = {};
-        data["width"] = 800;
-        data["height"]=400;
+        data["width"] = 900;
+        data["height"]=600;
         if(itemName!=='RESET'){
-            data["toolbox"] =toolboxes[itemName];
+            //data["toolbox"] =toolboxes[itemName];
             if(devices[itemName])
                 data["devices"] = devices[itemName]["devices"];
                 data["connectors"] = devices[itemName]["connectors"]
                 data["tests"] = devices[itemName]["tests"]
         }
+
+
          
          var $s = simcir;
          var $mysim = $('#circuitBox');
 
         $s.setupSimcir($mysim,data)
+
+       
+
 
         var tests = data["tests"];
         if(!tests){return;}
@@ -174,6 +149,19 @@
 
             }
             row.insertCell(-1); //box at end for checkboxes
+        }
+
+         //If we are looking at the DFF circuit, get the clock device and trigger twice to clear the output pin (recursion issue)
+        if(itemName=== "DFF"){
+            //get device index for the Clock
+            let i;
+            for(i = 0;i<data.devices.length;i++){
+                if (data.devices[i]['label']==='CLK')
+                    break;
+            }
+            //trigger the clock twice to zero out the circuit, with a delay to allow the values to propigate
+            window.setTimeout(function(){simcir.controller($('#circuitBox').find('.simcir-workspace')).data().deviceFuncts[4].trigger();}, 30);
+            window.setTimeout(function(){simcir.controller($('#circuitBox').find('.simcir-workspace')).data().deviceFuncts[4].trigger();}, 60);
         }
 
         return;
@@ -233,8 +221,8 @@ All the other attributes will be used defaults.
 -->
 <div class="simcir" id="circuitBox">
 {
-  "width":800,
-  "height":400
+  "width":900,
+  "height":600
 }
 </div><div id="testResults"><hr>Tests</hr><table id="testresultstable"></table></div>
 <br>
