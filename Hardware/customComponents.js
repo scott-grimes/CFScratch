@@ -27,6 +27,18 @@
         converted.toString(2);
         return converted.toString(2).padStart(16,"0")
   }
+  var busToSignedInt = function(busVal){
+          let value = 0;
+          for(let i = 0; i<16;i++){
+            let bitOn = isHot( extractValue(busVal,i) )
+            value+= bitOn ? Math.pow(2,i) : 0;
+          }
+
+          if(value>32767)
+            value-= Math.pow(2,16)
+
+          return value;
+        }
 
   // unit size
   var unit = $s.unit;
@@ -83,7 +95,7 @@
   // one-bit output as an LED with a value attribute 
   $s.registerDevice('SINGLEOUTPUT', function(device) {
       var in1 = device.addInput();
-        device.deviceDef.state = {'on':isOn(in1.getValue() )};
+        device.deviceDef.state = {'on': false };
       var super_createUI = device.createUI;
       device.createUI = function() {
         super_createUI();
@@ -164,7 +176,13 @@
       }
 
       device.deviceDef['value'] = parseIntVal( device.deviceDef['value'] );
-
+      device.trigger = function(newValue){
+        if(numInputs === 16 && newValue> 32767){
+            newValue = newValue-Math.pow(2,16);
+          }
+            device.deviceDef['value'] = newValue;
+            pushBusValue();
+      }
 
       /*a pop-up box which is used to edit the value of the device */
       var editablebox = function () {
@@ -176,7 +194,8 @@
         var myforeign = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject')
         var textdiv = document.createElement("div");
         var text = device.deviceDef['value'];
-
+        if(text> 32767)
+          text-=Math.pow(2,16);
 
         var textnode = document.createTextNode(text);
         textdiv.appendChild(textnode);
@@ -339,6 +358,7 @@
         */
         var updateOutput = function() {
           out1.setValue(on ? on : null);
+
         };
         updateOutput();
 
@@ -357,6 +377,7 @@
           device.$ui.append($button);
             
           var button_mouseDownHandler = function(event) {
+          
             event.preventDefault();
             event.stopPropagation();
             on = !on;
@@ -376,6 +397,19 @@
             $(document).off('mouseup', button_mouseUpHandler);
             $(document).off('touchend', button_mouseUpHandler);
           };
+
+
+          device.trigger = function(newValue){
+            if(newValue===null || newValue!=on){
+              on = !on;
+            $button.addClass('simcir-basicset-switch-button-pressed');
+            updateOutput();
+            if (!on) {
+                $button.removeClass('simcir-basicset-switch-button-pressed');
+              }
+            updateOutput();
+            }
+          }
             
           device.$ui.on('deviceAdd', function() {
             $s.enableEvents($button, true);
@@ -435,6 +469,8 @@
         $textDisplay.text(device.deviceDef['value'])   
         
       });
+
+      
 
       var super_createUI = device.createUI;
       device.createUI = function() {
@@ -760,8 +796,7 @@
   };
 
   var dmuxmultiwayfunct = function(inputs,numOutputs){
-    console.log(inputs,numOutputs);
-
+    
     let inVal = inputs[0];
     let sel = inputs[1]
     let bitnums = parseInt( Math.log(numOutputs)/Math.log(2) ) ;
@@ -783,11 +818,11 @@
         buff.push( null )
         }
     }
-    console.log(buff)
     return buff;
   }
 
   var dmux4wayconnectionNames = [ ['IN',''] , ['SEL','x2'] ,['A',''] , ['B',''] , ['C',''] , ['D','']];
+  var dmux8wayconnectionNames = [ ['IN',''] , ['SEL','x3'] ,['A',''] , ['B',''] , ['C',''] , ['D',''],['E',''] , ['F',''] , ['G',''] , ['H','']];
   var mux4way16connectionNames = [ ['A','x16'] , ['B','x16'] , ['C','x16'] , ['D','x16'] ,['SEL','x2'] , ['OUT','x16']];
   var mux8way16connectionNames = [ ['A','x16'] , ['B','x16'] , ['C','x16'] , ['D','x16'] , ['E','x16'] , ['F','x16'] , ['G','x16'] , ['H','x16'], ['SEL','x3'] , ['OUT','x16']];
 
@@ -799,6 +834,7 @@
   $s.registerDevice('MUX8WAY16', create16BitLogicGateFactory(mux8way16connectionNames, muxmultiway16funct, null) );
   $s.registerDevice('INC16', create16BitLogicGateFactory(inc16connectionNames, inc16funct, null) );
   $s.registerDevice('DMUX4WAY', createDmuxFactory(dmux4wayconnectionNames, dmuxmultiwayfunct, null) );
+  $s.registerDevice('DMUX8WAY', createDmuxFactory(dmux8wayconnectionNames, dmuxmultiwayfunct, null) );
 
   var or8waydata = function() {
       return function(device) {
@@ -852,13 +888,13 @@
   $s.registerDevice('OR8WAY', or8waydata() );
 
   let dmuxdata = { "devices":[
-    {"type":"In","immobile":true,"id":"dev0","x":50,"y":50,"label":"IN","state":{"on":false}},
-    {"type":"In","immobile":true,"id":"dev1","x":50,"y":250,"label":"SEL","state":{"on":false}},
+    {"type":"In","immobile":false,"id":"dev0","x":50,"y":50,"label":"IN","state":{"on":false}},
+    {"type":"In","immobile":false,"id":"dev1","x":50,"y":250,"label":"SEL","state":{"on":false}},
     {"type":"NOT","id":"dev2","x":150,"y":250,"label":"NOT"},
     {"type":"AND","id":"dev3","x":200,"y":50,"label":"AND"},
     {"type":"AND","id":"dev4","x":200,"y":150,"label":"AND"},
-    {"type":"Out","immobile":true,"id":"dev5","x":350,"y":100,"label":"A","state":{"on":false}},
-    {"type":"Out","immobile":true,"id":"dev6","x":350,"y":200,"label":"B","state":{"on":false}}
+    {"type":"Out","immobile":false,"id":"dev5","x":350,"y":100,"label":"A","state":{"on":false}},
+    {"type":"Out","immobile":false,"id":"dev6","x":350,"y":200,"label":"B","state":{"on":false}}
     ],
     "connectors":[
     {"from":"dev2.in0","to":"dev1.out0"},
@@ -872,55 +908,96 @@
   }
   $s.registerDevice('DMUX',dmuxdata)
 
-  let dffdata = {
-    "devices":[
-      {"type":"NAND","id":"dev0","x":240,"y":184,"label":"NAND"},
-      {"type":"NAND","id":"dev1","x":176,"y":88,"label":"NAND"},
-      {"type":"NAND","id":"dev2","x":336,"y":80,"label":"NAND"},
-      {"type":"NOT","id":"dev3","x":160,"y":160,"label":"NOT"},
-      {"type":"NAND","id":"dev4","x":336,"y":176,"label":"NAND"},
-      {"type":"In","immobile":true,"id":"dev5","x":40,"y":80,"label":"IN","state":{"on":false}},
-      {"type":"In","freq":10,"id":"dev6","x":40,"y":200,"label":"CLK"},
-      {"type":"Out","immobile":true,"id":"dev7","x":456,"y":136,"label":"OUT"}
-    ],
-    "connectors":[
-      {"from":"dev0.in0","to":"dev3.out0"},
-      {"from":"dev0.in1","to":"dev6.out0"},
-      {"from":"dev1.in0","to":"dev5.out0"},
-      {"from":"dev1.in1","to":"dev6.out0"},
-      {"from":"dev2.in0","to":"dev1.out0"},
-      {"from":"dev2.in1","to":"dev4.out0"},
-      {"from":"dev3.in0","to":"dev5.out0"},
-      {"from":"dev4.in0","to":"dev2.out0"},
-      {"from":"dev4.in1","to":"dev0.out0"},
-      {"from":"dev7.in0","to":"dev2.out0"}
-    ]
-  }
-  $s.registerDevice('DFF',dffdata)
 
-  let bitdata = {"devices":[
-      {"type":"Out","immobile":true,"id":"dev0","x":456,"y":136,"label":"OUT"},
-      {"type":"D-FF","id":"dev1","x":304,"y":208,"label":"D-FF"},
-      {"type":"In","immobile":true,"freq":10,"id":"dev2","x":32,"y":224,"label":"CLK"},
-      {"type":"In","immobile":true,"id":"dev3","x":32,"y":40,"label":"IN","state":{"on":false}},
-      {"type":"In","immobile":true,"id":"dev4","x":32,"y":120,"label":"LOAD","state":{"on":true}},
-      {"type":"MUX","id":"dev5","x":208,"y":112,"label":"MUX"}
-     ],
-     "connectors":[
-      {"from":"dev0.in0","to":"dev1.out0"},
-      {"from":"dev1.in0","to":"dev5.out0"},
-      {"from":"dev1.in1","to":"dev2.out0"},
-      {"from":"dev5.in0","to":"dev1.out0"},
-      {"from":"dev5.in1","to":"dev3.out0"},
-      {"from":"dev5.in2","to":"dev4.out0"}
-     ]
-  }
-  $s.registerDevice('BIT',bitdata)
+  $s.registerDevice('BIT', function(device) {
+        var numInputs = 3;
 
+        device.halfPitch = numInputs > 2;
+        device.addInput('IN')
+        device.addInput('LOAD')
+        device.addInput('CLOCK')
 
+        device.addOutput('OUT');
+        var storedValue = null;
 
+        var inputs = device.getInputs();
+        var outputs = device.getOutputs();
+
+        device.createUI();
+        device.$ui.on('inputValueChange', function() {
+          let clockOn = isHot ( inputs[2].getValue() );
+          let loadOn = isHot ( inputs[1].getValue() );
+          let inVal = inputs[0].getValue();
+          if(clockOn){
+            if(loadOn){
+              storedValue = inVal;
+            }
+          }
+
+          outputs[0].setValue(storedValue);
+
+        });
+        var super_createUI = device.createUI;
+        device.createUI = function() {
+          super_createUI();
+          var size = device.getSize();
+          var g = $s.graphics(device.$ui);
+          g.attr['class'] = 'simcir-basicset-symbol';
+
+          /*draw(g, 
+            (size.width - unit) / 2,
+            (size.height - unit) / 2,
+            unit, unit);
+            */
+          
+        };
+      }
+  );
 
 
+  $s.registerDevice('DFF', function(device) {
+        var numInputs = 2;
+
+        device.halfPitch = numInputs > 2;
+        device.addInput('IN')
+        device.addInput('CLOCK')
+
+        device.addOutput('OUT');
+        var storedValue = null;
+
+        var inputs = device.getInputs();
+        var outputs = device.getOutputs();
+
+        device.$ui.on('inputValueChange', function() {
+          let clockOn = isHot ( inputs[1].getValue() );
+          let inVal = isHot ( inputs[0].getValue() );
+
+          if(clockOn){
+              storedValue = inVal? 1 : null;
+            
+          }
+
+          outputs[0].setValue(storedValue);
+
+        });
+        var super_createUI = device.createUI;
+        device.createUI = function() {
+          super_createUI();
+          var size = device.getSize();
+          var g = $s.graphics(device.$ui);
+          g.attr['class'] = 'simcir-basicset-symbol';
+
+          /*draw(g, 
+            (size.width - unit) / 2,
+            (size.height - unit) / 2,
+            unit, unit);
+            */
+          
+        };
+      }
+  );
+
+  
   var ALUFactory = function() {
       return function(device) {
         var numInputs = 8;
@@ -1018,6 +1095,236 @@
   };
 
   $s.registerDevice('ALU',ALUFactory())
+
+
+
+  $s.registerDevice('REGISTER', function(device) {
+        var numInputs = 3;
+        let storedValue = 0;
+        
+        device.halfPitch = numInputs > 2;
+
+        device.addInput('IN','x16');
+        device.addInput('LOAD');
+        device.addInput('CLK');
+
+        device.addOutput('OUT','x16');
+
+        var inputs = device.getInputs();
+        var outputs = device.getOutputs();
+
+        device.$ui.on('inputValueChange', function() {
+       
+          let inVal = inputs[0].getValue();
+          let loadOn = isHot ( inputs[1].getValue() );
+          let clockOn = isHot (inputs[2].getValue() );
+          if(loadOn && clockOn) {
+
+          let inValDec = busToSignedInt(inVal);
+
+          
+            storedValue = inValDec;
+            let outVal = inVal;
+          
+
+          outputs[0].setValue( outVal );
+
+          device.createUI;
+          }
+        });
+
+        var super_createUI = device.createUI;
+
+        device.createUI = function() {
+          super_createUI();
+          var size = device.getSize();
+          var g = $s.graphics(device.$ui);
+          g.attr['class'] = 'simcir-basicset-symbol';
+
+          /*draw(g, 
+            (size.width - unit) / 2,
+            (size.height - unit) / 2,
+            unit, unit);
+            */
+          
+        };
+      }
+  );
+
+
+
+  $s.registerDevice('PC', function(device) {
+        var numInputs = 5;
+        let storedValue = 0;
+        
+        device.halfPitch = numInputs > 2;
+
+        device.addInput('IN','x16');
+        device.addInput('LOAD');
+        device.addInput('INC');
+        device.addInput('RESET');
+        device.addInput('CLK');
+
+        device.addOutput('OUT','x16');
+
+        var inputs = device.getInputs();
+        var outputs = device.getOutputs();
+
+        device.$ui.on('inputValueChange', function() {
+       
+          let clockOn = isHot (inputs[4].getValue() );
+          if(clockOn) {
+
+          let inVal = inputs[0].getValue();
+          let loadOn = isHot ( inputs[1].getValue() );
+          let incOn = isHot ( inputs[2].getValue() );
+          let resetOn = isHot ( inputs[2].getValue() );
+          let inValDec = busToSignedInt(inVal);
+
+          let newOut = storedValue;
+
+          if(resetOn){
+            newOut = 0;
+          }
+          else if(loadOn){
+            newOut = inValDec;
+          }
+          else if(incOn){
+            newOut+=1;
+          }
+
+          storedValue = newOut;
+          
+          let outVal = []
+          let binary = dec2bin(newOut);
+            for(let i = 15;i>=0;i--){
+              outVal.push(  binary[i]===1? 1 : null )
+            }
+
+
+          outputs[0].setValue( outVal );
+
+          device.createUI;
+          }
+
+        });
+
+        var super_createUI = device.createUI;
+
+        device.createUI = function() {
+          super_createUI();
+          var size = device.getSize();
+          var g = $s.graphics(device.$ui);
+          g.attr['class'] = 'simcir-basicset-symbol';
+
+          /*draw(g, 
+            (size.width - unit) / 2,
+            (size.height - unit) / 2,
+            unit, unit);
+            */
+          
+        };
+      }
+  );
+
+
+  var RAMFactory = function(numRegisters){
+
+      return function(device) {
+        
+        var RAM = {};
+        var lastValidAddress = numRegisters-1;
+        var addressBits = parseInt(Math.log(numRegisters)/Math.log(2));
+
+        var pop = function(a){
+          if(RAM[a]) return RAM[a];
+          return 0;
+        }
+
+        var poke = function(a,value){
+          RAM[a] = value;
+        }
+
+        device.getRAM = function(){
+          return RAM;
+        }
+
+        device.halfPitch = true;
+
+        device.addInput('IN','x16');
+        device.addInput('LOAD');
+        device.addInput('ADDRESS','x'+addressBits);
+        device.addInput('CLK')
+        
+        device.addOutput('OUT','x16');
+
+        var inputs = device.getInputs();
+        var outputs = device.getOutputs();
+
+        device.$ui.on('inputValueChange', function() {
+       
+          let loadOn = isHot ( inputs[1].getValue() );
+          let addVal = inputs[2].getValue();
+          let clockOn = isHot (inputs[3].getValue() )
+
+          //set address
+            let addressDec = 0;
+            for(let i = 0;i<addressBits;i++){
+              let bitOn = isHot( extractValue(addVal,i) );
+              addressDec += bitOn ? Math.pow(2,i) : 0;
+            }
+          let outVal = [];
+          if(loadOn && clockOn) { 
+
+            let inVal = inputs[0].getValue();
+            let inValDec = busToSignedInt(inVal);
+            
+            poke(addressDec,inValDec); 
+            outVal = inVal;
+          }
+          else{
+            // pull the old value from RAM and conver to bus
+            let oldM = pop(addressDec);
+            let binary = dec2bin(oldM);
+            for(let i = 15;i>=0;i--){
+              outVal.push(  binary[i]===1? 1 : null )
+            }
+          }
+
+         
+          outputs[0].setValue( outVal );
+          device.createUI;
+
+        });
+
+        var super_createUI = device.createUI;
+
+        device.createUI = function() {
+          super_createUI();
+          var size = device.getSize();
+          var g = $s.graphics(device.$ui);
+          g.attr['class'] = 'simcir-basicset-symbol';
+
+          /*draw(g, 
+            (size.width - unit) / 2,
+            (size.height - unit) / 2,
+            unit, unit);
+            */
+          
+        };
+      };
+};
+  
+  $s.registerDevice('RAM8',RAMFactory(8));
+  $s.registerDevice('RAM64',RAMFactory(64));
+  $s.registerDevice('RAM512',RAMFactory(512));
+  $s.registerDevice('RAM4K',RAMFactory(4096));
+  $s.registerDevice('RAM16K',RAMFactory(32768));
+  /*
+  //$s.registerDevice('SCREEN',RAMFactory())
+  //$s.registerDevice('KBD',RAMFactory(1))
+  //$s.registerDevice('MEMORY')
+  */
 
 }(simcir);
 
