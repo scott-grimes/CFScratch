@@ -1,4 +1,8 @@
-
+// dff test is unique, cannot just set initial values. instead use calls to "update inputs"
+var clearClock = function(clockDevice){
+    clockDevice.trigger();
+    clockDevice.trigger();
+}
 
 var runTest = function(testobj){
     return new Promise(function(resolve,reject){
@@ -19,19 +23,14 @@ var runTest = function(testobj){
             output[ devicesToSet[i] ] = [];
         }
 
-        var data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
+        var data;
+        var updateData = function(){
+            data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
+        }
+        updateData();
+
         var boolToBin = function(x){ return (x? 1:0); };
         
-
-        var setCircuitData = function(data){
-
-            return new Promise(function(resolve, reject) {
-                simcir.setupSimcir( $('#circuitBox'), data );
-                //console.log('uploading new circuit data')
-                    setTimeout(() => { //console.log(simcir.controller($('#circuitBox').find('.simcir-workspace')).data() );
-                     resolve()}, 60); // (*)
-            });  
-        };  
 
         var getIndexOfLabel = function(label){
             for(var i = 0;i<data.devices.length;i++){
@@ -40,35 +39,38 @@ var runTest = function(testobj){
             }
             return null;
         };
+        //returns the device with a given id
+        var device = function(id){ return simcir.controller($('#circuitBox').find('.simcir-workspace')).data().deviceFuncts[id]; }
+
         var getState  = function(label){
-            data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
             var i = getIndexOfLabel(label);
             let isBus = deviceIsBus(label);
+
+            let d = device(i).deviceDef;
             if( isBus ){
                 //2s compliment
-                if(data.devices[i].value>32768 && ( data.devices[i]['numInputs']===16 || data.devices[i]['numOutputs']===16 )  ){
+                
+                if(d.value>32768 && ( d['numInputs']===16 || d['numOutputs']===16 )  ){
                     
-                    return data.devices[i].value-Math.pow(2,15);
+                    return d.value-Math.pow(2,15);
                 }
 
-                return data.devices[i].value;
+                return d.value;
             }
 
-            i = data.devices[i].state['on']
+            i = d.state['on']
             return boolToBin(i)
         };
         
         var setState = function(label,value){
-            var i = getIndexOfLabel(label);
-            let isBus = deviceIsBus(label);
-            
-            if( isBus ){
-                data.devices[i].value = value;
-            }else{
-                data.devices[i].state['on'] = value;
-            }
-            
-            
+
+            return new Promise(function(resolve, reject) {
+                var i = getIndexOfLabel(label);
+                device(i).trigger(value);
+                //console.log('uploading new circuit data')
+                    setTimeout(() => { //console.log(simcir.controller($('#circuitBox').find('.simcir-workspace')).data() );
+                     resolve()}, 60); // (*)
+            });  
         };
 
         var deviceIsBus = function(label){
@@ -84,21 +86,21 @@ var runTest = function(testobj){
         
         var runSingleTest =function(i){
                 return new Promise(function(resolve, reject) {
-                    
+                    let promiseArray = [];
                     //pushing set pins into results object
                     for(let j = 0;j<devicesToSet.length;j++){
 
                         let valueToSet;
                         let isBus = deviceIsBus( devicesToSet[j]);
+                        
 
                         if( isBus ){
                             valueToSet = testobj[ devicesToSet[j] ][i];
                         }else{
                             valueToSet = testobj[ devicesToSet[j] ][i] ? true : false;
-
                         }
 
-                        setState(devicesToSet[j],  valueToSet)
+                        promiseArray.push( setState(devicesToSet[j],  valueToSet) )
 
                         if(! isBus )
                             valueToSet = boolToBin(valueToSet);
@@ -106,9 +108,7 @@ var runTest = function(testobj){
                         output[ devicesToSet[j] ].push( valueToSet )  ;
                     }
                    //console.log('starting to set circuit data');
-
-                    setCircuitData(data)
-                    .then( ()=> {
+                   Promise.all( promiseArray ).then( ()=> {
                         return new Promise(function(resolve, reject) {
                             //adding set pin to output
                             for(let j = 0;j<devicesToCheck.length;j++){
@@ -120,11 +120,21 @@ var runTest = function(testobj){
                     })
                     .then(()=> resolve() );
             });
-            }
+            };
 
     var chain = Promise.resolve();
     //check each test, push the values into our output 
 
+
+    //check for DFF test, because of recursion the outpin is set incorrect at the beginning
+    if(testobj['CLK']){
+        let clockPin = device( getIndexOfLabel("CLK") )
+        clearClock( clockPin );
+    }
+
+
+
+    //run all our tests
     for(let i = 0;i<numTests;i++){
         chain=chain.then( ()=> {
             return runSingleTest(i) 
@@ -142,6 +152,13 @@ var runTest = function(testobj){
     });
 }
 
+
+
+
+//cpu test is unique and requires lots of clock setting. seperate test object!
+var cpuTest = function(testobc){
+
+}
 
 
 
