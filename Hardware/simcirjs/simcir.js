@@ -1852,7 +1852,7 @@ simcir.$ = function() {
           node.id = devId + '.out' + i;
         });
       });
-
+      var deviceFuncts = [];
       var toolbox = [];
       var devices = [];
       var connectors = [];
@@ -1873,6 +1873,7 @@ simcir.$ = function() {
           }
         });
         var pos = transform($dev);
+        deviceFuncts.push(device);
         var deviceDef = clone(device.deviceDef);
         deviceDef.id = device.id;
         deviceDef.x = pos.x;
@@ -1892,7 +1893,8 @@ simcir.$ = function() {
         toolbox: toolbox,
         devices: devices,
         connectors: connectors,
-        tests: data.tests
+        tests: data.tests,
+        deviceFuncts: deviceFuncts
       };
     };
     var getText = function() {
