@@ -5,21 +5,21 @@
 
 <link rel="stylesheet" type="text/css" href="simcirjs/simcir.css" />
 <link rel="stylesheet" type="text/css" href="simcirjs/simcir-basicset.css" />
-
-<script type="text/javascript" src="circuits.js"></script>
-    
 <script src="jquery-3.2.1.min.js"></script>
 
 
 <script type="text/javascript" src="simcirjs/simcir.js"></script>
 <script type="text/javascript" src="simcirjs/simcir-basicset.js"></script>
 <script type="text/javascript" src="simcirjs/simcir-library.js"></script>
+
+<script type="text/javascript" src="circuits.js"></script>
+<script type="text/javascript" src="toolboxes.js"></script>
+<script type="text/javascript" src="circuitSuite.js"></script>
 <script type="text/javascript" src="customComponents.js"></script>
 <script type="text/javascript" src="tester.js"></script>
 
 
 <style type="text/css">
-/* http://jsfiddle.net/gordonwoodhull/undr1kx6/44/ */
 * {
   font-family: arial, sans-serif;
 }
@@ -28,149 +28,10 @@
 <title>SimcirJS</title>
 <script type="text/javascript">
     
-    var TESTING = false;
-    var getCircuitData = function() {
-        var $s = simcir; 
-         var $mysim = $('#circuitBox');
-    return $s.controller(
-        $mysim.find('.simcir-workspace') ).data();
-  };
-    
-    var setCircuitData = function(data){
-        
-    simcir.setupSimcir( $('#circuitBox'), data );
-  
-    }
 
-    var createTestResults = function(testobj,results){
-            var t = document.getElementById("testresultstable");
-
-            var passedAll = true;
-            var rowlen = t.rows[1].cells.length; 
-            
-            for(let testNumber = 0;testNumber<results["number"];testNumber++){
-                let row = t.rows[testNumber+1];
-                for(let i = 0;i<results["devicesToCheck"].length;i++){
-                    
-                    let dev = results["devicesToCheck"][i];
-                    if( results[dev][testNumber] !== testobj[dev][testNumber]){
-                        passedAll=false;
-                        row.cells[rowlen-1].innerHTML = "X";
-
-                    }else{
-
-                        row.cells[rowlen-1].innerHTML = "✓";
-                    }
-                    row.cells.namedItem( dev+'_'+testNumber).innerHTML = results[ dev ][testNumber];
-                }
-            }
-    }    
-    
-    var test = function(){
-        if(TESTING){ return; }
-        TESTING = true;
-        var data = getCircuitData();
-        runTest(data.tests)
-        .then(results=>{
-            createTestResults(data.tests,results);
-            TESTING = false;
-
-        })
-        .catch(err=>{console.log('error',err); TESTING = false;})
-        
-    };
-  
-    function setLibrary (itemName){
-        var data = {};
-        data["width"] = 900;
-        data["height"]=600;
-        if(itemName!=='RESET'){
-            //data["toolbox"] =toolboxes[itemName];
-            if(devices[itemName])
-                data["devices"] = devices[itemName]["devices"];
-                data["connectors"] = devices[itemName]["connectors"]
-                data["tests"] = devices[itemName]["tests"]
-        }
-
-
-         
-         var $s = simcir;
-         var $mysim = $('#circuitBox');
-
-        $s.setupSimcir($mysim,data)
-
-       
-
-
-        var tests = data["tests"];
-        if(!tests){return;}
-        var table = document.getElementById("testresultstable")
-        table.innerHTML = "";
-        //set up head of table
-        var header = table.createTHead();
-        let row = header.insertRow(0);
-        for(let i = 0;i<tests.toSet.length;i++){
-            let cell = row.insertCell(-1);
-            cell.innerHTML = tests.toSet[i];
-        }
-        //expected
-        for(let i = 0;i<tests.toCheck.length;i++){
-         
-            let cell = row.insertCell(-1);
-            cell.innerHTML = tests.toCheck[i]+'<sub>exp</sub>';   
-        }
-        //actual
-        for(let i = 0;i<tests.toCheck.length;i++){ 
-            let cell = row.insertCell(-1);
-            cell.innerHTML = tests.toCheck[i]+'<sub>act</sub>';   
-        }
-        //results cell for checkboxes
-        row.insertCell(-1);
-        
-        //set up cells
-        //fill setter cells
-        for(let test = 0;test<tests.number;test++){
-            let row = table.insertRow(-1);
-            for(let i = 0;i<tests.toSet.length;i++){
-                let cell = row.insertCell(-1);
-                cell.innerHTML = tests[ tests.toSet[i] ][test];
-            }
-            //fill checker cells with expected value
-            for(let i = 0;i<tests.toCheck.length;i++){
-                let cell = row.insertCell(-1);
-                cell.innerHTML = tests[ tests.toCheck[i] ][test];
-                
-            }
-            //create blank checker cells for actual value
-            for(let i = 0;i<tests.toCheck.length;i++){
-                let cell = row.insertCell(-1);
-                cell.innerHTML = ' ';
-                cell.id = tests.toCheck[i]+'_'+test;
-
-            }
-            row.insertCell(-1); //box at end for checkboxes
-        }
-
-         //If we are looking at the DFF circuit, get the clock device and trigger twice to clear the output pin (recursion issue)
-        if(itemName=== "DFF"){
-            //get device index for the Clock
-            let i;
-            for(i = 0;i<data.devices.length;i++){
-                if (data.devices[i]['label']==='CLK')
-                    break;
-            }
-            //trigger the clock twice to zero out the circuit, with a delay to allow the values to propigate
-            window.setTimeout(function(){simcir.controller($('#circuitBox').find('.simcir-workspace')).data().deviceFuncts[4].trigger();}, 30);
-            window.setTimeout(function(){simcir.controller($('#circuitBox').find('.simcir-workspace')).data().deviceFuncts[4].trigger();}, 60);
-        }
-
-        return;
-    }
     window.onload = function(){
-        //registerTestingComponents();
-       
-
         var toolbar = document.getElementById("toolbar");
+        var BOARD = CIRCUITESUITE($('#circuitBox'));
         //used to reset
         var myButton = document.createElement("input");
             myButton.type = "button";
@@ -178,7 +39,7 @@
             myButton.value = itemName
             myButton.id = 'RESET_button';
             toolbar.appendChild(myButton);
-        document.getElementById("RESET_button").addEventListener("click", function(){setLibrary(this.value)},false);
+        document.getElementById("RESET_button").addEventListener("click", function(){BOARD.setLibrary(this.value)},false);
         
         //add all our stuff
         for(var i = 0;i<thingsToBuild.length;i++){
@@ -191,10 +52,11 @@
             myButton.value = itemName
             myButton.id = itemName+'_button';
             toolbar.appendChild(myButton);
-            document.getElementById(myButton.id).addEventListener("click", function(){setLibrary( this.value)},false);
+            document.getElementById(myButton.id).addEventListener("click", function(){BOARD.setLibrary( this.value)},false);
             
-  }
-      document.getElementById("test").addEventListener("click", function(){ test() },false);  
+    }
+      document.getElementById("test").addEventListener("click", function(){ BOARD.test() },false);  
+
     };
     
 </script>
@@ -219,6 +81,7 @@
 Specify width and height only.
 All the other attributes will be used defaults.
 -->
+<input type="button" id="test" value="Start"></input><div id="testResultsMessage">Click Start to test your device</div><br>
 <div class="simcir" id="circuitBox">
 {
   "width":900,
@@ -226,7 +89,7 @@ All the other attributes will be used defaults.
 }
 </div><div id="testResults"><hr>Tests</hr><table id="testresultstable"></table></div>
 <br>
-<input type="button" id="test" value="Test"></input>
+
 Ctrl+Click(Mac:command+Click) on your circuit and copy a circuit data.
 <br>
 
