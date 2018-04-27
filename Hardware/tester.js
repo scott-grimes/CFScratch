@@ -1,7 +1,7 @@
 // dff test is unique, cannot just set initial values. instead use calls to "update inputs"
-var clearClock = function(clockDevice){
-    clockDevice.trigger();
-    clockDevice.trigger();
+var resetClock = function(clockDevice){
+    clockDevice.trigger(true);
+    clockDevice.trigger(false);
 }
 
 var runTest = function(testobj){
@@ -153,13 +153,9 @@ var runTest = function(testobj){
 }
 
 
-
-
-//cpu test is unique and requires lots of clock setting. seperate test object!
-var cpuTest = function(testobc){
-
+var runClockedTest = function(testobj){
+    
 }
-
 
 
 
