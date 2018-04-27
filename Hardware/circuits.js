@@ -14,6 +14,7 @@ devices.NOT = {"devices":[
     {"from":"dev1.in1","to":"dev0.out0"}
   ],
     "tests":{   "number":2,
+                "name":"NOT",
                 "toSet":["IN"],
                 "toCheck":["OUT"],
                 "IN":[0,1],
@@ -34,6 +35,7 @@ devices.AND = {"devices":[
     {"from":"dev4.in0","to":"dev3.out0"}
   ],
     "tests":{   "number":4,
+                "name":"AND",
                 "toSet":["A","B"],
                 "toCheck":["OUT"],
                 "A":[0,1,0,1],
@@ -56,6 +58,7 @@ devices.OR = { "devices":[
     {"from":"dev5.in0","to":"dev4.out0"}
   ],
     "tests":{   "number":4,
+                "name":"OR",
                 "toSet":["A","B"],
                 "toCheck":["OUT"],
                 "A":[0,1,0,1],
@@ -86,6 +89,7 @@ devices.XOR = {
     {"from":"dev7.in0","to":"dev6.out0"}
   ],
     "tests":{   "number":4,
+                "name":"XOR",
                 "toSet":["A","B"],
                 "toCheck":["OUT"],
                 "A":[0,1,0,1],
@@ -114,6 +118,7 @@ devices.MUX = {"devices":[
     {"from":"dev7.in1","to":"dev3.out0"}
   ],
     "tests":{   "number":8,
+                "name":"MUX",
                 "toSet":["A","B","SEL"],
                 "toCheck":["OUT"],
                 "A":[0,1,0,1,0,1,0,1],
@@ -142,6 +147,7 @@ devices.DMUX = {
     {"from":"dev6.in0","to":"dev3.out0"}
   ],
     "tests":{   "number":4,
+                "name":"DMUX",
                 "toSet":["IN","SEL"],
                 "toCheck":["A","B"],
                 "IN":[0,1,0,1],
@@ -209,6 +215,7 @@ devices.NOT16 = {"devices":[
     {"from":"dev19.in0","to":"dev3.out15"}
   ],
     "tests":{   "number":4,
+                "name":"NOT16",
                 "toSet":["IN"],
                 "toCheck":["OUT"],
                 "IN":[0,-1338,32767,21845],
@@ -295,6 +302,7 @@ devices.AND16 = {
     {"from":"dev21.in1","to":"dev5.out15"}
   ],
     "tests":{   "number":4,
+                "name":"AND16",
                 "toSet":["A","B"],
                 "toCheck":["OUT"],
                 "A":[0,21845,65280,1337],
@@ -383,6 +391,7 @@ devices.OR16 = {
     {"from":"dev21.in1","to":"dev5.out15"}
   ],
     "tests":{   "number":4,
+                "name":"OR16",
                 "toSet":["A","B"],
                 "toCheck":["OUT"],
                 "A":[0,43690,255,21845],
@@ -488,6 +497,7 @@ devices.MUX16 = {
     {"from":"dev22.in2","to":"dev6.out0"}
     ],
     "tests":{   "number":4,
+                "name":"MUX16",
                 "toSet":["A","B","SEL"],
                 "toCheck":["OUT"],
                 "A":[666,-1337,666,1337],
@@ -533,6 +543,7 @@ devices.OR8WAY = {  "devices":[
     {"from":"dev15.in1","to":"dev14.out0"}
   ],
     "tests":{   "number":5,
+                "name":"OR8WAY",
                 "toSet":["A","B","C","D","E","F","G","H"],
                 "toCheck":["OUT"],
                 "A":[0,1,0,0,0],
@@ -575,6 +586,7 @@ devices.MUX4WAY16 = {
     {"from":"dev9.in2","to":"dev6.out0"}
   ],
     "tests":{   "number":4,
+                "name":"MUX4WAY16",
                 "toSet":["A","B","C","D","SEL"],
                 "toCheck":["OUT"],
                 "A":[1337,-1337,666,666],
@@ -625,6 +637,7 @@ devices.MUX8WAY16 = {  "devices":[
     {"from":"dev14.in1","to":"dev13.out1"}
   ],
     "tests":{   "number":8,
+                "name":"MUX8WAY16",
                 "toSet":["A","B","C","D","E","F","G","H","SEL"],
                 "toCheck":["OUT"],
                 "A":[1337,-1337,666,666,1337,-1337,666,666],
@@ -659,6 +672,7 @@ devices.HALFADDER = {
     {"from":"dev5.in0","to":"dev3.out0"}
   ],
     "tests":{   "number":4,
+                "name":"HALFADDER",
                 "toSet":["A","B"],
                 "toCheck":["SUM","CARRY"],
                 "A":[0,1,0,1],
@@ -690,6 +704,7 @@ devices.FULLADDER = {
     {"from":"dev7.in1","to":"dev3.out1"}
   ],
     "tests":{   "number":8,
+                "name":"FULLADDER",
                 "toSet":["A","B","C"],
                 "toCheck":["SUM","CARRY"],
                 "A":[0,1,0,1,0,1,0,1],
@@ -794,6 +809,7 @@ devices.ADD16 = {
     {"from":"dev21.in2","to":"dev20.out0"}
   ],
     "tests":{   "number":5,
+                "name":"ADD16",
                 "toSet":["A","B"],
                 "toCheck":["OUT"],
                 "A":[671,512,-5,32767,20000],
@@ -817,6 +833,7 @@ devices.INC16 = {
     {"from":"dev4.in0","to":"dev3.out0"}
   ],
     "tests":{   "number":4,
+                "name":"INC16",
                 "toSet":["IN"],
                 "toCheck":["OUT"],
                 "IN":[5,-1338,32767,-1],
@@ -829,7 +846,7 @@ devices.DFF = {"devices":[
     {"type":"NAND","id":"dev1","x":176,"y":88,"label":"NAND"},
     {"type":"NOT","id":"dev2","x":160,"y":160,"label":"NOT"},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev3","x":40,"y":80,"label":"IN","state":{"on":false}},
-    {"type":"SINGLEINPUT","freq":10,"id":"dev4","x":40,"y":200,"label":"CLK","state":{"on":false}},
+    {"type":"SINGLEINPUT","freq":10,"id":"dev4","x":40,"y":200,"label":"CLOCK","state":{"on":false}},
     {"type":"SINGLEOUTPUT","immobile":true,"id":"dev5","x":456,"y":136,"label":"OUT","state":{"on":false}},
     {"type":"NAND","id":"dev6","x":336,"y":72,"label":"NAND"},
     {"type":"NAND","id":"dev7","x":344,"y":168,"label":"NAND"}
@@ -846,19 +863,13 @@ devices.DFF = {"devices":[
     {"from":"dev7.in0","to":"dev6.out0"},
     {"from":"dev7.in1","to":"dev0.out0"}
   ],
-    "tests":{   "number":7,
-                "toSet":["IN","CLK"],
-                "toCheck":["OUT"],
-                "IN":[1,0,0,1,0,1,1],
-                "CLK":[1,1,0,0,0,0,1],
-                "OUT":[1,0,0,0,0,0,1]
-            }
+    "tests":clockTest['DFF']
 }
 
 devices.BIT = { "devices":[
     {"type":"SINGLEOUTPUT","immobile":true,"id":"dev0","x":456,"y":136,"label":"OUT","state":{"on":false}},
     {"type":"DFF","id":"dev1","x":304,"y":208,"label":"DFF"},
-    {"type":"SINGLEINPUT","immobile":true,"freq":10,"id":"dev2","x":32,"y":224,"label":"CLK","state":{"on":false}},
+    {"type":"SINGLEINPUT","immobile":true,"freq":10,"id":"dev2","x":32,"y":224,"label":"CLOCK","state":{"on":false}},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev3","x":32,"y":40,"label":"IN","state":{"on":false}},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev4","x":32,"y":120,"label":"LOAD","state":{"on":false}},
     {"type":"MUX","id":"dev5","x":208,"y":112,"label":"MUX"}
@@ -870,14 +881,15 @@ devices.BIT = { "devices":[
     {"from":"dev5.in0","to":"dev1.out0"},
     {"from":"dev5.in1","to":"dev3.out0"},
     {"from":"dev5.in2","to":"dev4.out0"}
-  ]
+  ],
+  "tests": clockTest['BIT']
 }
 
 
 
 devices.REGISTER = {  "devices":[
     {"type":"CUSTOMBUSIN","numInputs":16,"immobile":true,"id":"dev0","x":456,"y":136,"label":"OUT","state":{"on":false},"isBus":true,"value":0,"numOutputs":16},
-    {"type":"SINGLEINPUT","immobile":true,"freq":10,"id":"dev1","x":32,"y":224,"label":"CLK"},
+    {"type":"SINGLEINPUT","immobile":true,"freq":10,"id":"dev1","x":32,"y":224,"label":"CLOCK"},
     {"type":"CUSTOMBUSOUT","immobile":true,"numOutputs":16,"id":"dev2","x":32,"y":40,"label":"IN","state":{"on":false},"isBus":true,"numInputs":16,"value":0},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev3","x":32,"y":120,"label":"LOAD","state":{"on":false}},
     {"type":"BusIn","numOutputs":16,"immobile":true,"id":"dev4","x":96,"y":16,"label":"BusIn"},
@@ -1047,6 +1059,7 @@ devices.ALU = {  "devices":[
     {"from":"dev26.in0","to":"dev25.out0"}
   ],
     "tests":{   "number":36,
+                "name":"ALU",
                 "toSet":["X","Y","ZX","NX","ZY","NY","F","NO"],
                 "toCheck":["OUT","ZR","NG"],
                 'X': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17],
@@ -1828,6 +1841,7 @@ devices.TEMP = {
     {"from":"dev11.in0","to":"dev0.out2"}
   ],
     "tests":{   "number":36,
+                "name":"TEMP",
                 "toSet":["X","Y","ZX","NX","ZY","NY","F","NO"],
                 "toCheck":["OUT","ZR","NG"],
                 "IN":[5,-1338,32767,-1],
