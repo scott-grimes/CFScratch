@@ -344,44 +344,40 @@
         if(device.deviceDef.state){
             on = device.deviceDef.state.on;
         }
-        
+        var $button;
         
         device.getState = function() {
           return type == 'Toggle'? { on : on } : null;
         };
 
-        /*device.$ui.on('inputValueChange', function() {
-          if (on) {
-            out1.setValue(in1.getValue() );
-          }
-        });
-        */
         var updateOutput = function() {
           out1.setValue(on ? on : null);
 
-        };
-        updateOutput();
+          $button.attr('fill', on? defaultLEDColor : defaultLEDBgColor);
+          
 
+        };
+        out1.setValue(on ? on : null);
         var super_createUI = device.createUI;
         device.createUI = function() {
           super_createUI();
           var size = device.getSize();
-          var $button = $s.createSVGElement('rect').
+          $button = $s.createSVGElement('rect').
             attr({x: size.width / 4, y: size.height / 4,
               width: size.width / 2, height: size.height / 2,
-              rx: 2, ry: 2});
-          $button.addClass('simcir-basicset-switch-button');
-          if (on) {
-            $button.addClass('simcir-basicset-switch-button-pressed');
-          }
+              rx: 2, ry: 2})
+            .attr('fill', on? defaultLEDColor : defaultLEDBgColor);
+          //.addClass('simcir-basicset-switch-button');
+         
           device.$ui.append($button);
+
             
           var button_mouseDownHandler = function(event) {
           
             event.preventDefault();
             event.stopPropagation();
             on = !on;
-            $button.addClass('simcir-basicset-switch-button-pressed');
+            //$button.addClass('simcir-basicset-switch-button-pressed');
               
             updateOutput();
             $(document).on('mouseup', button_mouseUpHandler);
@@ -389,9 +385,9 @@
           };
             
           var button_mouseUpHandler = function(event) {
-              if (!on) {
-                $button.removeClass('simcir-basicset-switch-button-pressed');
-              }
+              //if (!on) {
+              //  $button.removeClass('simcir-basicset-switch-button-pressed');
+              //}
             
             updateOutput();
             $(document).off('mouseup', button_mouseUpHandler);
@@ -402,12 +398,9 @@
           device.trigger = function(newValue){
             if(newValue===null || newValue!=on){
               on = !on;
-            $button.addClass('simcir-basicset-switch-button-pressed');
+            //$button.addClass('simcir-basicset-switch-button-pressed');
             updateOutput();
-            if (!on) {
-                $button.removeClass('simcir-basicset-switch-button-pressed');
-              }
-            updateOutput();
+            
             }
           }
             
