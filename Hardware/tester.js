@@ -1,5 +1,5 @@
 // dff test is unique, cannot just set initial values. instead use calls to "update inputs"
-var resetClock = function(clockDevice){
+var clearClock = function(clockDevice){
     clockDevice.trigger(true);
     clockDevice.trigger(false);
 }
