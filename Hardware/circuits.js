@@ -1,106 +1,7 @@
 //each toolbox inside contains the components required to build the desired chip
-var thingsToBuild = ['NOT','AND','OR','XOR','MUX','DMUX','NOT16','AND16','OR16','MUX16','OR8WAY','MUX4WAY16','MUX8WAY16','DMUX4WAY','DMUX8WAY','HALFADDER','FULLADDER','ADD16','INC16','ALU','DFF','BIT','REGISTER','RAM8','RAM64','RAM512','RAM4K','RAM16K','PC','CPU'];
-var toolboxes = {}; // the toolbox required for each component to be built
+var thingsToBuild = ['NOT','AND','OR','XOR','MUX','DMUX','NOT16','AND16','OR16','MUX16','OR8WAY','MUX4WAY16','MUX8WAY16','DMUX4WAY','DMUX8WAY','HALFADDER','FULLADDER','ADD16','INC16','ALU','DFF','BIT','REGISTER','RAM8','RAM64','RAM512','RAM4K','RAM16K','PC','CPU','COMPUTER'];
 var devices = {}; //the setup required for each component to be built
 
-var buildToolBoxes = function(){
-    //GATES
-    toolboxes.NOT = [{"type":"NAND"}];
-    toolboxes.AND = [{"type":"NAND"},
-                     {"type":"NOT"}];
-    toolboxes.OR = [{"type":"NAND"},
-                     {"type":"NOT"}];
-    toolboxes.XOR = [{"type":"AND"},
-                     {"type":"NOT"},
-                     {"type":"OR"}];
-    toolboxes.MUX = [{"type":"AND"},
-                     {"type":"NOT"},
-                     {"type":"OR"}];
-    toolboxes.DMUX = [{"type":"AND"},
-                     {"type":"NOT"}];
-
-    //16bit problems require buses
-    toolboxes.NOT16 = [{"type":"NOT"}]; 
-    toolboxes.AND16 = [{"type":"AND"}];
-    toolboxes.OR16 = [{"type":"OR"}]; 
-    toolboxes.MUX16 = [{"type":"MUX"}]; 
-
-    //multi-way gates
-    toolboxes.OR8WAY = [{"type":"OR"}]; 
-    toolboxes.MUX4WAY16 = [{"type":"MUX16"}]; 
-    toolboxes.MUX8WAY16 = [{"type":"MUX4WAY16"},
-                           {"type":"MUX16"},
-                           {"type":"BusIn"},
-                           {"type":"BusOut"}]; 
-    toolboxes.DMUX4WAY = [{"type":"DMUX"}]; 
-    toolboxes.DMUX8WAY = [{"type":"DMUX"},
-                           {"type":"DMUX4WAY"}]; 
-
-
-
-
-    // CHIPS
-    toolboxes.HALFADDER = [{"type":"AND"},
-                           {"type":"XOR"}]; 
-
-    toolboxes.FULLADDER = [{"type":"HALFADDER"},
-                           {"type":"OR"}]; 
-
-
-    toolboxes.ADD16 = [{"type":"FULLADDER"}]; 
-
-    toolboxes.INC16 = [{"type":"ADD16"}]; //todo NEEDS A TRUE GATE
-
-    toolboxes.ALU = [{"type":"MUX16"},
-                       {"type":"NOT16"},
-                       {"type":"ADD16"},
-                       {"type":"AND16"},
-                       {"type":"OR"},
-                       {"type":"OR8WAY"},
-                       {"type":"NOT"},
-                       {"type":"BusIn","numOutputs":16}]; 
-
-    toolboxes.DFF = []; //todo this
-
-    toolboxes.REGISTER = [{"type":"BIT"}];
-
-    toolboxes.RAM8 = [{"type":"MUX8WAY16"},
-                      {"type":"DMUX8WAY"},
-                      {"type":"REGISTER"}];
-    toolboxes.RAM64 = [{"type":"MUX8WAY16"},
-                      {"type":"DMUX8WAY"},
-                      {"type":"RAM8"}];
-    toolboxes.RAM512 = [{"type":"MUX8WAY16"},
-                      {"type":"DMUX8WAY"},
-                      {"type":"RAM64"}];
-    toolboxes.RAM4K = [{"type":"MUX8WAY16"},
-                      {"type":"DMUX8WAY"},
-                      {"type":"RAM512"}];
-    toolboxes.RAM16K = [{"type":"MUX8WAY16"},
-                      {"type":"DMUX8WAY"},
-                      {"type":"RAM4K"}];
-    toolboxes.PC = [{"type":"REGISTER"},
-                      {"type":"INC16"},
-                      {"type":"MUX16"}];
-    toolboxes.DFF = [{"type":"NAND"},
-                      {"type":"NOT"}];
-    /*toolboxes.CPU = [{"type":"REGISTER"},
-                     {"type":"ALU"},
-                      {"type":"MUX16"},
-                      {"type":"PC"}]
-
-*/
-    toolboxes.BIT = [{"type":"DFF"},
-                      {"type":"MUX"}];
-}
-buildToolBoxes()
-
-
-// SETUP
-var buildSingleBitDevices = function(){
-
-}
-buildSingleBitDevices();
 
 devices.NOT = {"devices":[
     {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":100,"label":"IN","state":{"on":false}},
@@ -903,8 +804,8 @@ devices.ADD16 = {
 
 devices.INC16 = {
 	"devices":[
-    {"type":"DC","id":"dev0","x":56,"y":176,"label":"DC"},
-    {"type":"BusOut","numInputs":16,"id":"dev1","x":168,"y":184,"label":"BusOut"},
+    {"type":"DC","immobile":true,"id":"dev0","x":56,"y":176,"label":"DC"},
+    {"type":"BusOut","immobile":true,"numInputs":16,"id":"dev1","x":168,"y":184,"label":"BusOut"},
     {"type":"CUSTOMBUSOUT","numInputs":16,"id":"dev2","x":56,"y":64,"label":"IN"},
     {"type":"ADD16","id":"dev3","x":304,"y":112,"label":"ADD16"},
     {"type":"CUSTOMBUSIN","numOutputs":16,"id":"dev4","x":464,"y":112,"label":"OUT"}
@@ -1371,7 +1272,7 @@ devices.RAM512 = {   "devices":[
     {"type":"RAM64","id":"dev6","x":304,"y":288,"label":"RAM64"},
     {"type":"CUSTOMBUSOUT","immobile":true,"isBus":true,"numInputs":16,"value":0,"id":"dev7","x":40,"y":24,"label":"IN"},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev8","x":40,"y":336,"label":"CLOCK","state":{"on":false}},
-    {"type":"CUSTOMBUSOUT","immobile":true,"numInputs":6,"id":"dev9","x":40,"y":224,"label":"ADDRESS","isBus":true,"value":0},
+    {"type":"CUSTOMBUSOUT","immobile":true,"numInputs":9,"id":"dev9","x":40,"y":224,"label":"ADDRESS","isBus":true,"value":0},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev10","x":40,"y":112,"label":"LOAD","state":{"on":false}},
     {"type":"CUSTOMBUSIN","immobile":true,"isBus":true,"value":0,"numOutputs":16,"id":"dev11","x":504,"y":152,"label":"OUT"},
     {"type":"MUX8WAY16","id":"dev12","x":424,"y":128,"label":"MUX8WAY16"},
@@ -1450,7 +1351,7 @@ devices.RAM4K = {   "devices":[
     {"type":"RAM512","id":"dev6","x":304,"y":288,"label":"RAM512"},
     {"type":"CUSTOMBUSOUT","immobile":true,"isBus":true,"numInputs":16,"value":0,"id":"dev7","x":40,"y":24,"label":"IN"},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev8","x":40,"y":336,"label":"CLOCK","state":{"on":false}},
-    {"type":"CUSTOMBUSOUT","immobile":true,"numInputs":6,"id":"dev9","x":40,"y":224,"label":"ADDRESS","isBus":true,"value":0},
+    {"type":"CUSTOMBUSOUT","immobile":true,"numInputs":12,"id":"dev9","x":40,"y":224,"label":"ADDRESS","isBus":true,"value":0},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev10","x":40,"y":112,"label":"LOAD","state":{"on":false}},
     {"type":"CUSTOMBUSIN","immobile":true,"isBus":true,"value":0,"numOutputs":16,"id":"dev11","x":504,"y":152,"label":"OUT"},
     {"type":"MUX8WAY16","id":"dev12","x":424,"y":128,"label":"MUX8WAY16"},
@@ -1531,7 +1432,7 @@ devices.RAM16K = {  "devices":[
     {"type":"RAM4K","id":"dev6","x":304,"y":288,"label":"RAM4K"},
     {"type":"CUSTOMBUSOUT","immobile":true,"isBus":true,"numInputs":16,"value":0,"id":"dev7","x":40,"y":24,"label":"IN"},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev8","x":40,"y":336,"label":"CLOCK","state":{"on":false}},
-    {"type":"CUSTOMBUSOUT","immobile":true,"numInputs":6,"id":"dev9","x":40,"y":224,"label":"ADDRESS","isBus":true,"value":0},
+    {"type":"CUSTOMBUSOUT","immobile":true,"numInputs":15,"id":"dev9","x":40,"y":224,"label":"ADDRESS","isBus":true,"value":0},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev10","x":40,"y":112,"label":"LOAD","state":{"on":false}},
     {"type":"CUSTOMBUSIN","immobile":true,"isBus":true,"value":0,"numOutputs":16,"id":"dev11","x":504,"y":152,"label":"OUT"},
     {"type":"MUX8WAY16","id":"dev12","x":424,"y":128,"label":"MUX8WAY16"},
@@ -1666,7 +1567,7 @@ devices.CPU = {  "devices":[
     {"type":"Joint","id":"dev27","x":352,"y":272,"label":"Joint","state":{"direction":0}},
     {"type":"Joint","id":"dev28","x":448,"y":272,"label":"Joint","state":{"direction":0}},
     {"type":"Joint","id":"dev29","x":464,"y":192,"label":"Joint","state":{"direction":0}},
-    {"type":"CUSTOMBUSIN","numOutputs":16,"id":"dev30","x":712,"y":224,"label":"ADDRESSM","isBus":true,"value":0},
+    {"type":"CUSTOMBUSIN","numOutputs":15,"id":"dev30","x":712,"y":224,"label":"ADDRESSM","isBus":true,"value":0},
     {"type":"Joint","id":"dev31","x":776,"y":344,"label":"Joint","state":{"direction":1}},
     {"type":"Joint","id":"dev32","x":480,"y":360,"label":"Joint","state":{"direction":1}},
     {"type":"Joint","id":"dev33","x":376,"y":480,"label":"Joint","state":{"direction":2}},
