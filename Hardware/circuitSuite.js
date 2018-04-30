@@ -1,5 +1,5 @@
 
-var CIRCUITESUITE = function(boardobject){return {
+var CIRCUITSUITE = function(boardobject){return {
 	
 	// prevent clicking test while a test is already in progress
 	TESTING : false,
@@ -7,7 +7,6 @@ var CIRCUITESUITE = function(boardobject){return {
 	$mysim : boardobject,
 
 	
-
     // returns the current state of the circuit board/
 	// all the devices and connections, etc
     getCircuitData : function(){
@@ -46,8 +45,8 @@ var CIRCUITESUITE = function(boardobject){return {
         window.document.getElementById("testResultsMessage").innerHTML = message;
     },
     
-    test : function(){
-
+    test : function(deviceName){
+        loadJSON()
         this.setTestingMessage('Testing...')
         if(this.TESTING) { return; }
 
@@ -70,28 +69,45 @@ var CIRCUITESUITE = function(boardobject){return {
     },
   
     setLibrary : function(deviceName){
-       
+
+        this.loadJSON(deviceName).then( data => {
+            console.log(data);
+
         this.setTestingMessage('Click Start to test your device');
-        var data = {};
+
         data["width"] = 900;
         data["height"]=600;
-
-        if(devices[deviceName]){
-            	data["toolbox"] =toolboxes[deviceName];
-            	data["devices"] = devices[deviceName]["devices"];
-                data["connectors"] = devices[deviceName]["connectors"]
-                data["tests"] = devices[deviceName]["tests"]
-        }
         this.$s.setupSimcir(this.$mysim,data)
-
         // erases the base table of given and expected values for this device
         let table = window.document.getElementById("testresultstable")
         table.innerHTML = "";
 
-         
+        });
 
+        
         return;
     },
 
+    //hacky  method to load json. need to fix
+    loadJSON : function(deviceName) {
+    return new Promise(function(resolve,reject){
+        var request = new XMLHttpRequest();
+        var loc = window.location.pathname;
+        var dir = loc.substring(0, loc.lastIndexOf('/')); //hacky method of geting local file
+    request.open("GET", dir+"/devices/"+deviceName+'.json');
+    request.onreadystatechange = function() {
+        if (this.readyState ===4) { //done
+            if (this.responseText) { 
+                resolve(JSON.parse(this.responseText))
+            }
+            else {
+                throw('data is empty')
+                reject()
+            }
+        }
+    };
+    request.send();
+});         
+    }
 }
-}
+};
