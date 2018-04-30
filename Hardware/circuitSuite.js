@@ -28,7 +28,8 @@ var CIRCUITSUITE = function(boardobject){return {
             table.innerHTML = '';
             let resultsMessage = resultsOfTest.passed ? 'Passed All Tests ✓' : 'One or More Tests Failed X';
             this.setTestingMessage(resultsMessage)
-
+            console.log(resultsOfTest);
+            return;
             let row = table.insertRow(0);
             let cell = row.insertCell(-1);
             cell.innerHTML = resultsOfTest.head;
@@ -36,6 +37,7 @@ var CIRCUITSUITE = function(boardobject){return {
             for(let i = 0;i<resultsOfTest.results.length;i++){
                 let row = table.insertRow(-1);
                 let cell = row.insertCell(-1);
+
                 cell.innerHTML = resultsOfTest.results[i]
             }
     },
@@ -45,36 +47,39 @@ var CIRCUITSUITE = function(boardobject){return {
         window.document.getElementById("testResultsMessage").innerHTML = message;
     },
     
-    test : function(deviceName){
-        loadJSON()
-        this.setTestingMessage('Testing...')
-        if(this.TESTING) { return; }
-
-        this.TESTING = true;
-
+    test : function(){
         var data = this.getCircuitData();
+        this.loadJSON('tests/'+data['deviceName']).then( testobj => {
+            this.setTestingMessage('Testing...')
+            if(this.TESTING) { return; }
 
-        runTest(data.tests)
-        .then((results)=>{
+            this.TESTING = true;
+
+            runTest(testobj)
+            .then((results)=>{
             
-            this.createTestResults(results);
-            this.TESTING = false;
+                this.createTestResults(results);
+                    this.TESTING = false;
 
         })
         .catch(err=>{
-        	console.log('error',err); 
-        	this.TESTING = false;
+            console.log('error',err); 
+            this.TESTING = false;
         })
+
+
+
+        })
+        
         
     },
   
     setLibrary : function(deviceName){
 
         this.loadJSON(deviceName).then( data => {
-            console.log(data);
 
         this.setTestingMessage('Click Start to test your device');
-
+        data['deviceName'] = deviceName;
         data["width"] = 900;
         data["height"]=600;
         this.$s.setupSimcir(this.$mysim,data)
