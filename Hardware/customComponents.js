@@ -394,7 +394,7 @@
             $(document).off('touchend', button_mouseUpHandler);
           };
 
-
+          
           device.trigger = function(newValue){
             if(newValue===null || newValue!=on){
               on = !on;
@@ -1111,19 +1111,18 @@
           let inVal = inputs[0].getValue();
           let loadOn = isHot ( inputs[1].getValue() );
           let clockOn = isHot (inputs[2].getValue() );
+
           if(loadOn && clockOn) {
 
-          let inValDec = busToSignedInt(inVal);
-
-          
+            let inValDec = busToSignedInt(inVal);
             storedValue = inValDec;
-            let outVal = inVal;
+          outputs[0].setValue( inVal );
+            
+          }
           
 
-          outputs[0].setValue( outVal );
 
           device.createUI;
-          }
         });
 
         var super_createUI = device.createUI;
@@ -1266,24 +1265,22 @@
               let bitOn = isHot( extractValue(addVal,i) );
               addressDec += bitOn ? Math.pow(2,i) : 0;
             }
+
           let outVal = [];
+
           if(loadOn && clockOn) { 
 
             let inVal = inputs[0].getValue();
             let inValDec = busToSignedInt(inVal);
-            
             poke(addressDec,inValDec); 
-            outVal = inVal;
           }
-          else{
+          
             // pull the old value from RAM and conver to bus
             let oldM = pop(addressDec);
             let binary = dec2bin(oldM);
             for(let i = 15;i>=0;i--){
-              outVal.push(  binary[i]===1? 1 : null )
+              outVal.push(  binary[i]==='1' ? 1 : null )
             }
-          }
-
          
           outputs[0].setValue( outVal );
           device.createUI;
