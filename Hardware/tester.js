@@ -6,7 +6,7 @@ var data;
 
 var inputPinTypes = ['SINGLEINPUT','CUSTOMBUSOUT']; // if a labeled pin has this type, set it. otherwise we have an output pin to check the value of
 
-
+// the data object contains an array of devices. given a label, what is the index of the device?
 var iOfLabelInData = function(label){
             for(var i = 0;i<data.devices.length;i++){
                 if (data.devices[i]['label']===label)
@@ -14,9 +14,11 @@ var iOfLabelInData = function(label){
             }
             return null;
         };
-        //returns the device with a given id
+
+//returns the simcir device with a given index (data.devices[id])
 var getDevice = function(id){ return simcir.controller($('#circuitBox').find('.simcir-workspace')).data().deviceFuncts[id]; }
 
+//returns the stored value of a given device.  
 var getState  = function(label){
             var i = iOfLabelInData(label);
             let isBus = deviceIsBus(label);
@@ -37,7 +39,7 @@ var getState  = function(label){
             return boolToBin(i);
 };
 
-   
+// sets the device with label "CLOCK" to the specified value
 var setClock = function(value){
             
             return new Promise(function(resolve, reject) {
@@ -47,7 +49,8 @@ var setClock = function(value){
                      resolve()}, 10); // (*)
             }); 
 };
-        
+      
+//sets the device with the given label to value  
 var setState = function(label,value){
             
             return new Promise(function(resolve, reject) {
@@ -59,6 +62,8 @@ var setState = function(label,value){
             }); 
 };
 
+// returns true if the device is a bus, false if otherwise. buses must have their outputs converted form an array of 1/null values
+// into a decimal value for reading
 var deviceIsBus = function(label){
             let i = iOfLabelInData(label);
             if(i===null) throw('device with label '+label+' not found')
@@ -68,17 +73,7 @@ var deviceIsBus = function(label){
             return false;
 };
 
-
-
-// a call to tester returns a results object as follows:
-// passed:true/false if all tests ran correctly
-// head: a string of the form DEVICE(in1,in2,in3) = (out1,out2,out3)
-// test results[], where each element is a string which describes the expected and actual values, followed by a check or x for pass/fail
-
-// using a promise chain, evaluate each test. reject the chain on the first failed test. 
-
-
-//returns the labels of all the pins which need to be set for each test
+//returns the labels of all the pins which need to be set for this test
 var getPinsToSet = function(testobj){
     var labels = testobj[0];
     var answer = [];
@@ -91,7 +86,7 @@ var getPinsToSet = function(testobj){
     return answer;
 }
 
-//returns the labels of all the pins we need to check for each test
+//returns the labels of all the pins we need to check for this test
 var getPinsToCheck = function(testobj){
 var labels = testobj[0];
     var answer = [];
@@ -104,21 +99,21 @@ var labels = testobj[0];
     return answer;
 }
 
-//returns an array of the expected outputs for a given test
-var expectedOutputs = function(testobj,i){
-    let outputs = []
-    for(let j = 0;j<testobj['devicesToCheck'].length ;j++){
-        var devName = testobj['devicesToCheck'][j];
-        outputs.push( testobj[devName][i] );
-    }
-    return outputs;
-}
+// a call to tester returns a results object as follows:
+// passed:true/false if all tests ran correctly
+// head: an array of strings which are the labels of the devices in our circuit
+// test results[], where each element is a string which describes the expected and actual values, followed by a check or x for pass/fail
 
+//testobj is formatted as follows:
+// first line ['label0','label1','labeln']
+// if the first device is labeled "clock", we must run a clocked test
+// each subsequent line is the expected values for each label
 
+// this works using a promise chain, evaluating each test. reject the chain on the first failed test. 
 
 var runTest = function(testobj){
     return new Promise(function(resolve,reject){
-
+        // get the current state of the board (devices and connections)
         data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
 
         let numTests = testobj.length-1;
@@ -191,12 +186,9 @@ var runTest = function(testobj){
                         
                         
                         if(!output['passed']){
-                            console.log('shoudl have been',testobj[i])
                             output['results'].push ( testobj[i] ); 
-                            console.log('was actually', [inputs,actual])
                             reject(); 
                         }else{
-                            console.log(testobj[i])
                             output['results'].push ( [inputs,actual] ); 
                             resolve();
                         }
@@ -234,11 +226,13 @@ var runTest = function(testobj){
             } );
             //console.log(i)
             
-//set the clock
+        //set the clock
             if(isClockedTest){
                 //tick tock
                 chain = chain.then( ()=> {
-                if( testobj[i][0].includes('+') ){ //time with a + is high clock
+                // If the time label has a '+', we are on clock-high, and should enable the clock so that
+                // clocked chips can have their outputs updated. 
+                if( testobj[i][0].includes('+') ){ 
                     return clockOn();
                 }
                 return clockOff();
