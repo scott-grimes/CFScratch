@@ -1,6 +1,6 @@
 //each toolbox inside contains the components required to build the desired chip
 var thingsToBuild = ['NOT','AND','OR','XOR','MUX','DMUX','NOT16','AND16','OR16','MUX16','OR8WAY','MUX4WAY16','MUX8WAY16','DMUX4WAY','DMUX8WAY','HALFADDER','FULLADDER','ADD16','INC16','ALU','DFF','BIT','REGISTER','RAM8','RAM64','RAM512','RAM4K','RAM16K','PC','CPU','COMPUTER'];
-var devices = {}; //the setup required for each component to be built
+//var devices = {}; //the setup required for each component to be built
 
 
 /*
@@ -336,4 +336,4 @@ var cputests = {
 'dreg': [0,0,12345,12345,12345,12345,11111,11111,11111,11111,11111,11111,11111,11111,11110,11110,11110,11110,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 
 };
-/*
+*/
