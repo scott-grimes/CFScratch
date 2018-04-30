@@ -2,11 +2,15 @@
 var thingsToBuild = ['NOT','AND','OR','XOR','MUX','DMUX','NOT16','AND16','OR16','MUX16','OR8WAY','MUX4WAY16','MUX8WAY16','DMUX4WAY','DMUX8WAY','HALFADDER','FULLADDER','ADD16','INC16','ALU','DFF','BIT','REGISTER','RAM8','RAM64','RAM512','RAM4K','RAM16K','PC','CPU','COMPUTER'];
 var devices = {}; //the setup required for each component to be built
 
-
+/*
 devices.NOT = {"devices":[
     {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":100,"label":"IN","state":{"on":false}},
     {"type":"NAND","id":"dev1","x":150,"y":100,"label":"Nand"},
-    {"type":"SINGLEOUTPUT","immobile":true,"id":"dev2","x":250,"y":100,"label":"OUT"}
+    {"type":"SINGLEOUTPUT","immobile":true,"id":"dev2","x":250,"y":100,"label":"Ofetch("test.json")
+
+  .then(response => response.json())
+
+  .then(json => console.log(json));UT"}
   ],
   "connectors":[
     {"from":"dev2.in0","to":"dev1.out0"},
@@ -19,8 +23,8 @@ devices.NOT = {"devices":[
                 "toCheck":["OUT"],
                 "IN":[0,1],
                 "OUT":[1,0]}
-};
-
+};*/
+/*
 devices.AND = {"devices":[
     {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
     {"type":"SINGLEINPUT","immobile":true,"id":"dev1","x":50,"y":150,"label":"B","state":{"on":false}},
@@ -96,6 +100,7 @@ devices.XOR = {
                 "B":[0,0,1,1],
                 "OUT":[0,1,1,0]}
 };
+
 
 devices.MUX = {"devices":[
     {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":50,"y":50,"label":"A","state":{"on":false}},
@@ -818,6 +823,7 @@ devices.ADD16 = {
             }
 }
 
+
 devices.INC16 = {
 	"devices":[
     {"type":"DC","immobile":true,"id":"dev0","x":56,"y":176,"label":"DC"},
@@ -840,6 +846,7 @@ devices.INC16 = {
                 "OUT":[6,-1337,-32768,0,]
             }
 }
+
 
 devices.DFF = {"devices":[
     {"type":"NAND","id":"dev0","x":240,"y":184,"label":"NAND"},
@@ -883,10 +890,10 @@ devices.BIT = { "devices":[
     {"from":"dev5.in2","to":"dev4.out0"}
   ],
   "tests": clockTest['BIT']
-}
+}*/
 
 
-
+/*
 devices.REGISTER = {  "devices":[
     {"type":"CUSTOMBUSIN","numInputs":16,"immobile":true,"id":"dev0","x":456,"y":136,"label":"OUT","state":{"on":false},"isBus":true,"value":0,"numOutputs":16},
     {"type":"SINGLEINPUT","immobile":true,"freq":10,"id":"dev1","x":32,"y":224,"label":"CLOCK"},
@@ -980,6 +987,8 @@ devices.REGISTER = {  "devices":[
     {"from":"dev21.in2","to":"dev1.out0"}
   ]
 }
+
+
 
 devices.ALU = {  "devices":[
     {"type":"SINGLEINPUT","immobile":true,"id":"dev0","x":32,"y":112,"label":"ZX","state":{"on":false}},
@@ -1075,6 +1084,7 @@ devices.ALU = {  "devices":[
                 'NG': [0,0,1,0,1,1,0,0,0,0,0,1,1,1,0,1,0,1,0,0,1,0,0,1,1,1,1,0,0,0,0,0,0,1,0,0] }
 }
 
+
 devices.DMUX4WAY = {  "devices":[
     {"type":"SINGLEOUTPUT","immobile":true,"state":{"on":false},"id":"dev0","x":400,"y":128,"label":"A"},
     {"type":"SINGLEOUTPUT","immobile":true,"state":{"on":false},"id":"dev1","x":400,"y":192,"label":"B"},
@@ -1142,6 +1152,8 @@ devices.DMUX8WAY = {   "devices":[
 
 
 }
+
+
 
 devices.RAM8 = {  "devices":[
     {"type":"REGISTER","id":"dev0","x":304,"y":0,"label":"REGISTER"},
@@ -1548,6 +1560,7 @@ devices.PC = {  "devices":[
   ]
 
 }
+*/
 //inM, instruction, reset / outM, writeM, addressM, pc
 devices.CPU = {  "devices":[
     {"type":"CUSTOMBUSOUT","isBus":true,"numInputs":16,"value":0,"id":"dev0","x":8,"y":64,"label":"INSTR"},
