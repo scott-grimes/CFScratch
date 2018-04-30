@@ -1,6 +1,6 @@
 //
 // BASED ON SimcirJS
-// Scott Grimes: Added immobility to devices
+// Scott Grimes: Added immobility to devices, triggering, and board name for testing circuits
 //
 // Copyright (c) 2014 Kazuhiko Arase
 //
@@ -1894,7 +1894,8 @@ simcir.$ = function() {
         devices: devices,
         connectors: connectors,
         tests: data.tests,
-        deviceFuncts: deviceFuncts
+        deviceFuncts: deviceFuncts,
+        deviceName : data.deviceName
       };
     };
     var getText = function() {
