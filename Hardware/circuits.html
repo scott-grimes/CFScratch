@@ -32,8 +32,9 @@
     
 
     window.onload = function(){
+        var buildingDevice = ''; // what device are we building
         var toolbar = document.getElementById("toolbar");
-        var BOARD = CIRCUITESUITE($('#circuitBox'));
+        var BOARD = CIRCUITSUITE($('#circuitBox'));
         //used to reset
         var myButton = document.createElement("input");
             myButton.type = "button";
