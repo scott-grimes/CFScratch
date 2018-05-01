@@ -13,7 +13,6 @@
 <script type="text/javascript" src="simcirjs/simcir-library.js"></script>
 
 
-<script type="text/javascript" src="toolboxes.js"></script>
 <script type="text/javascript" src="circuitSuite.js"></script>
 <script type="text/javascript" src="customComponents.js"></script>
 <script type="text/javascript" src="tester.js"></script>
@@ -58,6 +57,7 @@
             
     }
       document.getElementById("test").addEventListener("click", function(){ BOARD.test() },false);  
+      document.getElementById("test").addEventListener("click", function(){ BOARD.test() },false);  
 
     };
     
@@ -83,7 +83,7 @@
 Specify width and height only.
 All the other attributes will be used defaults.
 -->
-<input type="button" id="test" value="Start"></input><div id="testResultsMessage">Click Start to test your device</div><br>
+<input type="button" id="test" value="Start"><input type="button" id="stepOnce" value="Step"><div id="testResultsMessage">Click Start to test your device</div><br>
 <div class="simcir" id="circuitBox">
 {
   "width":900,

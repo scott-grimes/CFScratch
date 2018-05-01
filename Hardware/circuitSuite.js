@@ -48,17 +48,20 @@ var CIRCUITSUITE = function(boardobject){return {
     },
     
     test : function(){
+
+        if(this.TESTING) { return; }
+
+            this.setTestingMessage('Testing...')
+            this.TESTING = true;
+            window.document.getElementById("test").disabled = true;
         let data = this.getCircuitData();
         this.loadJSON('tests/'+data['deviceName']).then( testobj => {
-            this.setTestingMessage('Testing...')
-            if(this.TESTING) { return; }
-
-            this.TESTING = true;
             runTest(testobj)
             .then((results)=>{
             
                 this.createTestResults(results);
                     this.TESTING = false;
+            window.document.getElementById("test").disabled = false;
 
         })
         .catch(err=>{

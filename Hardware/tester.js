@@ -169,11 +169,12 @@ var runTest = function(testobj){
                             for(let j = 0;j<devicesToCheck.length;j++){
                                 let devLabel = devicesToCheck[j];
                                 let actualValue = getState(devLabel); 
-                                actual.push( actualValue );
+                                actual.push( actualValue )
                                 let z = indOfLabel[devLabel]; //index in our test row
                                 let expectedValue = testobj[i][z]; // look at our array of tests. find the i'th test, element z is our output
                                 expected.push ( expectedValue )
                                 if(actualValue !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
+                                    console.log('expected',expectedValue,'actual',actualValue)
                                     output['passed'] = false;
                                 }
                             }
@@ -187,6 +188,7 @@ var runTest = function(testobj){
                         if(!output['passed']){
                             output['results'].push ('Expected: '+testobj[i].toString());
                             output['results'].push ('Recieved: '+ [inputs,actual].toString() ); 
+                            console.log('row expected',expected,'row actual',actual)
                             reject(); 
                         }else{
                             output['results'].push ( testobj[i].toString() ); 
