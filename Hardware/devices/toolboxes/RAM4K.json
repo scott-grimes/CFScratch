@@ -1,0 +1,1 @@
+[{"type":"MUX8WAY16"},{"type":"DMUX8WAY"},{"type":"RAM512"},{"type":"BusIn","numOutputs":3},{"type":"BusIn","numOutputs":9},{"type":"BusOut","numInputs":12},{"type":"Joint"}]

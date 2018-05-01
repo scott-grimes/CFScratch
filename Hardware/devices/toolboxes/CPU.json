@@ -1,0 +1,1 @@
+[{"type":"REGISTER"},{"type":"ALU"},{"type":"MUX16"},{"type":"PC"},{"type":"AND"},{"type":"OR"},{"type":"NOT"},{"type":"BusIn","numOutputs":6},{"type":"BusOut","numInputs":6},{"type":"BusIn","numOutputs":3},{"type":"BusOut","numInputs":3},{"type":"BusIn","numOutputs":16},{"type":"BusOut","numInputs":15},{"type":"Joint"}]

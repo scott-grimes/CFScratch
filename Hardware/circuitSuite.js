@@ -94,33 +94,42 @@ var CIRCUITSUITE = function(boardobject){return {
     },
   
     setLibrary : function(deviceName){
+        let data = null;
+        this.loadJSON(deviceName).then( returned => {
+            data = returned;
+        })
+        .then( () => {return this.loadJSON('toolboxes/'+deviceName); } )
+        .then((toolboxObj) =>{
 
-        this.loadJSON(deviceName).then( data => {
+            this.setTestingMessage('Click Start to test your device');
+            data['deviceName'] = deviceName;
+            data["width"] = 900;
+            data["height"]=600;
+            data["toolbox"] = toolboxObj;
+            this.$s.setupSimcir(this.$mysim,data)
+            // erases the base table of given and expected values for this device
+            let table = window.document.getElementById("testresultstable")
+            table.innerHTML = "";
 
-        this.setTestingMessage('Click Start to test your device');
-        data['deviceName'] = deviceName;
-        data["width"] = 900;
-        data["height"]=600;
-        this.$s.setupSimcir(this.$mysim,data)
-        // erases the base table of given and expected values for this device
-        let table = window.document.getElementById("testresultstable")
-        table.innerHTML = "";
 
-
-        // if the device we are checking is the DFF, 
-        // clear the clock. due to the recursive nature of the output of DFF
-        // it is incorrectly set upon loading
-        if(data['deviceName']==='DFF'){
-            this.setDevice("CLOCK",0)
-            .then( () => {return this.setDevice("CLOCK",1);} )
-            .then( () => {return this.setDevice("CLOCK",0);} )
-        }
+            // if the device we are checking is the DFF, 
+            // clear the clock. due to the recursive nature of the output of DFF
+            // it is incorrectly set upon loading
+            if(data['deviceName']==='DFF'){
+                this.setDevice("CLOCK",0)
+                .then( () => {return this.setDevice("CLOCK",1);} )
+                .then( () => {return this.setDevice("CLOCK",0);} )
+            }
 
         });
 
         
-        return;
-    },
+            return;
+        }
+
+        
+        
+    ,
 
     //hacky  method to load json. need to fix
     loadJSON : function(deviceName) {
