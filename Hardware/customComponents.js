@@ -40,6 +40,16 @@
           return value;
         }
 
+  var dec2bus = function(decimalValue){
+          let binary = dec2bin(decimalValue);
+          let outVal = [];
+            for(let i = 15;i>=0;i--){
+              outVal.push(  binary[i]==='1'? 1 : null )
+            }
+          return outVal;
+
+  }
+
   // unit size
   var unit = $s.unit;
       var multiplyColor = function() {
@@ -1090,7 +1100,8 @@
   $s.registerDevice('ALU',ALUFactory())
 
 
-
+  //only updates output when clock is ON
+  // waits for clock to cycle back to OFF so that a continually ON clock does not speed ahead and cycle too fast
   $s.registerDevice('REGISTER', function(device) {
         var numInputs = 3;
         let storedValue = 0;
@@ -1100,7 +1111,7 @@
         device.addInput('IN','x16');
         device.addInput('LOAD');
         device.addInput('CLK');
-
+        let waitingForClockOn = true;
         device.addOutput('OUT','x16');
 
         var inputs = device.getInputs();
@@ -1112,17 +1123,20 @@
           let loadOn = isHot ( inputs[1].getValue() );
           let clockOn = isHot (inputs[2].getValue() );
 
-          if(loadOn && clockOn) {
-
-            let inValDec = busToSignedInt(inVal);
-            storedValue = inValDec;
-          outputs[0].setValue( inVal );
-            
+          if(clockOn && waitingForClockOn){
+            if(loadOn) {
+              let inValDec = busToSignedInt(inVal);
+              storedValue = inValDec;
+              outputs[0].setValue( inVal );
+          }
+            waitingForClockOn = false;
+            device.createUI;
+            return;
           }
           
-
-
-          device.createUI;
+          if(!clockOn){
+            waitingForClockOn = true;
+          }
         });
 
         var super_createUI = device.createUI;
@@ -1150,7 +1164,7 @@
         let storedValue = 0;
         
         device.halfPitch = numInputs > 2;
-
+        let waitingForClockOn = true;
         device.addInput('IN','x16');
         device.addInput('LOAD');
         device.addInput('INC');
@@ -1164,42 +1178,38 @@
 
         device.$ui.on('inputValueChange', function() {
        
-          let clockOn = isHot (inputs[4].getValue() );
-          if(clockOn) {
-
           let inVal = inputs[0].getValue();
           let loadOn = isHot ( inputs[1].getValue() );
-          let incOn = isHot ( inputs[2].getValue() );
-          let resetOn = isHot ( inputs[2].getValue() );
-          let inValDec = busToSignedInt(inVal);
+          let incOn = isHot (inputs[2].getValue() );
+          let resetOn = isHot (inputs[3].getValue() );
+          let clockOn = isHot (inputs[4].getValue() );
 
-          let newOut = storedValue;
-
-          if(resetOn){
-            newOut = 0;
-          }
-          else if(loadOn){
-            newOut = inValDec;
-          }
-          else if(incOn){
-            newOut+=1;
-          }
-
-          storedValue = newOut;
-          
-          let outVal = []
-          let binary = dec2bin(newOut);
-            for(let i = 15;i>=0;i--){
-              outVal.push(  binary[i]===1? 1 : null )
+          if(clockOn && waitingForClockOn){
+            
+            if(resetOn){
+              storedValue = 0;
             }
-
-
-          outputs[0].setValue( outVal );
-
-          device.createUI;
+            else if(loadOn) {
+              let inValDec = busToSignedInt(inVal);
+              storedValue = inValDec;
+              
+            }
+            else if(incOn){
+              storedValue+=1;
+              
+            }
+            waitingForClockOn = false;
+            let outVal = dec2bus(storedValue);
+            outputs[0].setValue( outVal );
+            device.createUI;
+            return;
           }
-
+          
+          if(!clockOn){
+            waitingForClockOn = true;
+          }
         });
+
 
         var super_createUI = device.createUI;
 
@@ -1277,11 +1287,7 @@
           
             // pull the old value from RAM and conver to bus
             let oldM = pop(addressDec);
-            let binary = dec2bin(oldM);
-            for(let i = 15;i>=0;i--){
-              outVal.push(  binary[i]==='1' ? 1 : null )
-            }
-         
+            let outVal = dec2bus(oldM); 
           outputs[0].setValue( outVal );
           device.createUI;
 

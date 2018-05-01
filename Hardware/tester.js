@@ -41,7 +41,6 @@ var getState  = function(label){
 
 // sets the device with label "CLOCK" to the specified value
 var setClock = function(value){
-            
             return new Promise(function(resolve, reject) {
                 var i = iOfLabelInData('CLOCK');
                 getDevice(i).trigger(value);
@@ -174,7 +173,7 @@ var runTest = function(testobj){
                                 let z = indOfLabel[devLabel]; //index in our test row
                                 let expectedValue = testobj[i][z]; // look at our array of tests. find the i'th test, element z is our output
                                 expected.push ( expectedValue )
-                                if(actualValue !== expectedValue ){
+                                if(actualValue !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
                                     output['passed'] = false;
                                 }
                             }
@@ -186,10 +185,11 @@ var runTest = function(testobj){
                         
                         
                         if(!output['passed']){
-                            output['results'].push ( testobj[i] ); 
+                            output['results'].push ('Expected: '+testobj[i].toString());
+                            output['results'].push ('Recieved: '+ [inputs,actual].toString() ); 
                             reject(); 
                         }else{
-                            output['results'].push ( [inputs,actual] ); 
+                            output['results'].push ( testobj[i].toString() ); 
                             resolve();
                         }
                         
@@ -206,20 +206,15 @@ var runTest = function(testobj){
             clockOn = function(){ return setClock(1); };
             clockOff = function(){ return setClock(0); };
 
-        //clear the clock and any leftover outputs
-        chain = chain
-        .then( () => {return clockOff();} )
-        .then( () => {return clockOn();} )
-        .then( () => {return clockOff();} )
+
+        
+        
         }
         
-
         //check each test, push the values into our output 
         //run all our tests
         for(let i = 1;i<testobj.length-1;i++){
             
-
-
             // set input pins
             chain=chain.then( ()=> {
                 return runSingleTest(i) 

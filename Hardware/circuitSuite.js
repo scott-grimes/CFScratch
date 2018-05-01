@@ -48,13 +48,12 @@ var CIRCUITSUITE = function(boardobject){return {
     },
     
     test : function(){
-        var data = this.getCircuitData();
+        let data = this.getCircuitData();
         this.loadJSON('tests/'+data['deviceName']).then( testobj => {
             this.setTestingMessage('Testing...')
             if(this.TESTING) { return; }
 
             this.TESTING = true;
-
             runTest(testobj)
             .then((results)=>{
             
@@ -73,6 +72,26 @@ var CIRCUITSUITE = function(boardobject){return {
         
         
     },
+
+    //sets the device with the given label to value  
+    setDevice : function(label,value){
+        let data = this.getCircuitData();
+        let triggerDevice = function(id){ simcir.controller(boardobject.find('.simcir-workspace')).data().deviceFuncts[id].trigger(value);} 
+            return new Promise(function(resolve, reject) {
+                var id = null;
+                // get the index of the device based on the label
+                for(let i = 0;i<data.devices.length;i++){
+                if (data.devices[i]['label']===label){
+                    id = i;
+                    break;
+                }
+                }
+                triggerDevice(id);
+                
+                setTimeout(() => { 
+                     resolve()}, 60); // (*)
+            }); 
+    },
   
     setLibrary : function(deviceName){
 
@@ -86,6 +105,16 @@ var CIRCUITSUITE = function(boardobject){return {
         // erases the base table of given and expected values for this device
         let table = window.document.getElementById("testresultstable")
         table.innerHTML = "";
+
+
+        // if the device we are checking is the DFF, 
+        // clear the clock. due to the recursive nature of the output of DFF
+        // it is incorrectly set upon loading
+        if(data['deviceName']==='DFF'){
+            this.setDevice("CLOCK",0)
+            .then( () => {return this.setDevice("CLOCK",1);} )
+            .then( () => {return this.setDevice("CLOCK",0);} )
+        }
 
         });
 
