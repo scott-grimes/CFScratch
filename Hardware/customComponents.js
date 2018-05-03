@@ -404,11 +404,11 @@
             $(document).off('touchend', button_mouseUpHandler);
           };
 
-          
+          // null is off, 1 is on
           device.trigger = function(newValue){
             if(newValue===null || newValue!=on){
               on = !on;
-            //$button.addClass('simcir-basicset-switch-button-pressed');
+            
             updateOutput();
             
             }

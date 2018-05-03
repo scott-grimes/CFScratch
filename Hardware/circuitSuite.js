@@ -2,15 +2,12 @@
 var CIRCUITSUITE = function(boardobject){return {
 	
 	// prevent clicking test while a test is already in progress
-	TESTING : false,
 	$s : simcir,
 	$mysim : boardobject,
 
-	
     // returns the current state of the circuit board/
 	// all the devices and connections, etc
     getCircuitData : function(){
-
     	return this.$s.controller( this.$mysim .find('.simcir-workspace') ).data();
   	},
     
@@ -20,17 +17,46 @@ var CIRCUITSUITE = function(boardobject){return {
     	this.$s.setupSimcir( this.$mysim , data );
     },
 
- 
+    clearTestResults : function(){
+
+        let table = window.document.getElementById("testresultstable");
+        table.innerHTML = '';
+
+    },
+
+    step : function(){
+        if(!this.ALLOW_CLICKS) return;
+        this.ALLOW_CLICKS = false;
+        window.document.getElementById("fastForwardButton").disabled = true;
+        window.document.getElementById("stepButton").disabled = true;
+        this.TEST.runSingleTest().then( ()=>{
+            window.document.getElementById("fastForwardButton").disabled = false;
+            window.document.getElementById("stepButton").disabled = false;
+        })
+
+    },
+
+    fastForward : function(){
+        if(!this.ALLOW_CLICKS) return;
+        this.ALLOW_CLICKS = false;
+        window.document.getElementById("stepButton").disabled = true;
+        window.document.getElementById("fastForwardButton").disabled = true;
+        this.TEST.runAllTests().then(()=>{return this.stopTestingMode();});
+    },
 
     // takes a given testobject and the results of the tests and builds a table
-    createTestResults : function(resultsOfTest){
+    addTestResult : function(result){
     		let table = window.document.getElementById("testresultstable");
-            table.innerHTML = '';
-            let resultsMessage = resultsOfTest.passed ? 'Passed All Tests ✓' : 'One or More Tests Failed X';
-            this.setTestingMessage(resultsMessage)
-            console.log(resultsOfTest);
-            return;
-            let row = table.insertRow(0);
+            console.log(result);
+            if(this.TEST.testOver){
+                let resultsMessage = this.TEST.passed ? 'Passed All Tests ✓' : 'One or More Tests Failed X';
+                this.setTestingMessage(resultsMessage);
+                this.stopTestingMode();
+
+                return;
+            }
+            /*
+            let row = table.insertRow();
             let cell = row.insertCell(-1);
             cell.innerHTML = resultsOfTest.head;
             
@@ -40,42 +66,49 @@ var CIRCUITSUITE = function(boardobject){return {
 
                 cell.innerHTML = resultsOfTest.results[i]
             }
+            */
     },
 
     setTestingMessage : function(message){
 
         window.document.getElementById("testResultsMessage").innerHTML = message;
     },
+
+    stopTestingMode : function(){
+
+            window.document.getElementById("startTestButton").disabled = false;
+            window.document.getElementById("stopTestButton").disabled = true;
+            window.document.getElementById("stepButton").disabled = true;
+            window.document.getElementById("fastForwardButton").disabled = true;
+            this.ALLOW_CLICKS = true;
+
+    },
     
-    test : function(){
+    startTestingMode : function(){
+        try{
 
-        if(this.TESTING) { return; }
+
             this.TEST = new TEST();
-            this.setTestingMessage('Testing...');
-            this.TESTING = true;
-            window.document.getElementById("test").disabled = true;
-        let data = this.getCircuitData();
-        this.loadJSON('tests/'+data['deviceName']).then( testobj => {
 
-            this.TEST.runTest(testobj)
-            .then((results)=>{
-            
-                this.createTestResults(results);
-                    this.TESTING = false;
-            window.document.getElementById("test").disabled = false;
-            this.TEST = null;
-        })
-        .catch(err=>{
-            console.log('error',err); 
-            this.TESTING = false;
-            this.Test = null;
-        })
+            this.setTestingMessage('Click Step or Fast Forward');
 
+            this.ALLOW_CLICKS = false;
 
+            window.document.getElementById("startTestButton").disabled = true;
+            window.document.getElementById("stopTestButton").disabled = false;
+            window.document.getElementById("stepButton").disabled = false;
+            window.document.getElementById("fastForwardButton").disabled = false;
 
-        })
-        
-        
+            let data = this.getCircuitData();
+
+            this.loadJSON('tests/'+data['deviceName']).then( testobj => {
+                 this.TEST.startTest(testobj)
+            });
+
+        }catch(err){
+                console.log('error',err); 
+                this.stopTestingMode();
+        }
     },
 
     //sets the device with the given label to value  
@@ -99,6 +132,7 @@ var CIRCUITSUITE = function(boardobject){return {
     },
   
     setLibrary : function(deviceName){
+        this.stopTestingMode();
         let data = null;
         this.loadJSON(deviceName).then( returned => {
             data = returned;

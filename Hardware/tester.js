@@ -51,7 +51,6 @@ var setClock = function(value){
       
 //sets the device with the given label to value  
 var setState = function(label,value){
-            
             return new Promise(function(resolve, reject) {
                 var i = iOfLabelInData(label);
                 getDevice(i).trigger(value);
@@ -79,7 +78,6 @@ var getPinsToSet = function(testobj){
     for(var i in labels){
         var pinLabel = labels[i];
         var pinIndex = iOfLabelInData( pinLabel )
-        console.log(data.devices[pinIndex])
         if(inputPinTypes.includes( data.devices[pinIndex].type ) && labels[i]!=="CLOCK")
             answer.push(labels[i])
     }
@@ -88,7 +86,7 @@ var getPinsToSet = function(testobj){
 
 //returns the labels of all the pins we need to check for this test
 var getPinsToCheck = function(testobj){
-var labels = testobj[0];
+	var labels = testobj[0];
     var answer = [];
     for(var i in labels){
         var pinLabel = labels[i];
@@ -98,6 +96,152 @@ var labels = testobj[0];
     }
     return answer;
 }
+
+var runAllTests = function(){
+
+		//check each test, push the values into our output 
+        //run all our tests
+        while(this.instructionIndex<this.instructions.length && !this.testOver){
+            
+            this.chain=this.chain.then( ()=> { return runSingleTest() } );
+        }
+
+
+        chain=chain.then( () => {
+                resolve ( output );
+            });
+            chain.catch((err)=>{
+            	console.log(err)
+                resolve ( output );
+            });
+
+}
+
+var tickTock = function(){
+        	//set the clock
+            if(this.isClockedTest){
+                //tick tock
+                chain = chain.then( ()=> {
+                // If the time label has a '+', we are on clock-high, and should enable the clock so that
+                // clocked chips can have their outputs updated. 
+                if( this.instruction[this.instructionIndex].includes('+') ){ 
+                    return clockOn();
+                }
+                return clockOff();
+            });
+
+            }
+        };
+var setAllDevices = function(){
+	return new Promise(function(resolve, reject) {
+
+		let promiseChain = Promise.resolve();
+        let j = this.instructionIndex;
+
+		for(let i = 0;i<this.devicesToSet.length;i++){
+            let valueToSet;
+            let devLabel = devicesToSet[i];
+            let z = indOfLabel[devLabel]; // the index in our instruction row of this device
+            let isBus = deviceIsBus( devLabel );
+
+            if( isBus ){
+                valueToSet = testobj[j][ z ];
+            }else{
+                valueToSet = testobj[j][ z ] ? true : false;
+            }
+            
+            if(! isBus )
+                valueToSet = boolToBin(valueToSet);
+
+            promiseChain = promiseChain.then( () => {return setState( devLabel ,  valueToSet);} );
+        }
+        promiseChain = promiseChain.then( () => { resolve(); } );
+        promiseChain.catch( (err) => {console.log(err); reject(); } );
+	});
+}
+
+var getAllOutputs = function(){
+	// get all results from the test
+	return new Promise(function(resolve, reject) {
+		try{
+			let promiseChain = Promise.resolve();
+	        let j = this.instructionIndex;
+	        let outputs = [];
+	        //adding set pin to output
+	        for(let i = 0;i<this.devicesToCheck.length;i++){
+	            let devLabel = devicesToCheck[j];
+	            let actualValue = getState(devLabel); 
+	            outputs.push( actualValue )
+	        }
+	        resolve(outputs);
+		}catch(err) {console.log(err); reject();}
+	});
+        
+}
+
+var checkActualAgainstExpectedOuts = function(actual){
+	return new Promise(function(resolve, reject) {
+		try{
+			let j = this.instructionIndex;
+			let passed = true;
+			let expectedValues = [];
+			for(let i = 0;i<this.devicesToCheck.length;i++){
+		            let devLabel = devicesToCheck[j];
+		            let z = indOfLabel[devLabel]; //index in our test row
+		            let expectedValue = this.instructions[ j ][ z ]; // look at our array of tests. find the i'th test, element z is our output
+	                expectedValues.push(expectedValue)
+	            if(actualValue[i] !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
+	                console.log('expected',expectedValue,'actual',actualValue)
+	                passed = false;
+	            }
+	        }
+	        
+	        let returnObj = {};
+	    	returnObj['passed'] = passed;
+	    	returnObj['expected'] = expectedValues;
+	    	resolve(returnObj);
+		}catch(err) {console.log(err); reject();}
+	});
+};
+
+
+
+
+        //returns the results of a single run of testing
+        //test are as follows [clock, in0, in1, in2, in_n, out1, out2, out_n]
+this.runSingleTest =function(){
+                return new Promise(function(resolve, reject) {
+                    let promiseArray = [];
+                    
+
+                    let promiseChain = Promise.resolve();
+
+                    // set all input devices
+                    promiseChain.then( ()=> {return setAllDevices();} );
+
+                    // get all output devices state
+                    promiseChain.then( ()=> {return getAllOutputs();} );
+
+                    // log the output of our circuit and check against expected values
+                    promiseChain.then( (actualOuts) => {
+                    	this.output.push(actualOuts);
+                    	return checkActualAgainstExpectedOuts(actualOuts); 
+                    });
+
+                    // resolve after logging 
+                    promiseChain.then( (results)=>{
+
+                    	this.instructionIndex+=1;
+
+                    	if(!results.passed){
+                    		this.testOver = true;
+                    		this.passed = false;
+                    		this.output.push(results.expected);
+                    	}
+                    	resolve();
+                    });
+                });
+            };
 
 // a call to tester returns a results object as follows:
 // passed:true/false if all tests ran correctly
@@ -111,20 +255,23 @@ var labels = testobj[0];
 
 // this works using a promise chain, evaluating each test. reject the chain on the first failed test. 
 
-this.runTest = function(testobj){
+this.startTest = function(testobj){
     return new Promise(function(resolve,reject){
+
         // get the current state of the board (devices and connections)
         data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
 
-        let numTests = testobj.length-1;
-        let devicesToSet = getPinsToSet(testobj);
-        let devicesToCheck = getPinsToCheck(testobj);
-        let output = {};
-        output['head'] = testobj[0];
-        output['results'] = [];
-        output['passed'] = true;
-        let isClockedTest = testobj[0].includes("CLOCK");
-
+        this.numTests = testobj.length-1;
+        this.devicesToSet = getPinsToSet(testobj);
+        this.devicesToCheck = getPinsToCheck(testobj);
+        this.output = [];
+        this.head = testobj[0];
+        this.results = [];
+        this.passed = true;
+        this.isClockedTest = testobj[0].includes("CLOCK");
+        this.instructions = testobj.slice(1);
+        this.instructionIndex = 0;
+        this.testOver = false;
 
         //indOfLabel in our answer row
         let indOfLabel = {}; 
@@ -133,121 +280,29 @@ this.runTest = function(testobj){
             indOfLabel[devName] = testobj[0].indexOf(devName);
         }
         
-       
-        
-        //test are as follows [clock, in0, in1, in2, in_n, out1, out2, out_n]
-        var runSingleTest =function(i){
-                return new Promise(function(resolve, reject) {
-                    let promiseArray = [];
-                    //pushing set pins into results object
-                    let inputs = [];
-                    let expected = [];
-                    let actual = [];
-
-                    for(let j = 0;j<devicesToSet.length;j++){
-                        
-                        let valueToSet;
-                        let devLabel = devicesToSet[j];
-                        let z = indOfLabel[devLabel]; //index in our test row
-                        let isBus = deviceIsBus( devLabel );
-
-                        if( isBus ){
-                            valueToSet = testobj[i][ z ];
-                        }else{
-                            valueToSet = testobj[i][ z ] ? true : false;
-                        }
-                        
-                        if(! isBus )
-                            valueToSet = boolToBin(valueToSet);
-                        inputs.push(valueToSet);
-                        promiseArray.push( setState( devLabel ,  valueToSet) )
-                    }
-                   // get all results from the test
-                   Promise.all( promiseArray )
-                   .then( ()=> {
-                        return new Promise(function(resolve, reject) {
-                            //adding set pin to output
-                            for(let j = 0;j<devicesToCheck.length;j++){
-                                let devLabel = devicesToCheck[j];
-                                let actualValue = getState(devLabel); 
-                                actual.push( actualValue )
-                                let z = indOfLabel[devLabel]; //index in our test row
-                                let expectedValue = testobj[i][z]; // look at our array of tests. find the i'th test, element z is our output
-                                expected.push ( expectedValue )
-                                if(actualValue !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
-                                    console.log('expected',expectedValue,'actual',actualValue)
-                                    output['passed'] = false;
-                                }
-                            }
-                            resolve();
-                        }); 
-                    })
-                    .then(()=> {
-                        
-                        
-                        
-                        if(!output['passed']){
-                            output['results'].push ('Expected: '+testobj[i].toString());
-                            output['results'].push ('Recieved: '+ [inputs,actual].toString() ); 
-                            console.log('row expected',expected,'row actual',actual)
-                            reject(); 
-                        }else{
-                            output['results'].push ( testobj[i].toString() ); 
-                            resolve();
-                        }
-                        
-                    });
-                });
-        };
-
         let clockOn; 
         let clockOff;
 
-        let chain = Promise.resolve();
+        this.chain = Promise.resolve();
 
-        if(isClockedTest){
+        // clear any input pins to 0;
+        for(let i in this.devicesToSet){
+        	let devLabel = this.devicesToSet[i]
+        	let zeroVal = deviceIsBus(devLabel) ? 0 : null;
+        	this.chain=this.chain.then( ()=> {
+                console.log('setting',devLabel,'to',zeroVal);
+                return setState(devLabel,zeroVal);
+            } );
+        }
+
+        // if we have a clocked test, clean the clock to reset any lingering values
+        if(this.isClockedTest){
             clockOn = function(){ return setClock(1); };
             clockOff = function(){ return setClock(0); };
-
-
-        
-        
+            console.log('herro')
         }
         
-        //check each test, push the values into our output 
-        //run all our tests
-        for(let i = 1;i<testobj.length;i++){
-            
-            // set input pins
-            chain=chain.then( ()=> {
-                return runSingleTest(i) 
-            } );
-            //console.log(i)
-            
-        //set the clock
-            if(isClockedTest){
-                //tick tock
-                chain = chain.then( ()=> {
-                // If the time label has a '+', we are on clock-high, and should enable the clock so that
-                // clocked chips can have their outputs updated. 
-                if( testobj[i][0].includes('+') ){ 
-                    return clockOn();
-                }
-                return clockOff();
-            });
-
-            }
-            
-            
-
-        }
-            chain=chain.then( () => {
-                resolve ( output );
-            });
-            chain.catch((err)=>{
-            	console.log(err)
-                resolve ( output );
-            });
+        
     });
 }
 

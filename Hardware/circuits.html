@@ -58,7 +58,8 @@
             document.getElementById(myButton.id).addEventListener("click", function(){BOARD.setLibrary( this.value)},false);
             
     } 
-      document.getElementById("test").addEventListener("click", function(){ BOARD.test() },false);  
+      document.getElementById("startTestButton").addEventListener("click", function(){ BOARD.startTestingMode() },false);  
+      document.getElementById("stopTestButton").addEventListener("click", function(){ BOARD.stopTestingMode() },false);  
 
     };
     
@@ -84,7 +85,8 @@
 Specify width and height only.
 All the other attributes will be used defaults.
 -->
-<input type="button" id="test" value="Start"><input type="button" id="stepOnce" value="Step"><div id="testResultsMessage">Click Start to test your device</div><br>
+<input type="button" id="startTestButton" value="Start"><input type="button" id="stopTestButton" value="Stop" disabled><input type="button" id="stepButton" value="Step" disabled><input type="button" id="fastForwardButton" value="Fast Forward" disabled>
+<br><div id="testResultsMessage">Click Start to test your device</div><br>
 <div class="simcir" id="circuitBox">
 {
   "width":900,
