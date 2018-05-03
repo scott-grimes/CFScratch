@@ -1,4 +1,4 @@
-// dff test is unique, cannot just set initial values. instead use calls to "update inputs"
+var TEST = function(){ 
 
 var boolToBin = function(x){ return (x? 1:0); };
 
@@ -79,6 +79,7 @@ var getPinsToSet = function(testobj){
     for(var i in labels){
         var pinLabel = labels[i];
         var pinIndex = iOfLabelInData( pinLabel )
+        console.log(data.devices[pinIndex])
         if(inputPinTypes.includes( data.devices[pinIndex].type ) && labels[i]!=="CLOCK")
             answer.push(labels[i])
     }
@@ -110,7 +111,7 @@ var labels = testobj[0];
 
 // this works using a promise chain, evaluating each test. reject the chain on the first failed test. 
 
-var runTest = function(testobj){
+this.runTest = function(testobj){
     return new Promise(function(resolve,reject){
         // get the current state of the board (devices and connections)
         data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
@@ -215,7 +216,7 @@ var runTest = function(testobj){
         
         //check each test, push the values into our output 
         //run all our tests
-        for(let i = 1;i<testobj.length-1;i++){
+        for(let i = 1;i<testobj.length;i++){
             
             // set input pins
             chain=chain.then( ()=> {
@@ -244,6 +245,7 @@ var runTest = function(testobj){
                 resolve ( output );
             });
             chain.catch((err)=>{
+            	console.log(err)
                 resolve ( output );
             });
     });
@@ -254,7 +256,7 @@ var runTest = function(testobj){
 
 
         
-        
+        }
         
     
 

@@ -50,23 +50,25 @@ var CIRCUITSUITE = function(boardobject){return {
     test : function(){
 
         if(this.TESTING) { return; }
-
-            this.setTestingMessage('Testing...')
+            this.TEST = new TEST();
+            this.setTestingMessage('Testing...');
             this.TESTING = true;
             window.document.getElementById("test").disabled = true;
         let data = this.getCircuitData();
         this.loadJSON('tests/'+data['deviceName']).then( testobj => {
-            runTest(testobj)
+
+            this.TEST.runTest(testobj)
             .then((results)=>{
             
                 this.createTestResults(results);
                     this.TESTING = false;
             window.document.getElementById("test").disabled = false;
-
+            this.TEST = null;
         })
         .catch(err=>{
             console.log('error',err); 
             this.TESTING = false;
+            this.Test = null;
         })
 
 

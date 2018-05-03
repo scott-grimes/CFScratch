@@ -13,9 +13,9 @@
 <script type="text/javascript" src="simcirjs/simcir-library.js"></script>
 
 
+<script type="text/javascript" src="tester.js"></script>
 <script type="text/javascript" src="circuitSuite.js"></script>
 <script type="text/javascript" src="customComponents.js"></script>
-<script type="text/javascript" src="tester.js"></script>
 
 
 <style type="text/css">
@@ -32,7 +32,9 @@
         var buildingDevice = ''; // what device are we building
         var thingsToBuild = ['NOT','AND','OR','XOR','MUX','DMUX','NOT16','AND16','OR16','MUX16','OR8WAY','MUX4WAY16','MUX8WAY16','DMUX4WAY','DMUX8WAY','HALFADDER','FULLADDER','ADD16','INC16','ALU','DFF','BIT','REGISTER','RAM8','RAM64','RAM512','RAM4K','RAM16K','PC','CPU','COMPUTER'];
         var toolbar = document.getElementById("toolbar");
-        var BOARD = CIRCUITSUITE($('#circuitBox'));
+        BOARD = CIRCUITSUITE($('#circuitBox'));
+        
+
         //used to reset
         var myButton = document.createElement("input");
             myButton.type = "button";
@@ -55,8 +57,7 @@
             toolbar.appendChild(myButton);
             document.getElementById(myButton.id).addEventListener("click", function(){BOARD.setLibrary( this.value)},false);
             
-    }
-      document.getElementById("test").addEventListener("click", function(){ BOARD.test() },false);  
+    } 
       document.getElementById("test").addEventListener("click", function(){ BOARD.test() },false);  
 
     };

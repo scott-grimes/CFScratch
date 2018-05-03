@@ -1287,7 +1287,7 @@
           
             // pull the old value from RAM and conver to bus
             let oldM = pop(addressDec);
-            let outVal = dec2bus(oldM); 
+            outVal = dec2bus(oldM); 
           outputs[0].setValue( outVal );
           device.createUI;
 
