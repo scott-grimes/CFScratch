@@ -406,11 +406,12 @@
 
           // null is off, 1 is on
           device.trigger = function(newValue){
-            if(newValue===null || newValue!=on){
-              on = !on;
-            
-            updateOutput();
-            
+            if(newValue === true || newValue === 1){
+              on = true;
+              updateOutput();
+            }
+            if(newValue ===null || newValue === false || newValue === 0){
+              updateOutput();
             }
           }
             

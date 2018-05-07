@@ -1,4 +1,5 @@
 var TEST = function(){ 
+var self = this;
 
 var boolToBin = function(x){ return (x? 1:0); };
 
@@ -24,6 +25,7 @@ var getState  = function(label){
             let isBus = deviceIsBus(label);
 
             let d = getDevice(i).deviceDef;
+            
             if( isBus ){
                 //2s compliment
                 
@@ -101,9 +103,9 @@ var runAllTests = function(){
 
 		//check each test, push the values into our output 
         //run all our tests
-        while(this.instructionIndex<this.instructions.length && !this.testOver){
+        while(self.instructionIndex<self.instructions.length && !self.testOver){
             
-            this.chain=this.chain.then( ()=> { return runSingleTest() } );
+            self.chain=self.chain.then( ()=> { return runSingleTest() } );
         }
 
 
@@ -115,16 +117,16 @@ var runAllTests = function(){
                 resolve ( output );
             });
 
-}
+};
 
 var tickTock = function(){
         	//set the clock
-            if(this.isClockedTest){
+            if(self.isClockedTest){
                 //tick tock
                 chain = chain.then( ()=> {
                 // If the time label has a '+', we are on clock-high, and should enable the clock so that
                 // clocked chips can have their outputs updated. 
-                if( this.instruction[this.instructionIndex].includes('+') ){ 
+                if( self.instruction[self.instructionIndex].includes('+') ){ 
                     return clockOn();
                 }
                 return clockOff();
@@ -136,18 +138,18 @@ var setAllDevices = function(){
 	return new Promise(function(resolve, reject) {
 
 		let promiseChain = Promise.resolve();
-        let j = this.instructionIndex;
-
-		for(let i = 0;i<this.devicesToSet.length;i++){
+        let j = self.instructionIndex;
+        console.log(self)
+		for(let i = 0;i<self.devicesToSet.length;i++){
             let valueToSet;
-            let devLabel = devicesToSet[i];
-            let z = indOfLabel[devLabel]; // the index in our instruction row of this device
+            let devLabel = self.devicesToSet[i];
+            let z = self.indOfLabel[devLabel]; // the index in our instruction row of this device
             let isBus = deviceIsBus( devLabel );
 
             if( isBus ){
-                valueToSet = testobj[j][ z ];
+                valueToSet = self.instructions[j][ z ];
             }else{
-                valueToSet = testobj[j][ z ] ? true : false;
+                valueToSet = self.instructions[j][ z ] ? true : false;
             }
             
             if(! isBus )
@@ -158,54 +160,51 @@ var setAllDevices = function(){
         promiseChain = promiseChain.then( () => { resolve(); } );
         promiseChain.catch( (err) => {console.log(err); reject(); } );
 	});
-}
+};
 
 var getAllOutputs = function(){
 	// get all results from the test
 	return new Promise(function(resolve, reject) {
+        let outputs = [];
 		try{
 			let promiseChain = Promise.resolve();
-	        let j = this.instructionIndex;
-	        let outputs = [];
+	        
 	        //adding set pin to output
-	        for(let i = 0;i<this.devicesToCheck.length;i++){
-	            let devLabel = devicesToCheck[j];
+	        for(let i = 0;i<self.devicesToCheck.length;i++){
+	            let devLabel = self.devicesToCheck[i];
 	            let actualValue = getState(devLabel); 
 	            outputs.push( actualValue )
 	        }
-	        resolve(outputs);
+            self.outputs.push(outputs)
+	        resolve();
 		}catch(err) {console.log(err); reject();}
 	});
         
-}
+};
 
-var checkActualAgainstExpectedOuts = function(actual){
+var checkActualAgainstExpectedOuts = function(){
 	return new Promise(function(resolve, reject) {
 		try{
-			let j = this.instructionIndex;
-			let passed = true;
+			let j = self.instructionIndex;
 			let expectedValues = [];
-			for(let i = 0;i<this.devicesToCheck.length;i++){
-		            let devLabel = devicesToCheck[j];
-		            let z = indOfLabel[devLabel]; //index in our test row
-		            let expectedValue = this.instructions[ j ][ z ]; // look at our array of tests. find the i'th test, element z is our output
+            let actual = self.outputs[ self.outputs.length-1];
+            console.log(self.outputs);
+			for(let i = 0;i<self.devicesToCheck.length;i++){
+		            let devLabel = self.devicesToCheck[j];
+		            let z = self.indOfLabel[devLabel]; //index in our test row
+		            let expectedValue = self.instructions[ j ][ z ]; // look at our array of tests. find the j'th test, element z is our output
 	                expectedValues.push(expectedValue)
-	            if(actualValue[i] !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
-	                console.log('expected',expectedValue,'actual',actualValue)
-	                passed = false;
+	            if(actual[i] !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
+	                console.log('expected',expectedValue,'actual',actual)
+	                self.passed = false;
+                    self.outputs.push(expectedValues);
 	            }
 	        }
 	        
-	        let returnObj = {};
-	    	returnObj['passed'] = passed;
-	    	returnObj['expected'] = expectedValues;
-	    	resolve(returnObj);
+	    	resolve();
 		}catch(err) {console.log(err); reject();}
 	});
 };
-
-
-
 
         //returns the results of a single run of testing
         //test are as follows [clock, in0, in1, in2, in_n, out1, out2, out_n]
@@ -213,7 +212,6 @@ this.runSingleTest =function(){
                 return new Promise(function(resolve, reject) {
                     let promiseArray = [];
                     
-
                     let promiseChain = Promise.resolve();
 
                     // set all input devices
@@ -223,21 +221,23 @@ this.runSingleTest =function(){
                     promiseChain.then( ()=> {return getAllOutputs();} );
 
                     // log the output of our circuit and check against expected values
-                    promiseChain.then( (actualOuts) => {
-                    	this.output.push(actualOuts);
-                    	return checkActualAgainstExpectedOuts(actualOuts); 
+                    promiseChain.then( () => {
+                    	
+                    	return checkActualAgainstExpectedOuts(); 
                     });
 
                     // resolve after logging 
-                    promiseChain.then( (results)=>{
+                    promiseChain.then( ()=>{
 
-                    	this.instructionIndex+=1;
 
-                    	if(!results.passed){
-                    		this.testOver = true;
-                    		this.passed = false;
-                    		this.output.push(results.expected);
+                        console.log(self.instructionIndex, self.instructions.length,self.passed)
+
+                    	if(!self.passed || self.instructionIndex>= self.instructions.length-1){
+                    		self.testOver = true;
+                            resolve();
                     	}
+
+                        self.instructionIndex+=1;
                     	resolve();
                     });
                 });
@@ -261,42 +261,40 @@ this.startTest = function(testobj){
         // get the current state of the board (devices and connections)
         data = simcir.controller($('#circuitBox').find('.simcir-workspace')).data();
 
-        this.numTests = testobj.length-1;
-        this.devicesToSet = getPinsToSet(testobj);
-        this.devicesToCheck = getPinsToCheck(testobj);
-        this.output = [];
-        this.head = testobj[0];
-        this.results = [];
-        this.passed = true;
-        this.isClockedTest = testobj[0].includes("CLOCK");
-        this.instructions = testobj.slice(1);
-        this.instructionIndex = 0;
-        this.testOver = false;
-
+        self.numTests = testobj.length-1;
+        self.devicesToSet = getPinsToSet(testobj);
+        self.devicesToCheck = getPinsToCheck(testobj);
+        self.outputs = [];
+        self.head = testobj[0];
+        self.results = [];
+        self.passed = true;
+        self.isClockedTest = testobj[0].includes("CLOCK");
+        self.instructions = testobj.slice(1);
+        self.instructionIndex = 0;
+        self.testOver = false;
         //indOfLabel in our answer row
-        let indOfLabel = {}; 
-        for(let i = 0;i<testobj[0].length;i++){
-           let devName = testobj[0][i];
-            indOfLabel[devName] = testobj[0].indexOf(devName);
+        self.indOfLabel = {}; 
+        for(let i = 0;i<self.head.length;i++){
+           let devName = self.head[i];
+            self.indOfLabel[devName] = self.head.indexOf(devName);
         }
         
         let clockOn; 
         let clockOff;
 
-        this.chain = Promise.resolve();
+        self.chain = Promise.resolve();
 
         // clear any input pins to 0;
-        for(let i in this.devicesToSet){
-        	let devLabel = this.devicesToSet[i]
+        for(let i in self.devicesToSet){
+        	let devLabel = self.devicesToSet[i]
         	let zeroVal = deviceIsBus(devLabel) ? 0 : null;
-        	this.chain=this.chain.then( ()=> {
-                console.log('setting',devLabel,'to',zeroVal);
+        	self.chain=self.chain.then( ()=> {
                 return setState(devLabel,zeroVal);
             } );
         }
 
         // if we have a clocked test, clean the clock to reset any lingering values
-        if(this.isClockedTest){
+        if(self.isClockedTest){
             clockOn = function(){ return setClock(1); };
             clockOff = function(){ return setClock(0); };
             console.log('herro')
@@ -304,7 +302,7 @@ this.startTest = function(testobj){
         
         
     });
-}
+};
 
 
 
