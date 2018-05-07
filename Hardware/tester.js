@@ -25,7 +25,7 @@ var getState  = function(label){
             let isBus = deviceIsBus(label);
 
             let d = getDevice(i).deviceDef;
-            
+
             if( isBus ){
                 //2s compliment
                 
@@ -109,10 +109,10 @@ var runAllTests = function(){
         }
 
 
-        chain=chain.then( () => {
+        self.chain=self.chain.then( () => {
                 resolve ( output );
             });
-            chain.catch((err)=>{
+            self.chain.catch((err)=>{
             	console.log(err)
                 resolve ( output );
             });
@@ -139,7 +139,6 @@ var setAllDevices = function(){
 
 		let promiseChain = Promise.resolve();
         let j = self.instructionIndex;
-        console.log(self)
 		for(let i = 0;i<self.devicesToSet.length;i++){
             let valueToSet;
             let devLabel = self.devicesToSet[i];
@@ -175,7 +174,7 @@ var getAllOutputs = function(){
 	            let actualValue = getState(devLabel); 
 	            outputs.push( actualValue )
 	        }
-            self.outputs.push(outputs)
+            self.outputs.push(outputs);
 	        resolve();
 		}catch(err) {console.log(err); reject();}
 	});
@@ -187,15 +186,15 @@ var checkActualAgainstExpectedOuts = function(){
 		try{
 			let j = self.instructionIndex;
 			let expectedValues = [];
-            let actual = self.outputs[ self.outputs.length-1];
-            console.log(self.outputs);
+            let actualLine = self.outputs[ self.outputs.length-1 ];
+
 			for(let i = 0;i<self.devicesToCheck.length;i++){
-		            let devLabel = self.devicesToCheck[j];
+		            let devLabel = self.devicesToCheck[i];
 		            let z = self.indOfLabel[devLabel]; //index in our test row
 		            let expectedValue = self.instructions[ j ][ z ]; // look at our array of tests. find the j'th test, element z is our output
 	                expectedValues.push(expectedValue)
-	            if(actual[i] !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
-	                console.log('expected',expectedValue,'actual',actual)
+	            if(actualLine[i] !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
+
 	                self.passed = false;
                     self.outputs.push(expectedValues);
 	            }
@@ -210,29 +209,27 @@ var checkActualAgainstExpectedOuts = function(){
         //test are as follows [clock, in0, in1, in2, in_n, out1, out2, out_n]
 this.runSingleTest =function(){
                 return new Promise(function(resolve, reject) {
-                    let promiseArray = [];
                     
-                    let promiseChain = Promise.resolve();
+                    
+                    let promiseChain = self.chain;
 
                     // set all input devices
-                    promiseChain.then( ()=> {return setAllDevices();} );
+                    promiseChain = promiseChain.then( ()=> {return setAllDevices();} );
 
                     // get all output devices state
-                    promiseChain.then( ()=> {return getAllOutputs();} );
+                    promiseChain = promiseChain.then( ()=> {return getAllOutputs();} );
 
                     // log the output of our circuit and check against expected values
-                    promiseChain.then( () => {
+                    promiseChain = promiseChain.then( () => {
                     	
                     	return checkActualAgainstExpectedOuts(); 
                     });
 
                     // resolve after logging 
-                    promiseChain.then( ()=>{
+                    promiseChain = promiseChain.then( ()=>{
 
-
-                        console.log(self.instructionIndex, self.instructions.length,self.passed)
-
-                    	if(!self.passed || self.instructionIndex>= self.instructions.length-1){
+                        console.log(self);
+                    	if(!self.passed || self.instructionIndex === self.instructions.length-1){
                     		self.testOver = true;
                             resolve();
                     	}
