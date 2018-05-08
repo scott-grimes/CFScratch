@@ -33,9 +33,6 @@ var CIRCUITSUITE = function(boardobject){return {
 
         	this.addTestResult();
 
-        }).catch((err)=>{ console.log(err); 
-			window.document.getElementById("fastForwardButton").disabled = false;
-            window.document.getElementById("stepButton").disabled = false;
         })
 
     },
@@ -63,10 +60,10 @@ var CIRCUITSUITE = function(boardobject){return {
                 let resultsMessage = this.TEST.passed ? 'Passed All Tests ✓' : 'One or More Tests Failed X';
                 this.setTestingMessage(resultsMessage);
                 //console.log(this.TEST.outputs)
-                
+                this.stopTestingMode();
                 
             }
-            this.stopTestingMode();
+            
             /*
             let row = table.insertRow();
             let cell = row.insertCell(-1);
@@ -122,6 +119,7 @@ var CIRCUITSUITE = function(boardobject){return {
 
             this.loadJSON('tests/'+data['deviceName']).then( testobj => {
                  this.TEST.startTest(testobj)
+
             });
 
         }catch(err){

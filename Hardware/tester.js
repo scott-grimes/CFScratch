@@ -126,26 +126,33 @@ this.runAllTests = function(){
 };
 
 var tickTock = function(){
-        	//set the clock
-            if(self.isClockedTest){
-                //tick tock
-                chain = chain.then( ()=> {
+    return new Promise(function(resolve,reject){
+
                 // If the time label has a '+', we are on clock-high, and should enable the clock so that
                 // clocked chips can have their outputs updated. 
-                if( self.instruction[self.instructionIndex].includes('+') ){ 
-                    return clockOn();
+                if( self.instructions[self.instructionIndex][0].includes('+') ){ 
+                    
+                    setClock(1).then( ()=> {resolve();})
+                }else{
+                    setClock(0).then( ()=> {resolve();})
                 }
-                return clockOff();
-            });
-
-            }
-        };
+                
+       });
+}
 
 var setAllDevices = function(){
 	return new Promise(function(resolve, reject) {
 
 		let promiseChain = Promise.resolve();
         let j = self.instructionIndex;
+
+        //if we have a clocked test add the clocked time to our output line
+            if(self.isClockedTest){
+                let clockVal = self.instructions[ j ][0];
+                self.oneLine.push( clockVal );
+            }
+
+
 		for(let i = 0;i<self.devicesToSet.length;i++){
             let valueToSet;
             let devLabel = self.devicesToSet[i];
@@ -176,16 +183,16 @@ var getAllOutputs = function(){
 	return new Promise(function(resolve, reject) {
 		try{
 			let promiseChain = Promise.resolve();
-	        let outputs = [];
 	        //adding set pin to output
 	        for(let i = 0;i<self.devicesToCheck.length;i++){
 	            let devLabel = self.devicesToCheck[i];
 	            let actualValue = getState(devLabel); 
 
                 self.oneLine.push( actualValue );
-                outputs.push(actualValue);
 	        }
 
+            
+            self.outputs.push( self.oneLine );
 	        resolve();
 		}catch(err) {console.log(err); reject();}
 	});
@@ -198,9 +205,8 @@ var checkActualAgainstExpectedOuts = function(){
 
 			let j = self.instructionIndex;
 
-            let actualLine = self.outputs[ self.outputs.length-1 ]; //most recent output
+            let actualLine = self.oneLine; //most recent output
             let expectedLine = self.instructions[ j ]; // look at our array of tests. find the j'th test, element z is our output
-
 
 			for(let i = 0;i<self.devicesToCheck.length;i++){
 
@@ -210,8 +216,8 @@ var checkActualAgainstExpectedOuts = function(){
                     let actualValue = actualLine[z]
                     if(actualValue !== expectedValue && expectedValue !=='*' ){ //'*' is wildcard, any value is acceptable
 
-	                self.passed = false;
-                    self.testOver = true;
+    	                self.passed = false;
+                        self.testOver = true;
                 
 	            }
 	        }
@@ -229,7 +235,7 @@ var checkActualAgainstExpectedOuts = function(){
         //test are as follows [clock, in0, in1, in2, in_n, out1, out2, out_n]
 this.runSingleTest =function(){
                 return new Promise(function(resolve, reject) {
-                    if(self.testOver) reject();
+                    if(self.testOver) resolve();
 
                     self.oneLine = [];
                     let promiseChain = Promise.resolve();
@@ -241,17 +247,26 @@ this.runSingleTest =function(){
 
                     // log the output of our circuit and check against expected values
                     promiseChain = promiseChain.then( () => {
-                    	self.outputs.push( self.oneLine );
-
+                    	
                     	return checkActualAgainstExpectedOuts(); 
                     });
 
-                    // resolve after logging 
-                    promiseChain = promiseChain.then( ()=>{
+                    // tick tock the clock if we have a clocked test
+                    if(self.isClockedTest){
+                        promiseChain = promiseChain.then( ()=>{
+                            return tickTock();
+                        });
+                    }
+                           
+                    
+                    console.log(self.oneLine, self.instructions[self.instructionIndex])
 
+                    // check for end of testing, then resolve
+                    promiseChain = promiseChain.then( ()=>{
+                        
                     	if(!self.passed){
                     		self.testOver = true;
-                            reject();
+                            resolve();
                     	}
 
 
