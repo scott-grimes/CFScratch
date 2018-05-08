@@ -25,15 +25,14 @@ var CIRCUITSUITE = function(boardobject){return {
     },
 
     step : function(){
-        //=if(!this.ALLOW_CLICKS) return;
-        //this.ALLOW_CLICKS = false;
+        if(this.TEST.testOver) return;
         window.document.getElementById("fastForwardButton").disabled = true;
         window.document.getElementById("stepButton").disabled = true;
 
         this.TEST.runSingleTest().then( ()=>{
-            window.document.getElementById("fastForwardButton").disabled = false;
-            window.document.getElementById("stepButton").disabled = false;
+
         	this.addTestResult();
+
         }).catch((err)=>{ console.log(err); 
 			window.document.getElementById("fastForwardButton").disabled = false;
             window.document.getElementById("stepButton").disabled = false;
@@ -42,26 +41,32 @@ var CIRCUITSUITE = function(boardobject){return {
     },
 
     fastForward : function(){
-        if(!this.ALLOW_CLICKS) return;
-        this.ALLOW_CLICKS = false;
+        //if(!this.ALLOW_CLICKS) return;
+        //tnis.ALLOW_CLICKS = false;
         window.document.getElementById("stepButton").disabled = true;
         window.document.getElementById("fastForwardButton").disabled = true;
-        this.TEST.runAllTests().then(()=>{
-        	return this.stopTestingMode();
+        this.TEST.runAllTests().then( ()=>{
+            this.addTestResult();
+        	this.stopTestingMode();
         });
     },
 
     // takes a given testobject and the results of the tests and builds a table
     addTestResult : function(){
+
+            window.document.getElementById("fastForwardButton").disabled = false;
+            window.document.getElementById("stepButton").disabled = false;
+
     		let table = window.document.getElementById("testresultstable");
-            if(this.TEST.testOver){
-            	console.log('test is stopping!')
+
+            if(this.TEST.testOver && !this.TEST.killed){
                 let resultsMessage = this.TEST.passed ? 'Passed All Tests ✓' : 'One or More Tests Failed X';
                 this.setTestingMessage(resultsMessage);
-                this.stopTestingMode();
-                return;
+                //console.log(this.TEST.outputs)
+                
+                
             }
-        	this.ALLOW_CLICKS = true;
+            this.stopTestingMode();
             /*
             let row = table.insertRow();
             let cell = row.insertCell(-1);
@@ -81,6 +86,15 @@ var CIRCUITSUITE = function(boardobject){return {
         window.document.getElementById("testResultsMessage").innerHTML = message;
     },
 
+    //user triggered stop of testing mode
+
+    killTestingMode : function(){
+        this.setTestingMessage('Testing Halted')
+        this.TEST.testOver=true;
+        this.TEST.killed = true;
+        this.stopTestingMode();
+    },
+
     stopTestingMode : function(){
 
             window.document.getElementById("startTestButton").disabled = false;
@@ -88,7 +102,6 @@ var CIRCUITSUITE = function(boardobject){return {
             window.document.getElementById("stepButton").disabled = true;
             window.document.getElementById("fastForwardButton").disabled = true;
             this.ALLOW_CLICKS = true;
-            console.log('ended')
 
     },
     

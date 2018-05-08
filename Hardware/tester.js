@@ -99,23 +99,29 @@ var getPinsToCheck = function(testobj){
     return answer;
 }
 
-var runAllTests = function(){
+this.runAllTests = function(){
 
+                return new Promise(function(resolve, reject) {
+                    
 		//check each test, push the values into our output 
         //run all our tests
-        while(self.instructionIndex<self.instructions.length && !self.testOver){
-            
-            self.chain=self.chain.then( ()=> { return runSingleTest() } );
+        let chain = self.chain;
+
+        for(let i = self.instructionIndex; i<self.instructions.length;i++)
+        {
+            chain=chain.then( ()=> { return self.runSingleTest() } );
+
         }
 
 
-        self.chain=self.chain.then( () => {
-                resolve ( output );
+        chain=chain.then( () => {
+                resolve ( self.outputs );
             });
-            self.chain.catch((err)=>{
+            chain.catch((err)=>{
             	console.log(err)
-                resolve ( output );
+                resolve ( self.outputs );
             });
+        });
 
 };
 
@@ -134,6 +140,7 @@ var tickTock = function(){
 
             }
         };
+
 var setAllDevices = function(){
 	return new Promise(function(resolve, reject) {
 
@@ -148,14 +155,17 @@ var setAllDevices = function(){
             if( isBus ){
                 valueToSet = self.instructions[j][ z ];
             }else{
-                valueToSet = self.instructions[j][ z ] ? true : false;
+                valueToSet = self.instructions[j][ z ] === 1 ? true : false;
             }
             
             if(! isBus )
                 valueToSet = boolToBin(valueToSet);
 
+            self.oneLine.push( valueToSet );
+
             promiseChain = promiseChain.then( () => {return setState( devLabel ,  valueToSet);} );
         }
+
         promiseChain = promiseChain.then( () => { resolve(); } );
         promiseChain.catch( (err) => {console.log(err); reject(); } );
 	});
@@ -164,17 +174,18 @@ var setAllDevices = function(){
 var getAllOutputs = function(){
 	// get all results from the test
 	return new Promise(function(resolve, reject) {
-        let outputs = [];
 		try{
 			let promiseChain = Promise.resolve();
-	        
+	        let outputs = [];
 	        //adding set pin to output
 	        for(let i = 0;i<self.devicesToCheck.length;i++){
 	            let devLabel = self.devicesToCheck[i];
 	            let actualValue = getState(devLabel); 
-	            outputs.push( actualValue )
+
+                self.oneLine.push( actualValue );
+                outputs.push(actualValue);
 	        }
-            self.outputs.push(outputs);
+
 	        resolve();
 		}catch(err) {console.log(err); reject();}
 	});
@@ -184,22 +195,31 @@ var getAllOutputs = function(){
 var checkActualAgainstExpectedOuts = function(){
 	return new Promise(function(resolve, reject) {
 		try{
+
 			let j = self.instructionIndex;
-			let expectedValues = [];
-            let actualLine = self.outputs[ self.outputs.length-1 ];
+
+            let actualLine = self.outputs[ self.outputs.length-1 ]; //most recent output
+            let expectedLine = self.instructions[ j ]; // look at our array of tests. find the j'th test, element z is our output
+
 
 			for(let i = 0;i<self.devicesToCheck.length;i++){
+
 		            let devLabel = self.devicesToCheck[i];
 		            let z = self.indOfLabel[devLabel]; //index in our test row
-		            let expectedValue = self.instructions[ j ][ z ]; // look at our array of tests. find the j'th test, element z is our output
-	                expectedValues.push(expectedValue)
-	            if(actualLine[i] !== expectedValue && expectedValue!=='*' ){ //'*' is wildcard, any value is acceptable
+		            let expectedValue = expectedLine[z]
+                    let actualValue = actualLine[z]
+                    if(actualValue !== expectedValue && expectedValue !=='*' ){ //'*' is wildcard, any value is acceptable
 
 	                self.passed = false;
-                    self.outputs.push(expectedValues);
+                    self.testOver = true;
+                
 	            }
 	        }
-	        
+            if(!self.passed){
+
+	            self.outputs.push( expectedLine );
+            }
+
 	    	resolve();
 		}catch(err) {console.log(err); reject();}
 	});
@@ -209,10 +229,10 @@ var checkActualAgainstExpectedOuts = function(){
         //test are as follows [clock, in0, in1, in2, in_n, out1, out2, out_n]
 this.runSingleTest =function(){
                 return new Promise(function(resolve, reject) {
-                    
-                    
-                    let promiseChain = self.chain;
+                    if(self.testOver) reject();
 
+                    self.oneLine = [];
+                    let promiseChain = Promise.resolve();
                     // set all input devices
                     promiseChain = promiseChain.then( ()=> {return setAllDevices();} );
 
@@ -221,21 +241,27 @@ this.runSingleTest =function(){
 
                     // log the output of our circuit and check against expected values
                     promiseChain = promiseChain.then( () => {
-                    	
+                    	self.outputs.push( self.oneLine );
+
                     	return checkActualAgainstExpectedOuts(); 
                     });
 
                     // resolve after logging 
                     promiseChain = promiseChain.then( ()=>{
 
-                        console.log(self);
-                    	if(!self.passed || self.instructionIndex === self.instructions.length-1){
+                    	if(!self.passed){
                     		self.testOver = true;
-                            resolve();
+                            reject();
                     	}
 
-                        self.instructionIndex+=1;
-                    	resolve();
+
+                        if(self.instructionIndex<self.instructions.length-1){
+                            self.instructionIndex+=1;
+                        }else{
+                            self.testOver = true;
+                        }
+
+                        resolve();
                     });
                 });
             };
@@ -280,22 +306,27 @@ this.startTest = function(testobj){
         let clockOff;
 
         self.chain = Promise.resolve();
+        let chain = self.chain;
 
         // clear any input pins to 0;
         for(let i in self.devicesToSet){
         	let devLabel = self.devicesToSet[i]
         	let zeroVal = deviceIsBus(devLabel) ? 0 : null;
-        	self.chain=self.chain.then( ()=> {
+        	chain=chain.then( ()=> {
                 return setState(devLabel,zeroVal);
             } );
         }
 
         // if we have a clocked test, clean the clock to reset any lingering values
         if(self.isClockedTest){
-            clockOn = function(){ return setClock(1); };
-            clockOff = function(){ return setClock(0); };
-            console.log('herro')
+            //clock on
+            chain = chain.then( ()=>{ return setClock(1); });
+            //clock off
+            chain = chain.then( ()=>{ return setClock(0); });
+            
         }
+
+        chain = chain.then( ()=>{ resolve(); })
         
         
     });
