@@ -3,9 +3,12 @@ var self = this;
 
 var boolToBin = function(x){ return (x? 1:0); };
 
+// contains the data of our circuit. what devices and connections exist? what is the state of each device?
 var data;
 
-var inputPinTypes = ['SINGLEINPUT','CUSTOMBUSOUT']; // if a labeled pin has this type, set it. otherwise we have an output pin to check the value of
+// if a labeled device has this type, we should set it when testing. otherwise the device is an output pin, and we 
+// should simply check it's value when testing
+var inputPinTypes = ['SINGLEINPUT','CUSTOMBUSOUT']; 
 
 // the data object contains an array of devices. given a label, what is the index of the device?
 var iOfLabelInData = function(label){
@@ -51,7 +54,7 @@ var setClock = function(value){
             }); 
 };
       
-//sets the device with the given label to value  
+//sets the device with the given label to a specified value  
 var setState = function(label,value){
             return new Promise(function(resolve, reject) {
                 var i = iOfLabelInData(label);
@@ -62,8 +65,8 @@ var setState = function(label,value){
             }); 
 };
 
-// returns true if the device is a bus, false if otherwise. buses must have their outputs converted form an array of 1/null values
-// into a decimal value for reading
+// returns true if the device is a bus, false if otherwise. buses must have their outputs converted from an array of 1/null values
+// into a decimal value
 var deviceIsBus = function(label){
             let i = iOfLabelInData(label);
             if(i===null) throw('device with label '+label+' not found')
@@ -73,7 +76,7 @@ var deviceIsBus = function(label){
             return false;
 };
 
-//returns the labels of all the pins which need to be set for this test
+//returns the labels of all the devices which need to be set for this test
 var getPinsToSet = function(testobj){
     var labels = testobj[0];
     var answer = [];
@@ -98,32 +101,6 @@ var getPinsToCheck = function(testobj){
     }
     return answer;
 }
-
-this.runAllTests = function(){
-
-                return new Promise(function(resolve, reject) {
-                    
-		//check each test, push the values into our output 
-        //run all our tests
-        let chain = self.chain;
-
-        for(let i = self.instructionIndex; i<self.instructions.length;i++)
-        {
-            chain=chain.then( ()=> { return self.runSingleTest() } );
-
-        }
-
-
-        chain=chain.then( () => {
-                resolve ( self.outputs );
-            });
-            chain.catch((err)=>{
-            	console.log(err)
-                resolve ( self.outputs );
-            });
-        });
-
-};
 
 var tickTock = function(){
     return new Promise(function(resolve,reject){
@@ -235,8 +212,8 @@ var checkActualAgainstExpectedOuts = function(){
         //test are as follows [clock, in0, in1, in2, in_n, out1, out2, out_n]
 this.runSingleTest =function(){
                 return new Promise(function(resolve, reject) {
-                    if(self.testOver) resolve();
-
+                    if(self.testOver) resolve(null);
+                    self.outputs = [];
                     self.oneLine = [];
                     let promiseChain = Promise.resolve();
                     // set all input devices
@@ -258,25 +235,23 @@ this.runSingleTest =function(){
                         });
                     }
                            
-                    
-                    console.log(self.oneLine, self.instructions[self.instructionIndex])
 
                     // check for end of testing, then resolve
                     promiseChain = promiseChain.then( ()=>{
                         
                     	if(!self.passed){
                     		self.testOver = true;
-                            resolve();
+
+                            
                     	}
-
-
-                        if(self.instructionIndex<self.instructions.length-1){
+                        else{
+                            if(self.instructionIndex<self.instructions.length-1){
                             self.instructionIndex+=1;
-                        }else{
+                            }else{
                             self.testOver = true;
-                        }
-
-                        resolve();
+                            }
+                        }   
+                        resolve(self.outputs);
                     });
                 });
             };
@@ -341,7 +316,7 @@ this.startTest = function(testobj){
             
         }
 
-        chain = chain.then( ()=>{ resolve(); })
+        chain = chain.then( ()=>{ resolve(self.head); })
         
         
     });

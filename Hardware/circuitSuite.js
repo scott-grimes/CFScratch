@@ -1,69 +1,87 @@
 
-var CIRCUITSUITE = function(boardobject){return {
+var CIRCUITSUITE = function(boardobject){
 	
 	// prevent clicking test while a test is already in progress
-	$s : simcir,
-	$mysim : boardobject,
+	var $s = simcir;
+	var $mysim = boardobject;
+	var self = this;
 
     // returns the current state of the circuit board/
 	// all the devices and connections, etc
-    getCircuitData : function(){
-    	return this.$s.controller( this.$mysim .find('.simcir-workspace') ).data();
-  	},
-    
+    var getCircuitData = function(){
+    	return $s.controller( $mysim .find('.simcir-workspace') ).data();
+  	};    
     // given a data object, replace the current board with all of the
     // connections and devices in our data object
-    setCircuitData : function(data){
-    	this.$s.setupSimcir( this.$mysim , data );
-    },
+    var setCircuitData = function(data){
+    	$s.setupSimcir( $mysim , data );
+    };
 
-    clearTestResults : function(){
+    var clearTestResults = function(){
 
         let table = window.document.getElementById("testresultstable");
         table.innerHTML = '';
 
-    },
+    };
 
-    step : function(){
-        if(this.TEST.testOver) return;
-        window.document.getElementById("fastForwardButton").disabled = true;
-        window.document.getElementById("stepButton").disabled = true;
+    // runs a single step. if there is output, display the output.
+    //if this step terminates testing mode (if the test failed, or was the last instruction), call stoptestingmode
+    this.step = function(){
+    	return new Promise(function(resolve, reject) {
+    		if(self.TEST.testOver){
+    			return self.stopTestingMode();
+    		} 
 
-        this.TEST.runSingleTest().then( ()=>{
+        	self.TEST.runSingleTest()
+        	.then( (testoutput)=>{
+        		if(testoutput){
+        			return showStepResult(testoutput);
+        		}
+        		return self.stopTestingMode();
+        	})
+        	.then(()=>{resolve();})
+    	});
 
-        	this.addTestResult();
+    };
+    
 
-        })
-
-    },
-
-    fastForward : function(){
+    this.fastForward = function(){
+    	return new Promise(function(resolve, reject) {
         //if(!this.ALLOW_CLICKS) return;
         //tnis.ALLOW_CLICKS = false;
+
         window.document.getElementById("stepButton").disabled = true;
         window.document.getElementById("fastForwardButton").disabled = true;
-        this.TEST.runAllTests().then( ()=>{
-            this.addTestResult();
-        	this.stopTestingMode();
+        var chain = Promise.resolve();
+        var start = self.TEST.instructionIndex;
+        var end = self.TEST.instructions.length;
+        for(let i = start;i<end;i++)
+        {
+        	 chain = chain.then(()=>{return self.step();});
+        }
+       	chain = chain.then(()=>{resolve();})
         });
-    },
+    };
 
-    // takes a given testobject and the results of the tests and builds a table
-    addTestResult : function(){
-
-            window.document.getElementById("fastForwardButton").disabled = false;
-            window.document.getElementById("stepButton").disabled = false;
-
+    // takes a row of output and logs it something with it. 
+    // if returns false if nothing was printed
+    var showStepResult = function(testoutput){
+		return new Promise(function(resolve, reject) {
+			if(!testoutput) resolve();
     		let table = window.document.getElementById("testresultstable");
+    		console.log(testoutput.toString())
 
-            if(this.TEST.testOver && !this.TEST.killed){
-                let resultsMessage = this.TEST.passed ? 'Passed All Tests ✓' : 'One or More Tests Failed X';
-                this.setTestingMessage(resultsMessage);
-                //console.log(this.TEST.outputs)
-                this.stopTestingMode();
-                
+    		if(self.TEST.killed){
+    			setTestingMessage('Test Halted');
+                return self.stopTestingMode();
+    		}
+            else if(self.TEST.testOver){
+                let resultsMessage = self.TEST.passed ? 'Passed All Tests ✓' : 'One or More Tests Failed X';
+                setTestingMessage(resultsMessage);
+                return self.stopTestingMode();
             }
-            
+
+            resolve(); 
             /*
             let row = table.insertRow();
             let cell = row.insertCell(-1);
@@ -76,61 +94,67 @@ var CIRCUITSUITE = function(boardobject){return {
                 cell.innerHTML = resultsOfTest.results[i]
             }
             */
-    },
+    	});
+    };
 
-    setTestingMessage : function(message){
+    var setTestingMessage = function(message){
 
         window.document.getElementById("testResultsMessage").innerHTML = message;
-    },
+    };
 
     //user triggered stop of testing mode
 
-    killTestingMode : function(){
-        this.setTestingMessage('Testing Halted')
-        this.TEST.testOver=true;
-        this.TEST.killed = true;
-        this.stopTestingMode();
-    },
+    this.killTestingMode = function(){
+        self.TEST.testOver=true;
+        self.TEST.killed = true;
+        setTestingMessage('Testing Halted')
+        self.stopTestingMode();
+    };
 
-    stopTestingMode : function(){
-
+    // disables testing mode
+    this.stopTestingMode = function(){
+    	return new Promise(function(resolve, reject) {
             window.document.getElementById("startTestButton").disabled = false;
             window.document.getElementById("stopTestButton").disabled = true;
             window.document.getElementById("stepButton").disabled = true;
             window.document.getElementById("fastForwardButton").disabled = true;
-            this.ALLOW_CLICKS = true;
-
-    },
+            self.ALLOW_CLICKS = true;
+            resolve();
+        });
+    };
     
-    startTestingMode : function(){
+    this.startTestingMode = function(){
         try{
-            this.TEST = new TEST();
+            self.TEST = new TEST();
 
-            this.setTestingMessage('Click Step or Fast Forward');
+            setTestingMessage('Click Step or Fast Forward');
 
-            this.ALLOW_CLICKS = false;
+            self.ALLOW_CLICKS = false;
 
             window.document.getElementById("startTestButton").disabled = true;
             window.document.getElementById("stopTestButton").disabled = false;
             window.document.getElementById("stepButton").disabled = false;
             window.document.getElementById("fastForwardButton").disabled = false;
 
-            let data = this.getCircuitData();
+            let data = getCircuitData();
 
-            this.loadJSON('tests/'+data['deviceName']).then( testobj => {
-                 this.TEST.startTest(testobj)
+            loadJSON('tests/'+data['deviceName']).then( testobj => {
+                 return self.TEST.startTest(testobj);
 
+            })
+            .then((head)=>{
+            	showStepResult(head);
             });
 
         }catch(err){
                 console.log('error',err); 
-                this.stopTestingMode();
+                self.stopTestingMode();
         }
-    },
+    };
 
     //sets the device with the given label to value  
-    setDevice : function(label,value){
-        let data = this.getCircuitData();
+    var setDevice = function(label,value){
+        let data = getCircuitData();
         let triggerDevice = function(id){ simcir.controller(boardobject.find('.simcir-workspace')).data().deviceFuncts[id].trigger(value);} 
             return new Promise(function(resolve, reject) {
                 var id = null;
@@ -146,23 +170,23 @@ var CIRCUITSUITE = function(boardobject){return {
                 setTimeout(() => { 
                      resolve()}, 60); // (*)
             }); 
-    },
+    };
   
-    setLibrary : function(deviceName){
-        this.stopTestingMode();
+    this.setLibrary = function(deviceName){
+        self.stopTestingMode();
         let data = null;
-        this.loadJSON(deviceName).then( returned => {
+        loadJSON(deviceName).then( returned => {
             data = returned;
         })
-        .then( () => {return this.loadJSON('toolboxes/'+deviceName); } )
+        .then( () => {return loadJSON('toolboxes/'+deviceName); } )
         .then((toolboxObj) =>{
 
-            this.setTestingMessage('Click Start to test your device');
+            setTestingMessage('Click Start to test your device');
             data['deviceName'] = deviceName;
             data["width"] = 900;
             data["height"]=600;
             data["toolbox"] = toolboxObj;
-            this.$s.setupSimcir(this.$mysim,data)
+            $s.setupSimcir($mysim,data)
             // erases the base table of given and expected values for this device
             let table = window.document.getElementById("testresultstable")
             table.innerHTML = "";
@@ -172,23 +196,23 @@ var CIRCUITSUITE = function(boardobject){return {
             // clear the clock. due to the recursive nature of the output of DFF
             // it is incorrectly set upon loading
             if(data['deviceName']==='DFF'){
-                this.setDevice("CLOCK",0)
-                .then( () => {return this.setDevice("CLOCK",1);} )
-                .then( () => {return this.setDevice("CLOCK",0);} )
+                setDevice("CLOCK",0)
+                .then( () => {return setDevice("CLOCK",1);} )
+                .then( () => {return setDevice("CLOCK",0);} )
             }
 
         });
 
         
             return;
-        }
+        };
 
         
         
-    ,
+    
 
     //hacky  method to load json. need to fix
-    loadJSON : function(deviceName) {
+    var loadJSON = function(deviceName) {
     return new Promise(function(resolve,reject){
         var request = new XMLHttpRequest();
         var loc = window.location.pathname;
@@ -207,6 +231,5 @@ var CIRCUITSUITE = function(boardobject){return {
     };
     request.send();
 });         
-    }
-}
+    };
 };

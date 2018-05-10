@@ -32,7 +32,7 @@
         var buildingDevice = ''; // what device are we building
         var thingsToBuild = ['NOT','AND','OR','XOR','MUX','DMUX','NOT16','AND16','OR16','MUX16','OR8WAY','MUX4WAY16','MUX8WAY16','DMUX4WAY','DMUX8WAY','HALFADDER','FULLADDER','ADD16','INC16','ALU','DFF','BIT','REGISTER','RAM8','RAM64','RAM512','RAM4K','RAM16K','PC','CPU','COMPUTER'];
         var toolbar = document.getElementById("toolbar");
-        BOARD = CIRCUITSUITE($('#circuitBox'));
+        BOARD = new CIRCUITSUITE($('#circuitBox'));
         
 
         //used to reset
