@@ -7,6 +7,7 @@
   var defaultLEDColor = '#ff0000';
   var defaultLEDBgColor = '#000000';
   var onValue = 1;
+  var fontSize = 12;
   var offValue = null;
   var isHot = function(v) { return v != null; };
   var intValue = function(v) { return isHot(v)? 1 : 0; };
@@ -49,6 +50,118 @@
           return outVal;
 
   }
+
+  var transform = function(){
+
+    var attrX = 'simcir-transform-x';
+    var attrY = 'simcir-transform-y';
+
+    return function(obj, x,y){
+      var transform = 'translate(' + x + ' ' + y + ')';
+        
+        obj.attr('transform', transform);
+        obj.attr(attrX, x);
+        obj.attr(attrY, y);
+    }
+  }();
+
+
+  var doLayout = function(device) {
+        var x = 0;
+        var y = 0;
+        var w = unit * device.layout.cols / 2;
+        var h = unit * device.layout.rows / 2;
+        device.$ui.children('.simcir-device-label').
+          attr({y : y + h + fontSize});
+        device.$ui.children('.simcir-device-body').
+          attr({x: x, y: y, width: w, height: h});
+
+        $.each(device.intfs, function(i, intf) {
+          if (device.layout.nodes[intf.label] &&
+              device.layout.nodes[intf.label].match(/^([TBLR])([0-9]+)$/) ) {
+            //var off = +RegExp.$2 * unit / 2;
+              var off = device.layout.nodes[intf.label][1] * unit / 2;
+            switch( device.layout.nodes[intf.label][0]  ) {
+            case 'T' : updateCustomLayout(intf, x + off, y, 'bottom'); break;
+            case 'B' : updateCustomLayout(intf, x + off, y + h, 'top'); break;
+            case 'L' : updateCustomLayout(intf, x, y + off, 'right'); break;
+            case 'R' : updateCustomLayout(intf, x + w, y + off, 'left'); break;
+            }
+          } else {
+            transform(intf.node.$ui, 0, 0);
+          }
+        });
+      };
+
+  var updateCustomLayout = function(intf, x, y, align) {
+        transform(intf.node.$ui, x, y);
+        if (!intf.$label) {
+          intf.$label = createLabel(intf.label).
+            attr('class', 'simcir-node-label');
+          $s.enableEvents(intf.$label, false);
+          intf.node.$ui.append(intf.$label);
+        }
+        if (align == 'right') {
+          intf.$label.attr('text-anchor', 'start').
+            attr('x', 6).
+            attr('y', fontSize / 2);
+        } else if (align == 'left') {
+          intf.$label.attr('text-anchor', 'end').
+            attr('x', -6).
+            attr('y', fontSize / 2);
+        } else if (align == 'top') {
+          intf.$label.attr('text-anchor', 'middle').
+            attr('x', 0).
+            attr('y', -6);
+        } else if (align == 'bottom') {
+          intf.$label.attr('text-anchor', 'middle').
+            attr('x', 0).
+            attr('y', fontSize + 6);
+        }
+      };
+
+  var makeCustomLayout = function(device){
+    let inputs = device.getInputs();
+    let outputs = device.getOutputs();
+    device['intfs'] = [];
+    device['layout'] = [];
+
+    //set rows and columns automatically
+    device.layout['rows'] = Math.max(inputs.length,outputs.length)*2-1;
+    device.layout['cols'] = 11;
+    device.layout['nodes'] = {}
+
+    let center = Math.floor(device.layout.rows/2);
+    let diff = device.layout.rows / inputs.length;
+    for(let i = 0;i<inputs.length;i++){
+      let j = Math.floor(i*diff);
+      device.layout.nodes[ inputs[i].label ] = 'L'+(j+1);
+    }
+
+    diff = device.layout.rows / outputs.length;
+    for(let i = 0;i<outputs.length;i++){
+      let j = Math.floor(i*diff);
+      device.layout.nodes[ outputs[i].label ] = 'R'+(j+1);
+    }
+
+    for(let i = 0;i<inputs.length;i++){
+          device.intfs.push ( { node: inputs[i], label: inputs[i].label})
+        }
+        for(let i = 0;i<outputs.length;i++){
+          device.intfs.push ( { node: outputs[i], label: outputs[i].label});
+        }
+
+      device.layout.rows = ~~( (Math.max(1, device.layout.rows) + 1) / 2) * 2;
+      device.layout.cols = ~~( (Math.max(1, device.layout.cols) + 1) / 2) * 2;
+     
+  }
+
+var createLabel = function(text) {
+
+    return $s.createSVGElement('text').
+      text(text).
+      css('font-size', fontSize + 'px');
+  };
 
   // unit size
   var unit = $s.unit;
@@ -535,6 +648,7 @@
       "layout":{"rows":6,"cols":8,"hideLabelOnWorkspace":false,
       "nodes":{"A":"L1","B":"L3","SEL":"L5","OUT":"R3"}}
   }
+
   $s.registerDevice('MUX',muxdata);
 
 
@@ -559,7 +673,6 @@
       "nodes":{"A":"L1","B":"L3","SUM":"R1","CARRY":"R3"}}
   }
   $s.registerDevice('HALFADDER',halfadderdata)
-
 
   let fulladderdata = {
      "devices":[
@@ -614,8 +727,12 @@
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
+
+
+        makeCustomLayout(device);
+
         device.$ui.on('inputValueChange', function() {
-        let inputsArray = [];
+          let inputsArray = [];
 
           for(let i = 0;i<numInputs;i++)
             inputsArray.push( inputs[i].getValue() )
@@ -628,6 +745,7 @@
         var super_createUI = device.createUI;
         device.createUI = function() {
           super_createUI();
+          doLayout(device);
           var size = device.getSize();
           var g = $s.graphics(device.$ui);
           g.attr['class'] = 'simcir-basicset-symbol';
@@ -1102,19 +1220,8 @@
   $s.registerDevice('ALU',ALUFactory())
 
   $s.registerDevice('CPU', function(device) {
-        var numInputs = 4;
-        var numOutputs = 4;
-
-      var intfs = [];
-      //var $ports = [];
-        var layout = {
-          "rows":7,"cols":12,"hideLabelOnWorkspace":true,
-    "nodes":{"inM":"L1","instruction":"L3","reset":"L5","CLK":"L7",
-            "writeM":"R1","outM":"R3","addressM":"R5","pc":"R7"}
-        };
-        
-
-        device.halfPitch = numInputs > 2;
+       
+        device.halfPitch = true;
         var CPU = new CpuEmulator();
         let waitingForClockOn = true;
         
@@ -1129,97 +1236,13 @@
         device.addOutput('pc','x15');
 
 
-        //debugger;
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
-        for(let i = 0;i<inputs.length;i++){
-          intfs.push ( { node: inputs[i], label: inputs[i].label})
-        }
-        for(let i = 0;i<outputs.length;i++){
-          intfs.push ( { node: outputs[i], label: outputs[i].label});
-        }
-
-
-
-        var transform = function(){
-
-var attrX = 'simcir-transform-x';
-    var attrY = 'simcir-transform-y';
-
-return function(obj, x,y){
-      var transform = 'translate(' + x + ' ' + y + ')';
         
-        obj.attr('transform', transform);
-        obj.attr(attrX, x);
-        obj.attr(attrY, y);
-}
-}();
-var createLabel = function(text) {
-    return $s.createSVGElement('text').
-      text(text).
-      css('font-size', fontSize + 'px');
-  };
-      var cols = layout.cols;
-      var rows = layout.rows;
-      rows = ~~( (Math.max(1, rows) + 1) / 2) * 2;
-      cols = ~~( (Math.max(1, cols) + 1) / 2) * 2;
-      var fontSize = 12;
-      var updateIntf = function(intf, x, y, align) {
-        transform(intf.node.$ui, x, y);
-        debugger;
-        if (!intf.$label) {
-          intf.$label = createLabel(intf.label).
-            attr('class', 'simcir-node-label');
-          $s.enableEvents(intf.$label, false);
-          intf.node.$ui.append(intf.$label);
-        }
-        if (align == 'right') {
-          intf.$label.attr('text-anchor', 'start').
-            attr('x', 6).
-            attr('y', fontSize / 2);
-        } else if (align == 'left') {
-          intf.$label.attr('text-anchor', 'end').
-            attr('x', -6).
-            attr('y', fontSize / 2);
-        } else if (align == 'top') {
-          intf.$label.attr('text-anchor', 'middle').
-            attr('x', 0).
-            attr('y', -6);
-        } else if (align == 'bottom') {
-          intf.$label.attr('text-anchor', 'middle').
-            attr('x', 0).
-            attr('y', fontSize + 6);
-        }
-      };
+        makeCustomLayout(device);
 
-      var doLayout = function() {
-        var x = 0;
-        var y = 0;
-        var w = unit * cols / 2;
-        var h = unit * rows / 2;
-        device.$ui.children('.simcir-device-label').
-          attr({y : y + h + fontSize});
-        device.$ui.children('.simcir-device-body').
-          attr({x: x, y: y, width: w, height: h});
-        $.each(intfs, function(i, intf) {
-          if (layout.nodes[intf.label] &&
-              layout.nodes[intf.label].match(/^([TBLR])([0-9]+)$/) ) {
-            //var off = +RegExp.$2 * unit / 2;
-              var off = layout.nodes[intf.label][1] * unit / 2;
-            switch( layout.nodes[intf.label][0]  ) {
-            case 'T' : updateIntf(intf, x + off, y, 'bottom'); break;
-            case 'B' : updateIntf(intf, x + off, y + h, 'top'); break;
-            case 'L' : updateIntf(intf, x, y + off, 'right'); break;
-            case 'R' : updateIntf(intf, x + w, y + off, 'left'); break;
-            }
-          } else {
-            transform(intf.node.$ui, 0, 0);
-          }
-        });
-      };
-      device.getSize = function() {
-        return {width: unit * cols / 2, height: unit * rows / 2};
-      };
+      
+      
         device.$ui.on('inputValueChange', function() {
           
           let inM = inputs[0].getValue();
@@ -1260,14 +1283,8 @@ var createLabel = function(text) {
 
         device.createUI = function() {
           super_createUI();
-          doLayout();
+          doLayout(device);
 
-          /*draw(g, 
-            (size.width - unit) / 2,
-            (size.height - unit) / 2,
-            unit, unit);
-            */
-          
         };
     });
 
@@ -1275,10 +1292,10 @@ var createLabel = function(text) {
   //only updates output when clock is ON
   // waits for clock to cycle back to OFF so that a continually ON clock does not speed ahead and cycle too fast
   $s.registerDevice('REGISTER', function(device) {
-        var numInputs = 3;
+        
         let storedValue = 0;
         
-        device.halfPitch = numInputs > 2;
+        device.halfPitch = true;
 
         device.addInput('IN','x16');
         device.addInput('LOAD');
@@ -1288,6 +1305,8 @@ var createLabel = function(text) {
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
+
+        makeCustomLayout(device);
 
         device.$ui.on('inputValueChange', function() {
        
@@ -1313,18 +1332,15 @@ var createLabel = function(text) {
 
         var super_createUI = device.createUI;
 
-        device.createUI = function() {
-          super_createUI();
-          var size = device.getSize();
-          var g = $s.graphics(device.$ui);
-          g.attr['class'] = 'simcir-basicset-symbol';
 
-          /*draw(g, 
-            (size.width - unit) / 2,
-            (size.height - unit) / 2,
-            unit, unit);
-            */
-          
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+      };
+
+        device.createUI = function() {
+           super_createUI();
+            doLayout(device);
+
         };
       }
   );
@@ -1435,6 +1451,8 @@ var createLabel = function(text) {
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
 
+        makeCustomLayout(device);
+
         device.$ui.on('inputValueChange', function() {
        
           let loadOn = isHot ( inputs[1].getValue() );
@@ -1467,8 +1485,10 @@ var createLabel = function(text) {
 
         var super_createUI = device.createUI;
 
+
         device.createUI = function() {
           super_createUI();
+          doLayout(device);
           var size = device.getSize();
           var g = $s.graphics(device.$ui);
           g.attr['class'] = 'simcir-basicset-symbol';
