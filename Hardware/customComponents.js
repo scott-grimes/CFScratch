@@ -80,7 +80,8 @@
           if (device.layout.nodes[intf.label] &&
               device.layout.nodes[intf.label].match(/^([TBLR])([0-9]+)$/) ) {
             //var off = +RegExp.$2 * unit / 2;
-              var off = device.layout.nodes[intf.label][1] * unit / 2;
+            var off = device.layout.nodes[intf.label].substring(1);
+            off = off * unit / 2;
             switch( device.layout.nodes[intf.label][0]  ) {
             case 'T' : updateCustomLayout(intf, x + off, y, 'bottom'); break;
             case 'B' : updateCustomLayout(intf, x + off, y + h, 'top'); break;
@@ -124,25 +125,7 @@
     let inputs = device.getInputs();
     let outputs = device.getOutputs();
     device['intfs'] = [];
-    device['layout'] = [];
 
-    //set rows and columns automatically
-    device.layout['rows'] = Math.max(inputs.length,outputs.length)*2-1;
-    device.layout['cols'] = 11;
-    device.layout['nodes'] = {}
-
-    let center = Math.floor(device.layout.rows/2);
-    let diff = device.layout.rows / inputs.length;
-    for(let i = 0;i<inputs.length;i++){
-      let j = Math.floor(i*diff);
-      device.layout.nodes[ inputs[i].label ] = 'L'+(j+1);
-    }
-
-    diff = device.layout.rows / outputs.length;
-    for(let i = 0;i<outputs.length;i++){
-      let j = Math.floor(i*diff);
-      device.layout.nodes[ outputs[i].label ] = 'R'+(j+1);
-    }
 
     for(let i = 0;i<inputs.length;i++){
           device.intfs.push ( { node: inputs[i], label: inputs[i].label})
@@ -151,8 +134,8 @@
           device.intfs.push ( { node: outputs[i], label: outputs[i].label});
         }
 
-      device.layout.rows = ~~( (Math.max(1, device.layout.rows) + 1) / 2) * 2;
-      device.layout.cols = ~~( (Math.max(1, device.layout.cols) + 1) / 2) * 2;
+      //device.layout.rows = ~~( (Math.max(1, device.layout.rows) + 1) / 2) * 2;
+      //device.layout.cols = ~~( (Math.max(1, device.layout.cols) + 1) / 2) * 2;
      
   }
 
@@ -716,18 +699,30 @@ var createLabel = function(text) {
   var create16BitLogicGateFactory = function(connectionNames, logicfunct, draw) {
       return function(device) {
         var numInputs = connectionNames.length-1;
+        debugger;
+        device['layout'] = {};
+        device.layout['rows'] = numInputs*2;
+        device.layout['cols'] = 7;
+        device.layout['nodes'] = {};
 
         device.halfPitch = numInputs > 2;
 
+        var pos = 1;
         for (var i = 0; i < numInputs; i += 1) {
           device.addInput(connectionNames[i][0],connectionNames[i][1]);
+          device.layout.nodes[connectionNames[i][0]] = 'L'+pos;
+          pos+=2;
         }
 
         device.addOutput(connectionNames[numInputs][0] , connectionNames[numInputs][1] );
+        device.layout.nodes[connectionNames[numInputs][0]] = 'R'+Math.floor(numInputs/2+1);
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
 
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+        }
 
         makeCustomLayout(device);
 
@@ -884,12 +879,32 @@ var createLabel = function(text) {
         device.addInput(connectionNames[0][0],connectionNames[0][1]); //IN
         device.addInput(connectionNames[1][0],connectionNames[1][1]); //SEL xX
 
+
+        device['layout'] = {};
+        device.layout['rows'] = numOutputs*2;
+        device.layout['cols'] = 7;
+        device.layout['nodes'] = {};
+
+        device.layout.nodes['IN'] = 'L'+Math.floor(numOutputs*2*.25)
+        device.layout.nodes['SEL'] = 'L'+Math.floor(numOutputs*2*.75)
+
+        let pos = 1;
         for (var i = 2; i < numOutputs+2; i += 1) {
           device.addOutput(connectionNames[i][0],connectionNames[i][1]);
+          device.layout.nodes[connectionNames[i][0]] = 'R'+pos;
+          pos+=2;
         }
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
+
+        makeCustomLayout(device);   
+
+
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+        }
+        
         device.$ui.on('inputValueChange', function() {
         let inputsArray = [];
 
@@ -1038,13 +1053,30 @@ var createLabel = function(text) {
         device.halfPitch = numInputs > 2;
         device.addInput('IN')
         device.addInput('LOAD')
-        device.addInput('CLOCK')
+        device.addInput('CLK')
 
         device.addOutput('OUT');
         var storedValue = null;
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
+
+        device['layout'] = {};
+        device.layout['rows'] = 6;
+        device.layout['cols'] = 10;
+        device.layout['nodes'] = {};
+
+        device.layout.nodes['IN'] = 'L1';
+        device.layout.nodes['LOAD'] = 'L3';
+        device.layout.nodes['CLK'] = 'L5';
+        device.layout.nodes['OUT'] = 'R3';
+
+        makeCustomLayout(device);
+
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+        }
+
 
         device.createUI();
         device.$ui.on('inputValueChange', function() {
@@ -1063,6 +1095,7 @@ var createLabel = function(text) {
         var super_createUI = device.createUI;
         device.createUI = function() {
           super_createUI();
+          doLayout(device);
           var size = device.getSize();
           var g = $s.graphics(device.$ui);
           g.attr['class'] = 'simcir-basicset-symbol';
@@ -1083,13 +1116,28 @@ var createLabel = function(text) {
 
         device.halfPitch = numInputs > 2;
         device.addInput('IN')
-        device.addInput('CLOCK')
+        device.addInput('CLK')
 
         device.addOutput('OUT');
         var storedValue = null;
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
+
+        device['layout'] = {};
+        device.layout['rows'] = 4;
+        device.layout['cols'] = 10;
+        device.layout['nodes'] = {};
+
+        device.layout.nodes['IN'] = 'L1';
+        device.layout.nodes['CLK'] = 'L3';
+        device.layout.nodes['OUT'] = 'R2';
+
+        makeCustomLayout(device);
+
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+        }
 
         device.$ui.on('inputValueChange', function() {
           let clockOn = isHot ( inputs[1].getValue() );
@@ -1106,6 +1154,7 @@ var createLabel = function(text) {
         var super_createUI = device.createUI;
         device.createUI = function() {
           super_createUI();
+          doLayout(device);
           var size = device.getSize();
           var g = $s.graphics(device.$ui);
           g.attr['class'] = 'simcir-basicset-symbol';
@@ -1144,6 +1193,30 @@ var createLabel = function(text) {
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
+
+        device['layout'] = {};
+        device.layout['rows'] = 16;
+        device.layout['cols'] = 10;
+
+        device.layout['nodes'] = {};
+
+        let pos = 1;
+        for(let i = 0;i<inputs.length;i++){
+          device.layout.nodes[inputs[i].label] = 'L'+pos;
+          pos+=2;
+        }
+
+        device.layout.nodes['OUT'] = 'R3';
+        device.layout.nodes['ZR'] = 'R5';
+        device.layout.nodes['NG'] = 'R7';
+
+        
+        makeCustomLayout(device);
+
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+        }
+      
 
         device.$ui.on('inputValueChange', function() {
        
@@ -1203,6 +1276,7 @@ var createLabel = function(text) {
 
         device.createUI = function() {
           super_createUI();
+          doLayout(device);
           var size = device.getSize();
           var g = $s.graphics(device.$ui);
           g.attr['class'] = 'simcir-basicset-symbol';
@@ -1238,10 +1312,27 @@ var createLabel = function(text) {
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
+
+        device['layout'] = {};
+        device.layout['rows'] = 8;
+        device.layout['cols'] = 12;
+
+        device.layout['nodes'] = {};
+        device.layout.nodes['inM'] = 'L1';
+        device.layout.nodes['instruction'] = 'L3';
+        device.layout.nodes['reset'] = 'L5';
+        device.layout.nodes['CLK'] = 'L7';
+
+        device.layout.nodes['writeM'] = 'R1';
+        device.layout.nodes['outM'] = 'R3';
+        device.layout.nodes['addressM'] = 'R5';
+        device.layout.nodes['pc'] = 'R7';
         
         makeCustomLayout(device);
 
-      
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+        }
       
         device.$ui.on('inputValueChange', function() {
           
@@ -1306,6 +1397,16 @@ var createLabel = function(text) {
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
 
+        device['layout'] = {};
+        device.layout['rows'] = inputs.length*2;
+        device.layout['cols'] = 10;
+        device.layout['nodes'] ={};
+        device.layout.nodes['IN'] = 'L1';
+        device.layout.nodes['LOAD'] = 'L3';
+        device.layout.nodes['CLK'] = 'L5';
+
+        device.layout.nodes['OUT'] = 'R3';
+
         makeCustomLayout(device);
 
         device.$ui.on('inputValueChange', function() {
@@ -1348,6 +1449,7 @@ var createLabel = function(text) {
 
 
   $s.registerDevice('PC', function(device) {
+
         var numInputs = 5;
         let storedValue = 0;
         
@@ -1363,6 +1465,25 @@ var createLabel = function(text) {
 
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
+
+        device['layout'] = {};
+        device.layout['rows'] = inputs.length*2;
+        device.layout['cols'] = 10;
+        device.layout['nodes'] = {};
+        device.layout.nodes['IN'] = "L1";
+        device.layout.nodes['LOAD'] = "L3";
+        device.layout.nodes['INC'] = "L5";
+        device.layout.nodes['RESET'] = "L7";
+        device.layout.nodes['CLK'] = "L9";
+        device.layout.nodes['OUT'] = "R5";
+
+        makeCustomLayout(device);
+
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+         }
+
+
 
         device.$ui.on('inputValueChange', function() {
        
@@ -1403,6 +1524,7 @@ var createLabel = function(text) {
 
         device.createUI = function() {
           super_createUI();
+          doLayout(device);
           var size = device.getSize();
           var g = $s.graphics(device.$ui);
           g.attr['class'] = 'simcir-basicset-symbol';
@@ -1451,7 +1573,22 @@ var createLabel = function(text) {
         var inputs = device.getInputs();
         var outputs = device.getOutputs();
 
+        device['layout'] = {};
+        device.layout['rows'] = inputs.length*2;
+        device.layout['cols'] = 10;
+        device.layout['nodes'] = {};
+        device.layout.nodes['IN'] = "L1";
+        device.layout.nodes['LOAD'] = "L3";
+        device.layout.nodes['ADDRESS'] = "L5";
+        device.layout.nodes['CLK'] = "L7";
+        device.layout.nodes['OUT'] = "R3";
+
         makeCustomLayout(device);
+
+        device.getSize = function() {
+        return {width: unit * device.layout.cols / 2, height: unit * device.layout.rows / 2};
+         }
+
 
         device.$ui.on('inputValueChange', function() {
        
