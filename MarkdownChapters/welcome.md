@@ -4,7 +4,7 @@ This website will teach you how to construct an entire computer from scratch, be
 
 Login to get started!
 
-[![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
+[![N|Solid](https://nodejs.org/static/images/logo.svg)](https://nodejs.org/static/images/logo.svg)
 
 CFS is broken up into several chapters in two sections, as follows
 
