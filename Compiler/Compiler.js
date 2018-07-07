@@ -83,9 +83,9 @@ class Analyzer {
         
     //checks to see if we are looking at a string (leading char is \")
     // if so, pull the entire string as a token
-    if (this.inputStream.charAt(0) == '"') {
-      var closing_index = this.inputStream.indexOf('"', 1); 
-      var token = this.inputStream.slice(0, closing_index + 1);
+    if (this.inputStream.charAt(0) === '"') {
+      var closingIndex = this.inputStream.indexOf('"', 1); 
+      var token = this.inputStream.slice(0, closingIndex + 1);
       this.inputStream = this.inputStream.slice(token.length);
       return token;
     }
@@ -104,22 +104,22 @@ class Analyzer {
     // should delimit the token instead of the whitespace
     // example:   "A=M+3;" returns foundInside = [';','+','=']
         
-    var potential_token = this.inputStream.split(' ', 1)[0];
+    var potentialToken = this.inputStream.split(' ', 1)[0];
         
     var foundInside = [];
         
     // add one of each symbol found inside the potential token to the list of "found inside"
-    for (var i = 0; i < potential_token.length; i++) {
-      if ( this.symbols.includes( potential_token.charAt(i) ) & !foundInside.includes( potential_token.charAt(i) ) ) { foundInside.push( potential_token.charAt(i) ); }
+    for (var i = 0; i < potentialToken.length; i++) {
+      if ( this.symbols.includes( potentialToken.charAt(i) ) & !foundInside.includes( potentialToken.charAt(i) ) ) { foundInside.push( potentialToken.charAt(i) ); }
     }
         
     //if there is a symbol inside, use it to delimit our token, always slicing to the first token
     if (foundInside.length > 0) {
-      for (var i = 0; i < foundInside.length; i++) { potential_token = potential_token.split( foundInside[i], 1)[0]; }
+      for (var i = 0; i < foundInside.length; i++) { potentialToken = potentialToken.split( foundInside[i], 1)[0]; }
     }
         
     //chops out the token from our input stream and returns it
-    var token = potential_token;
+    var token = potentialToken;
     this.inputStream = this.inputStream.slice(token.length).trim();
         
     return token;
@@ -144,7 +144,7 @@ class Analyzer {
   tokenType(token) {
     //returns the type of token we have obtained
         
-    if ( token.charAt(0) == '"' ) { return 'stringConstant'; }
+    if ( token.charAt(0) === '"' ) { return 'stringConstant'; }
         
     if (this.keywords.includes(token)) { return 'keyword'; }
     if (this.symbols.includes(token)) { return 'symbol'; }
@@ -185,8 +185,8 @@ class CompileJack {
         
   }
 
-  process(file_with_path) {
-    this.fetch = new Analyzer(file_with_path);
+  process(fileWithPath) {
+    this.fetch = new Analyzer(fileWithPath);
     this.symbol = new SymbolTable();
     this.indent = 0;
     this.whileCount = -1;
@@ -197,7 +197,7 @@ class CompileJack {
   }
         
         
-  xml_ify(token) {
+  xmlify(token) {
     //replaces the characters <,>,",and " with their xml equivalants
     token = token.replace('&', '&amp;');
     token = token.replace('<', '&lt;');
@@ -223,20 +223,18 @@ class CompileJack {
     if (Number.isInteger( token )) {
       type = this.fetch.tokenType( token.toString() );
       CompileJack.print('<' + type + '> ' + token.toString() + ' </' + type + '>');
-    }
-           
-        
-    //we have a string
-    else {
+    } else {
+      //we have a string
       type = this.fetch.tokenType(token);
-            
+
       //remove quotes form string constants, otherwise just print the type and string
-      if (type === 'stringConstant') { token = this.fetch.stringVal(token); }
-                
+      if (type === 'stringConstant') {
+        token = this.fetch.stringVal(token);
+      }
+
       //removes non-xml-compatable characters from our token
-      token = this.xml_ify(token);
+      token = this.xmlify(token);
       CompileJack.print('<' + type + '> ' + token + ' </' + type + '>');
-            
     }
             
             
@@ -249,7 +247,7 @@ class CompileJack {
     var f = this.fetch;
     this.AssertAndAdvance('class'); //encountered a class "class"
         
-    this.class_name = f.advance(); 
+    this.className = f.advance(); 
         
     this.AssertAndAdvance('{'); //opens the class '{'
         
@@ -298,24 +296,24 @@ class CompileJack {
     //KIND IS FIELD
     this.indent += 1;
     var f = this.fetch;
-    var num_of_vars = 1;
-    var f_or_s = f.advance(); //field or static
+    var numOfVars = 1;
+    var fOrS = f.advance(); //field or static
     var type = f.advance();  
     var varName = f.advance(); 
-    this.symbol.define(varName, type, f_or_s);
+    this.symbol.define(varName, type, fOrS);
     var peek = f.peek();
     while ( peek === ',' ) {
       f.advance(); //remove the ','
       varName = f.advance();//varName
-      this.symbol.define(varName, type, f_or_s);
+      this.symbol.define(varName, type, fOrS);
       peek = f.peek();
-      num_of_vars += 1;
+      numOfVars += 1;
     }
             
             
     this.AssertAndAdvance(';'); //';'
-    if (f_or_s !== 'static') {
-      return num_of_vars;
+    if (fOrS !== 'static') {
+      return numOfVars;
     }
             
     return 0;
@@ -331,46 +329,46 @@ class CompileJack {
     this.whileCount = -1;
     this.ifCount = -1;
     this.symbol.startSubroutine();
-    var sub_type = f.advance(); //could be a constructor/function/method
+    var subType = f.advance(); //could be a constructor/function/method
         
-    if (sub_type === 'method')
-    //first arg pushed is 'this'
-    { this.symbol.define('this', 'object', 'arg'); }
+    if (subType === 'method') { //first arg pushed is 'this'
+      this.symbol.define('this', 'object', 'arg'); 
+    }
         
         
-    var return_type = f.advance(); //return type or void
-    if (return_type === 'void') { this.voidReturn = true; } else { this.voidReturn = false; }
-    var sub_name = f.advance(); //subroutineName 
+    var returnType = f.advance(); //return type or void
+    if (returnType === 'void') { this.voidReturn = true; } else { this.voidReturn = false; }
+    var subName = f.advance(); //subroutineName 
        
     this.AssertAndAdvance('('); // '('
         
-    var parameter_count = this.CompileParameterList();
+    var parameterCount = this.CompileParameterList();
         
     this.AssertAndAdvance(')'); // ')'
         
     this.AssertAndAdvance('{'); // '{' starts the body of the subroutine
         
-    var num_of_method_vars = 0;
+    var numOfMethodVars = 0;
     var peek = f.peek();
     while (peek === 'var') {
-      num_of_method_vars += this.CompileVarDec();
+      numOfMethodVars += this.CompileVarDec();
       peek = f.peek();
     }
                 
-    var functionName = this.class_name + '.' + sub_name;
+    var functionName = this.className + '.' + subName;
     //find num of variables declared!
-    VMWriter.writeFunction(functionName, num_of_method_vars);
+    VMWriter.writeFunction(functionName, numOfMethodVars);
         
         
         
-    if (sub_type === 'constructor') {
+    if (subType === 'constructor') {
             
       CompileJack.print ('push constant ' + classVariables.toString() );
       CompileJack.print('call Memory.alloc 1');
       CompileJack.print('pop pointer 0');
     }
             
-    if (sub_type === 'method') {
+    if (subType === 'method') {
       CompileJack.print('push argument 0');
       CompileJack.print('pop pointer 0');
     }
@@ -388,12 +386,12 @@ class CompileJack {
     
   CompileParameterList() {
     //((type varName)(','type varName)*)?
-    var parameter_count = 0;
+    var parameterCount = 0;
     this.indent += 1;
     var f = this.fetch;
     var peek = f.peek();
     while (peek !== ')') {
-      parameter_count += 1;
+      parameterCount += 1;
       var type = f.advance();// type or varName
       var varName = f.advance();
       this.symbol.define(varName, type, 'arg');
@@ -402,7 +400,7 @@ class CompileJack {
     }
             
     this.indent -= 1;
-    return parameter_count;
+    return parameterCount;
         
   }
         
@@ -410,7 +408,7 @@ class CompileJack {
   CompileSubroutineBody() {
     this.indent += 1;
     var f = this.fetch;
-    var num_of_vars = 0;
+    var numOfVars = 0;
     var peek = f.peek();
     while (peek !== '}') {
       this.CompileStatements();
@@ -418,7 +416,7 @@ class CompileJack {
     }
             
     this.AssertAndAdvance('}'); //'}' end of our function
-    //print('i had '+str(num_of_vars)+ ' variables')
+    //print('i had '+str(numOfVars)+ ' variables')
     this.indent -= 1;
   }
         
@@ -426,8 +424,8 @@ class CompileJack {
   CompileVarDec() {
     this.indent += 1;
     var f = this.fetch;
-    var num_of_vars = 1;
-    var variable_token = f.advance();  
+    var numOfVars = 1;
+    var variableToken = f.advance();  
     var type = f.advance();  
     var varName = f.advance(); 
     this.symbol.define(varName, type, 'var');
@@ -443,12 +441,12 @@ class CompileJack {
                 
             
       peek = f.peek();
-      num_of_vars += 1;
+      numOfVars += 1;
     }
             
     this.AssertAndAdvance(';'); //';' ends declaration
     this.indent -= 1;
-    return num_of_vars;
+    return numOfVars;
         
   }
         
@@ -474,7 +472,19 @@ class CompileJack {
   CompileStatement() {
     var f = this.fetch;
     var peek = f.peek();
-    if (peek === 'let') { this.CompileLet(); } else if (peek === 'if') { this.CompileIf(); } else if (peek === 'while') { this.CompileWhile(); } else if (peek === 'do') { this.CompileDo(); } else if (peek === 'return') { this.CompileReturn(); } else { throw ('Line: ' + Analyzer.prototype.lineCount + ' invalid statement, expected one of [let,if,while,do,return]'); }
+    if (peek === 'let') { 
+      this.CompileLet(); 
+    } else if (peek === 'if') { 
+      this.CompileIf(); 
+    } else if (peek === 'while') {
+      this.CompileWhile(); 
+    } else if (peek === 'do') { 
+      this.CompileDo(); 
+    } else if (peek === 'return') { 
+      this.CompileReturn(); 
+    } else {
+      throw ('Line: ' + Analyzer.prototype.lineCount + ' invalid statement, expected one of [let,if,while,do,return]'); 
+    }
   }
         
         
@@ -511,14 +521,14 @@ class CompileJack {
       if (peek !== ']') { this.CompileExpression(); }
       this.AssertAndAdvance(']');//']' array close bracket
             
-      var array_var_number = this.symbol.indexOf(varName).toString();
+      var arrayVarNumber = this.symbol.indexOf(varName).toString();
       kind = this.symbol.kindOf(varName);
       //if arrayvar number is broken! throw
             
-      if (array_var_number === null) {
+      if (arrayVarNumber === null) {
         throw ('Line: ' + Analyzer.prototype.lineCount);
       }
-      VMWriter.push(kind, array_var_number);
+      VMWriter.push(kind, arrayVarNumber);
       CompileJack.print('add');
     }
             
@@ -529,7 +539,7 @@ class CompileJack {
     this.CompileExpression();
         
     this.AssertAndAdvance(';'); // ';'
-    var var_symbol_num = this.symbol.indexOf(varName);
+    var varSymbolNum = this.symbol.indexOf(varName);
     kind = this.symbol.kindOf(varName);
         
     if (array) {
@@ -538,7 +548,7 @@ class CompileJack {
       CompileJack.print('push temp 0');
       CompileJack.print('pop that 0');
     } else {
-      VMWriter.pop(kind, var_symbol_num);
+      VMWriter.pop(kind, varSymbolNum);
     }
             
     this.indent -= 1;
@@ -689,9 +699,9 @@ class CompileJack {
     while ( ['+', '-', '*', '/', '&', '|',
       '<', '>', '='].includes(peek)) {
       var token = f.advance();
-      var operator_statement = f.symbolOperator(token);// operator symbol
+      var operatorStatement = f.symbolOperator(token);// operator symbol
       this.CompileTerm();
-      CompileJack.print(operator_statement);
+      CompileJack.print(operatorStatement);
       peek = f.peek();
     }
             
@@ -746,8 +756,8 @@ class CompileJack {
         this.CompileExpression();
         this.AssertAndAdvance(']');
                 
-        var var_symbol_num = this.symbol.indexOf(varName);
-        VMWriter.push(kind, var_symbol_num);
+        var varSymbolNum = this.symbol.indexOf(varName);
+        VMWriter.push(kind, varSymbolNum);
         CompileJack.print('add');
         CompileJack.print('pop pointer 1');
         CompileJack.print('push that 0');
@@ -757,9 +767,9 @@ class CompileJack {
       //variable
       else {
         var varName = token;
-        var var_symbol_num = this.symbol.indexOf(varName);
+        var varSymbolNum = this.symbol.indexOf(varName);
         var kind = this.symbol.kindOf(varName);
-        VMWriter.push(kind, var_symbol_num);
+        VMWriter.push(kind, varSymbolNum);
       }
                 
     } else {
@@ -775,9 +785,9 @@ class CompileJack {
     this.indent += 1;
     var f = this.fetch;
     var peek = f.peek();
-    var num_of_expressions = 0;
+    var numOfExpressions = 0;
     while (peek !== ')') {
-      num_of_expressions += 1;
+      numOfExpressions += 1;
       this.CompileExpression();
       peek = f.peek();
       if (peek === ',') {
@@ -790,7 +800,7 @@ class CompileJack {
                 
         
     this.indent -= 1;
-    return num_of_expressions;
+    return numOfExpressions;
   }
         
        
@@ -798,12 +808,12 @@ class CompileJack {
   CompileSubroutineCall(className = '') {
     var f = this.fetch;
     var token = f.advance(); //could be a '.' or (
-    var num_subroutine_arguments = 0;
-    var subroutine_name;
+    var numSubroutineArguments = 0;
+    var subroutineName;
     if (className !== '') {
-      subroutine_name = className + '.';
+      subroutineName = className + '.';
     } else {
-      subroutine_name = token;
+      subroutineName = token;
       className = token;
     }
            
@@ -811,7 +821,7 @@ class CompileJack {
     while (token !== '(') {
       token = f.advance();
       if (token !== '(') {
-        subroutine_name += token;
+        subroutineName += token;
       }
                 
     }
@@ -828,27 +838,27 @@ class CompileJack {
       if (index === null || kind === null || type === null) {
         throw ('Line: ' + Analyzer.prototype.lineCount);
       }
-      subroutine_name = type + '.' + subroutine_name.split('.', 1)[1]; //[1]? in javascript
+      subroutineName = type + '.' + subroutineName.split('.', 1)[1]; //[1]? in javascript
       VMWriter.push(kind, index);
-      num_subroutine_arguments += 1;
+      numSubroutineArguments += 1;
     }
            
         
-    if ( subroutine_name.indexOf('.') == -1 ) {
+    if ( subroutineName.indexOf('.') == -1 ) {
       //we have a call to this object's method. 
-      subroutine_name = this.class_name + '.' + subroutine_name;
+      subroutineName = this.className + '.' + subroutineName;
       CompileJack.print('push pointer 0');
-      num_subroutine_arguments += 1;
+      numSubroutineArguments += 1;
     }
            
         
-    num_subroutine_arguments += this.CompileExpressionList();
+    numSubroutineArguments += this.CompileExpressionList();
     token = this.AssertAndAdvance(')'); //')' end of subroutine call's arguments
         
     //this.symbol.printTables()
         
         
-    VMWriter.writeCall(subroutine_name, num_subroutine_arguments);
+    VMWriter.writeCall(subroutineName, numSubroutineArguments);
   }
         
         
