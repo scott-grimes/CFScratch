@@ -142,12 +142,12 @@ class Array { \n\
 
    try{
        m.value = '';
-       a = new CompileJack(jackTest);
-    
+       a = compile(jackTest);
+       m1.value = a.err? a.err : 'Analyzed Successfully!';
        for(var i = 0;i<a.lines.length;i++){
            m.value += a.lines[i]+'\n';
        }
-       m1.value = 'Analyzed Successfully!'
+     
        m.value = m.value.slice(0,-1);
    }
    catch(err){
