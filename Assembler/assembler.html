@@ -96,13 +96,15 @@ M=D";
    m1.value = 'Compiling...';
    try{
        m.value = '';
-       var a = new Assembler(inputValue);
+       var a = assemble(inputValue);
+       m1.value = a.error?a.error : 'Analyzed Successfully!'
+       
        for(var i = 0;i<a.machineCode.length;i++){
            m.value+=a.machineCode[i]+'\n';
        }
        m.value = m.value.slice(0,-1)
 
-       m1.value = 'Analyzed Successfully!'
+       
    }
    catch(err){
        m.value = '';
